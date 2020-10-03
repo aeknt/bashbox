@@ -3,13 +3,13 @@ if [ $1 = arch ]; then
  printf '%s\n' "${MACHTYPE%%-*}"
 fi
 if [ $1 = basename ]; then
- for file in "$2"; do
+ for file in "${@: +1}"; do
     file="${file%/}"
     printf '%s\n' "${file##*/}"
  done
 fi
 if [ $1 = cat ]; then
- for file in "$2"; do
+ for file in "${@: +1}"; do
      [[ ! -f $file ]] && {
          printf '%s\n' "cat: $file: No such file or directory." >&2
          exit 1
@@ -19,7 +19,7 @@ if [ $1 = cat ]; then
  done
 fi
 if [ $1 = date ]; then
- date_format="$2"
+ date_format="${@: +1}"
  
  [[ ${date_format:0:1} == + ]] &&
      date_format="${date_format/+}"

@@ -1,1 +1,10 @@
-#start
+#!/usr/bin/env bash
+if [ $1 = arch ]; then
+ printf '%s\n' "${MACHTYPE%%-*}"
+fi
+if [ $1 = basename ]; then
+ for file in "$2"; do
+    file="${file%/}"
+    printf '%s\n' "${file##*/}"
+ done
+fi

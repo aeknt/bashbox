@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-if [ $1 = arch ]; then
+cmdf="$1"
+shift
+if [ $cmdf = arch ]; then
  printf '%s\n' "${MACHTYPE%%-*}"
 fi
-if [ $1 = basename ]; then
- for file in "${@: +1}"; do
+if [ $cmdf = basename ]; then
+ for file in "$@"; do
     file="${file%/}"
     printf '%s\n' "${file##*/}"
  done
 fi
-if [ $1 = cat ]; then
- for file in "${@: +1}"; do
+if [ $cmdf = cat ]; then
+ for file in "$@"; do
      [[ ! -f $file ]] && {
          printf '%s\n' "cat: $file: No such file or directory." >&2
          exit 1
@@ -18,8 +20,8 @@ if [ $1 = cat ]; then
      printf '%s\n' "$(<"$file")"
  done
 fi
-if [ $1 = date ]; then
- date_format="${@: +1}"
+if [ $cmdf = date ]; then
+ date_format="$@"
  
  [[ ${date_format:0:1} == + ]] &&
      date_format="${date_format/+}"

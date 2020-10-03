@@ -8,3 +8,21 @@ if [ $1 = basename ]; then
     printf '%s\n' "${file##*/}"
  done
 fi
+if [ $1 = cat ]; then
+ for file in "$2"; do
+     [[ ! -f $file ]] && {
+         printf '%s\n' "cat: $file: No such file or directory." >&2
+         exit 1
+     }
+ 
+     printf '%s\n' "$(<"$file")"
+ done
+fi
+if [ $1 = date ]; then
+ date_format="$2"
+ 
+ [[ ${date_format:0:1} == + ]] &&
+     date_format="${date_format/+}"
+ 
+ printf "%($date_format)T\\n"
+fi

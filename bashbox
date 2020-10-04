@@ -47,7 +47,7 @@ if [ $cmdf = expand ]; then
  file="$(< "$1")"
  printf '%s\n' "${file//$'\t'/'        '}"
 fi
-if [ $cmd = expr ]; then
+if [ $cmdf = expr ]; then
  printf '%s\n' "$(($@))"
 fi
 if [ $cmdf = false ]; then

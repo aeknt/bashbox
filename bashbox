@@ -28,3 +28,82 @@ if [ $cmdf = date ]; then
  
  printf "%($date_format)T\\n"
 fi
+if [ $cmdf = echo ]; then
+ echo "$@"
+fi
+if [ $cmdf = env ]; then
+ mapfile -t envars < <(compgen -v)
+
+ for var in "${envars[@]}"; do
+    printf '%s=%s\n' "$var" "${!var}"
+ done
+fi
+if [ $cmdf = expand ]; then
+ [[ ! -f $1 ]] && {
+     printf '%s\n' "expand: $1: No such file or directory." >&2
+     exit 1
+ }
+ 
+ file="$(< "$1")"
+ printf '%s\n' "${file//$'\t'/'        '}"
+fi
+if [ $cmd = expr ]; then
+ printf '%s\n' "$(($@))"
+fi
+if [ $cmdf = false ]; then
+ exit 1
+fi
+if [ $cmdf = head ]; then
+ while getopts ":n:" opt; do
+     case $opt in
+         n) max_lines="$OPTARG" ;;
+ 
+         :)
+             printf '%s\n' "option -$OPTARG requires an argument." >&2
+             exit 1
+         ;;
+ 
+         ?)
+             printf '%s\n' "error: -$OPTARG not a valid option." >&2
+             exit 1
+         ;;
+     esac
+
+     shift "$((OPTIND - 1))"
+ done
+
+ [[ ! -f $1 ]] && {
+     printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
+     exit 1
+ }
+
+ mapfile -tn "${max_lines:-10}" file_data < "$1"
+ printf '%s\n' "${file_data[@]}"
+fi
+if [ $cmdf = hostname ]; then
+ : '\h'
+ printf '%s\n' "${_@P}"
+fi
+if [ $cmdf = locale ]; then
+ locale_vars=(
+     LANG
+     LC_CTYPE
+     LC_NUMERIC
+     LC_TIME
+     LC_COLLATE
+     LC_MONETARY
+     LC_MESSAGES
+     LC_PAPER
+     LC_NAME
+     LC_ADDRESS
+     LC_TELEPHONE
+     LC_MEASUREMENT
+     LC_IDENTIFICATION
+ )
+
+
+ for var in "${locale_vars[@]}"; do
+     printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
+ done
+ printf '%s=%s\n' "LC_ALL" "$LC_ALL
+fi

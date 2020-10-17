@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# uptime in pure bash.
+
+: "$(</proc/uptime)"
+seconds_up=${_%%.*}
+if [[ "$#" == 0 ]]; then
+    printf ' %(%H:%M:%S)T up '
+    if [[ $((minutes_up)) -ge 1440 ]]; then
+        printf '%d days, ' $((minutes_up/1440))
+    fi
+    if [[ $((minutes_up)) -ge 60 ]]; then
+        printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+    else
+        printf '%d min' $minutes_up
+    fi 
+else
+    getopts sp options
+    case $options in
+        s) current_timestamp=$(printf '%(%s)T')
+           printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
+        p) minutes_up=$((seconds_up/60))
+           printf 'up '
+           if [[ $((minutes_up)) -ge 60 ]]; then
+               printf '%d hours, ' $((minutes_up/60))
+           fi
+           printf '%d minutes\n' $((minutes_up%60));;
+        ?) echo "$0: invalid option -- '$options'
+Usage: $0 [-ps]">&2;;
+    esac
+fi

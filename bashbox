@@ -4,13 +4,12 @@ shift
 if [ $cmdf = arch ]; then
  printf '%s\n' "${MACHTYPE%%-*}"
 fi
-if [ $cmdf = basename ]; then
-echo test
- for file in "$@"; do
-    file="${file%/}"
-    printf '%s\n' "${file##*/}"
- done
-fi
+#if [ $cmdf = basename ]; then #something broken ?
+ #for file in "$@"; do
+  #  file="${file%/}"
+   # printf '%s\n' "${file##*/}"
+ #done
+#fi
 if [ $cmdf = cat ]; then
  for file in "$@"; do
      [[ ! -f $file ]] && {

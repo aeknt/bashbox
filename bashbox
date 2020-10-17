@@ -285,6 +285,374 @@ if [ $1 = true ]; then
  #!/usr/bin/env bash
  #
  # true in pure bash.
+ exit 0
+fi
+if [ $1 = uptime ]; then
+ #!/usr/bin/env bash
+ #
+ # uptime in pure bash.
+ 
+ : "$(</proc/uptime)"
+ seconds_up=${_%%.*}
+ if [[ "$#" == 0 ]]; then
+     printf ' %(%H:%M:%S)T up '
+     if [[ $((minutes_up)) -ge 1440 ]]; then
+         printf '%d days, ' $((minutes_up/1440))
+     fi
+     if [[ $((minutes_up)) -ge 60 ]]; then
+         printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+     else
+         printf '%d min' $minutes_up
+     fi 
+ else
+     getopts sp options
+     case $options in
+         s) current_timestamp=$(printf '%(%s)T')
+            printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
+         p) minutes_up=$((seconds_up/60))
+            printf 'up '
+            if [[ $((minutes_up)) -ge 60 ]]; then
+                printf '%d hours, ' $((minutes_up/60))
+            fi
+            printf '%d minutes\n' $((minutes_up%60));;
+         ?) echo "$0: invalid option -- '$options'
+ Usage: $0 [-ps]">&2;;
+     esac
+ fi
+fi
+if [ $1 = wc ]; then
+ #!/usr/bin/env bash
+ #
+ # wc in pure bash.
+ 
+ while getopts "lcw" opt; do
+     case $opt in
+         l) lines=1 ;;
+         c) bytes=1 ;;
+         w) words=1 ;;
+ 
+         ?)
+             printf '%s\n' "error: -$OPTARG not a valid option." >&2
+             exit 1
+         ;;
+     esac
+ done
+ 
+ [[ -t 0 && -f ${*: -1} ]] &&
+     file=${*: -1}
+ 
+ [[ -t 0 && ! -f $file ]] && {
+     printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
+     exit 1
+ }
+ 
+ mapfile file_data < "${file:-/dev/stdin}"
+ 
+ for line in "${file_data[@]}"; do
+     read -ra line_split <<< "$line"
+     ((splits+=${#line_split[@]}, chars+=${#line}))
+ done
+ 
+ [[ -z $lines && -z $bytes && -z $words ]] &&
+     ((lines=1, bytes=1, words=1))
+ 
+ [[ $lines ]] && printf '%s ' "${#file_data[@]}"
+ [[ $words ]] && printf '%s ' "$splits"
+ [[ $bytes ]] && printf '%s ' "$chars"
+ 
+ printf '%s\n' "$file"
+fi
+if [ $1 = whoami ]; then
+ #!/usr/bin/env bash
+ #
+#!/bin/env bash
+cmdf=$1
+shift
+if [ $1 = arch ]; then
+ #!/usr/bin/env bash
+ #
+ # arch in pure bash.
+ 
+ printf '%s\n' "${MACHTYPE%%-*}"
+fi
+if [ $1 = basename ]; then
+ #!/usr/bin/env bash
+ #
+ # basename in pure bash.
+ 
+ for file in "$@"; do
+     file="${file%/}"
+     printf '%s\n' "${file##*/}"
+ done
+fi
+if [ $1 = cat ]; then
+ #!/usr/bin/env bash
+ #
+ # cat in pure bash.
+ 
+ if [[ "$#" == 0 ]]; then
+     while read -rn1; do echo "$REPLY"; done
+ else
+     for file in "$@"; do
+         if [[ -f $file ]]; then
+             printf '%s\n' "$(<"$file")"
+         else
+             printf '%s\n' "cat: $file: No such file or directory" >&2
+         fi
+     done
+ fi
+fi
+if [ $1 = date ]; then
+ #!/usr/bin/env bash
+ #
+ # date in pure bash.
+ 
+ date_format="$1"
+ 
+ [[ ${date_format:0:1} == + ]] &&
+     date_format="${date_format/+}"
+ 
+ printf "%($date_format)T\\n"
+fi
+if [ $1 = dirname ]; then
+ #!/usr/bin/env bash
+ #
+ # dirname in pure bash.
+ 
+ for file in "$@"; do
+     printf '%s\n' "${file%/*}/"
+ done
+fi
+if [ $1 = echo ]; then
+ #!/usr/bin/env bash
+ #
+ # echo in pure bash.
+ 
+ echo "$@"
+fi
+if [ $1 = env ]; then
+ #!/usr/bin/env bash
+ #
+ # env in pure bash.
+ 
+ mapfile -t envars < <(compgen -v)
+ 
+ for var in "${envars[@]}"; do
+     printf '%s=%s\n' "$var" "${!var}"
+ done
+fi
+if [ $1 = expand ]; then
+ #!/usr/bin/env bash
+ #
+ # expand in pure bash.
+ 
+ [[ ! -f $1 ]] && {
+     printf '%s\n' "expand: $1: No such file or directory." >&2
+     exit 1
+ }
+ 
+ file="$(< "$1")"
+ printf '%s\n' "${file//$'\t'/'        '}"
+fi
+if [ $1 = expr ]; then
+ #!/usr/bin/env bash
+ #
+ # expr in pure bash.
+ 
+ printf '%s\n' "$(($@))"
+fi
+if [ $1 = false ]; then
+ #!/usr/bin/env bash
+ #
+ # false in pure bash.
+ 
+ exit 1
+fi
+if [ $1 = head ]; then
+ #!/usr/bin/env bash
+ #
+ # head in pure bash.
+ 
+ max_lines=10
+ 
+ while getopts ":n:" opt; do
+     case $opt in
+         n) max_lines="$OPTARG" ;;
+ 
+         :)
+             printf '%s\n' "option -$OPTARG requires an argument." >&2
+             exit 1
+         ;;
+ 
+         ?)
+             printf '%s\n' "error: -$OPTARG not a valid option." >&2
+             exit 1
+         ;;
+     esac
+ 
+     shift "$((OPTIND - 1))"
+ done
+ 
+ [[ ! -f $1 ]] && {
+     printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
+     exit 1
+ }
+ 
+ mapfile file_data < "$1"
+ [[ ${max_lines##-*} || $((max_lines += ${#file_data[@]})) ]]
+ printf '%s' "${file_data[@]0:max_lines}"
+fi
+if [ $1 = hostname ]; then
+ #!/usr/bin/env bash
+ #
+ # hostname in pure bash.
+ 
+ : '\h'
+ printf '%s\n' "${_@P}"
+fi
+if [ $1 = locale ]; then
+ #!/usr/bin/env bash
+ #
+ # locale in pure bash.
+ 
+ locale_vars=(
+     LANG
+     LC_CTYPE
+     LC_NUMERIC
+     LC_TIME
+     LC_COLLATE
+     LC_MONETARY
+     LC_MESSAGES
+     LC_PAPER
+     LC_NAME
+     LC_ADDRESS
+     LC_TELEPHONE
+     LC_MEASUREMENT
+     LC_IDENTIFICATION
+ )
+ 
+ 
+ for var in "${locale_vars[@]}"; do
+     printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
+ done
+ printf '%s=%s\n' "LC_ALL" "$LC_ALL"
+fi
+if [ $1 = logname ]; then
+ #!/usr/bin/env bash
+ #
+ # logname in pure bash.
+ 
+ : '\u'
+ printf '%s\n' "${_@P}"
+fi
+if [ $1 = printenv ]; then
+ #!/usr/bin/env bash
+ #
+ # printenv in pure bash.
+ 
+ [[ $1 ]] && {
+     printf '%s\n' "${!1}"
+     exit 0
+ }
+ 
+ mapfile -t envars < <(compgen -v)
+ 
+ for var in "${envars[@]}"; do
+     printf '%s=%s\n' "$var" "${!var}"
+ done
+fi
+if [ $1 = printf ]; then
+ #!/usr/bin/env bash
+ #
+ # printf in pure bash.
+ 
+ printf "$@"
+fi
+if [ $1 = pwd ]; then
+ #!/usr/bin/env bash
+ #
+ # pwd in pure bash.
+ 
+ printf '%s\n' "$PWD"
+fi
+if [ $1 = realpath ]; then
+ #!/usr/bin/env bash
+ #
+ # realpath in pure bash.
+ 
+ file="${1%/}"
+ parent_dir="${file%/*}"
+ 
+ [[ -f ${PWD}/${file##*/} ]] && {
+     printf '%s\n' "${PWD}/${file##*/}"
+     exit 0
+ }
+ 
+ cd "$parent_dir" &>/dev/null || exit 1 &&
+     printf '%s\n' "${PWD}/${file##*/}"
+fi
+if [ $1 = seq ]; then
+ #!/usr/bin/env bash
+ #
+ # seq in pure bash.
+ 
+ [[ -z $1 ]] && {
+     printf '%s\n' "seq: error: missing arguments." >&2
+     exit 1
+ }
+ 
+ [[ $2 ]] &&
+     first="$1"
+ 
+ [[ $3 ]] &&
+     increment="$2"
+ 
+ last="${*: -1}"
+ 
+ for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+     printf '%s\n' "$i"
+ }
+fi
+if [ $1 = tail ]; then
+ #!/usr/bin/env bash
+ #
+ # tail in pure bash.
+ 
+ while getopts ":n:" opt; do
+     case $opt in
+         n) max_lines="$OPTARG" ;;
+ 
+         :)
+             printf '%s\n' "option -$OPTARG requires an argument." >&2
+             exit 1
+         ;;
+ 
+         ?)
+             printf '%s\n' "error: -$OPTARG not a valid option." >&2
+             exit 1
+         ;;
+     esac
+ 
+     shift "$((OPTIND - 1))"
+ done
+ 
+ [[ ! -f $1 ]] && {
+     printf '%s\n' "tail: ${1:-null}: No such file or directory." >&2
+     exit 1
+ }
+ 
+ mapfile -tn 0 file_data < "$1"
+ 
+ [[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
+     max_lines="${#file_data[@]}"
+ 
+ printf '%s\n' "${file_data[@]: -$max_lines}"
+fi
+if [ $1 = true ]; then
+ #!/usr/bin/env bash
+ #
+ # true in pure bash.
+ exit 0
 fi
 if [ $1 = uptime ]; then
  #!/usr/bin/env bash

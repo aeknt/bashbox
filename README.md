@@ -1,6 +1,3 @@
-# bareutils
+# bashbox
 
-A coreutils written in pure `bash`.
-
----
-To do: `fold`, `tac`, `factor`, `seq` options.
+A busybox like thing written in pure `bash`

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 touch bashbox
 chmod +x bashbox
 echo "#""!"/bin/env bash >> bashbox

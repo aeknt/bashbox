@@ -1,8 +1,17 @@
 #!/bin/bash
 touch bashbox
 chmod +x bashbox
-echo #/bin/env bash >> bashbox
+echo "#""!"/bin/env bash >> bashbox
+echo cmdf="$"1 >> bashbox
+echo shift >> bashbox
 git clone https://github.com/Pan00Pernicek/bashbox/ bashboxmerge
 cd bashboxmerge
 cd bin
-ls
+items=$(ls)
+cd ..
+cd ..
+for i in $items
+do
+ echo if "[" "$"1 = $i "]"";"" then" >> bashbox
+ echo fi >> bashbox
+done

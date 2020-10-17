@@ -16,7 +16,7 @@ do
  echo fi >> bashbox
  #start of text edit
  filern=bashboxmerge/bin/$i
- lines=$(cat filern | wc -l)
+ lines=$(cat $filern | wc -l)
  for u in `seq $lines`
  do
  rn=" "$( head -n $u $filern | tail -1)

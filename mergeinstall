@@ -14,11 +14,12 @@ for i in $items
 do
  echo if "[" "$"1 = $i "]"";"" then" >> bashbox
  echo fi >> bashbox
- #start of text input
- lines=$(cat bashboxmerge/bin/$i | wc -l)
+ #start of text edit
+ filern=bashboxmerge/bin/$i
+ lines=$(cat filern | wc -l)
  for u in `seq $lines`
  do
- rn=" "$( head -n $u $1 | tail -1)
+ rn=" "$( head -n $u $filern | tail -1)
  cat <<< "$rn" >> "bashbox"
  done
 done

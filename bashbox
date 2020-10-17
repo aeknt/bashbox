@@ -54,6 +54,8 @@ if [ $cmdf = false ]; then
  exit 1
 fi
 if [ $cmdf = head ]; then
+ max_lines=10
+
  while getopts ":n:" opt; do
      case $opt in
          n) max_lines="$OPTARG" ;;
@@ -68,7 +70,7 @@ if [ $cmdf = head ]; then
              exit 1
          ;;
      esac
-
+ 
      shift "$((OPTIND - 1))"
  done
 
@@ -77,8 +79,9 @@ if [ $cmdf = head ]; then
      exit 1
  }
 
- mapfile -tn "${max_lines:-10}" file_data < "$1"
- printf '%s\n' "${file_data[@]}"
+ mapfile file_data < "$1"
+ [[ ${max_lines##-*} || $((max_lines += ${#file_data[@]})) ]]
+ printf '%s' "${file_data[@]0:max_lines}"
 fi
 if [ $cmdf = hostname ]; then
  : '\h'

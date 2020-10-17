@@ -4,12 +4,12 @@ shift
 if [ $cmdf = arch ]; then
  printf '%s\n' "${MACHTYPE%%-*}"
 fi
-#if [ $cmdf = basename ]; then #something broken ?
- #for file in "$@"; do
-  #  file="${file%/}"
-   # printf '%s\n' "${file##*/}"
- #done
-#fi
+if [ $cmdf = basename ]; then
+ for file in "$@"; do
+    file="${file%/}"
+    printf '%s\n' "${file##*/}"
+ done
+fi
 if [ $cmdf = cat ]; then
  for file in "$@"; do
      [[ ! -f $file ]] && {
@@ -108,5 +108,5 @@ if [ $cmdf = locale ]; then
  for var in "${locale_vars[@]}"; do
      printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
  done
- printf '%s=%s\n' "LC_ALL" "$LC_ALL
+ printf '%s=%s\n' "LC_ALL" "$LC_ALL"
 fi

@@ -246,6 +246,10 @@ if [ $cmdf = seq ]; then
      printf '%s\n' "$i"
  }
 fi
+if [ $cmdf = sh ]; then
+ #!/usr/bin/env bash
+ bash --posix
+fi
 if [ $cmdf = tail ]; then
  #!/usr/bin/env bash
  #

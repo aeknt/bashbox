@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+#found this randomly and it kinda works
+printf '%s\n' *

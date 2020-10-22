@@ -178,6 +178,11 @@ if [ $cmdf = logname ]; then
  : '\u'
  printf '%s\n' "${_@P}"
 fi
+if [ $cmdf = ls ]; then
+ #!/usr/bin/bash
+ #found this randomly and it kinda works
+ printf '%s\n' *
+fi
 if [ $cmdf = printenv ]; then
  #!/usr/bin/env bash
  #

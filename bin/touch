@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #touch in pure bash
-if [ -f $1 ]
+if [ -f $1 ]; then
  touch: error this file already exist
 else
  echo "" > $1

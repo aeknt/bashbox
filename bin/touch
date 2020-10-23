@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#touch in pure bash
+if [ -f $1 ]
+ touch: error this file already exist
+else
+ echo "" > $1
+fi

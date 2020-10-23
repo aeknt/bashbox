@@ -297,9 +297,7 @@ fi
 if [ $cmdf = touch ]; then
  #!/usr/bin/env bash
  #touch in pure bash
- if [ -f $1 ]; then
-  #nothing
- else
+ if [ ! -f $1 ]; then
   echo "" > $1
  fi
 fi

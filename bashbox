@@ -255,6 +255,10 @@ if [ $cmdf = sh ]; then
  #!/usr/bin/env bash
  bash --posix
 fi
+if [ $cmdf = sleep ]; then
+ #!/usr/bin/env bash
+ read -d "" -rt $1
+fi
 if [ $cmdf = tail ]; then
  #!/usr/bin/env bash
  #
@@ -289,6 +293,15 @@ if [ $cmdf = tail ]; then
      max_lines="${#file_data[@]}"
  
  printf '%s\n' "${file_data[@]: -$max_lines}"
+fi
+if [ $cmdf = touch ]; then
+ #!/usr/bin/env bash
+ #touch in pure bash
+ if [ -f $1 ]; then
+  #nothing
+ else
+  echo "" > $1
+ fi
 fi
 if [ $cmdf = true ]; then
  #!/usr/bin/env bash

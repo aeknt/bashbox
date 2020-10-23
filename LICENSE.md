@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2016-2018 Dylan Araps 
+Copyright (c) 2016-2018 Dylan Araps (bareutils)
 
 Copyright (c) 2020-2020 Pan Pernicek
 

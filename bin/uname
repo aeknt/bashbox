@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-info="${MACHTYPE}"
-os="${info%-*}"
-os="${os##*-}"
-echo $os
+if [ -z $1 ]; then
+ info="${MACHTYPE}"
+ os="${info%-*}"
+ os="${os##*-}"
+ echo $os
+elif [ $1 = -m ]; then
+ printf '%s\n' "${MACHTYPE%%-*}"
+fi

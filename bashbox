@@ -307,6 +307,17 @@ if [ $cmdf = true ]; then
  # true in pure bash.
  exit 0
 fi
+if [ $cmdf = uname ]; then
+ #!/usr/bin/env bash
+ if [ -z $1 ]; then
+  info="${MACHTYPE}"
+  os="${info%-*}"
+  os="${os##*-}"
+  echo $os
+ elif [ $1 = -m ]; then
+  printf '%s\n' "${MACHTYPE%%-*}"
+ fi
+fi
 if [ $cmdf = uptime ]; then
  #!/usr/bin/env bash
  #

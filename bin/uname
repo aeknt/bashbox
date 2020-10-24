@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+info="${MACHTYPE}"
+os="${info%-*}"
+os="${os##*-}"
+echo $os

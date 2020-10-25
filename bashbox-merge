@@ -1,7 +1,7 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 touch bashbox
 chmod +x bashbox
-echo "#""!"/bin/env bash >> bashbox
+echo "#""!"/usr/bin/env bash >> bashbox
 echo cmdf="$"1 >> bashbox
 echo shift >> bashbox
 git clone https://github.com/Pan00Pernicek/bashbox/ bashboxmerge

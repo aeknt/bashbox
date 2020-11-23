@@ -35,6 +35,11 @@ if [ $cmdf = cat ]; then
      done
  fi
 fi
+if [ $cmdf = clear ]; then
+ #!/usr/bin/env bas
+ printf "\033c"
+ #found this randomly and it seems to "work"
+fi
 if [ $cmdf = date ]; then
  #!/usr/bin/env bash
  #

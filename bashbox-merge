@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+rm bashbox
 touch bashbox
 chmod +x bashbox
 echo "#""!"/usr/bin/env bash >> bashbox
@@ -8,11 +9,14 @@ git clone https://github.com/Pan00Pernicek/bashbox/ bashboxmerge
 cd bashboxmerge
 cd bin
 items=$(ls)
+help=$(echo *)
 cd ..
 cd ..
+echo if "[[" a = b "]]"";"" then" >> bashbox #see blow line
+echo " "exit >> bashbox #this is just lazy way to fix elif start issue
 for i in $items
 do
- echo if "[" "$"cmdf = $i "]"";"" then" >> bashbox
+ echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
  #start of text edit
  filern=bashboxmerge/bin/$i
  lines=$(cat $filern | wc -l)
@@ -21,5 +25,7 @@ do
   rn=" "$( head -n $u $filern | tail -1)
   cat <<< "$rn" >> "bashbox"
  done
- echo fi >> bashbox 
 done
+echo else >> bashbox
+echo " "echo $help  >> bashbox
+echo fi >> bashbox

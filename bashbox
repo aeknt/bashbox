@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 cmdf=$1
 shift
-if [ $cmdf = arch ]; then
+if [[ a = b ]]; then
+ exit
+elif [[ $cmdf = arch ]]; then
  #!/usr/bin/env bash
  #
  # arch in pure bash.
  
  printf '%s\n' "${MACHTYPE%%-*}"
-fi
-if [ $cmdf = basename ]; then
+elif [[ $cmdf = basename ]]; then
  #!/usr/bin/env bash
  #
  # basename in pure bash.
@@ -17,8 +18,7 @@ if [ $cmdf = basename ]; then
      file="${file%/}"
      printf '%s\n' "${file##*/}"
  done
-fi
-if [ $cmdf = cat ]; then
+elif [[ $cmdf = cat ]]; then
  #!/usr/bin/env bash
  #
  # cat in pure bash.
@@ -34,13 +34,11 @@ if [ $cmdf = cat ]; then
          fi
      done
  fi
-fi
-if [ $cmdf = clear ]; then
+elif [[ $cmdf = clear ]]; then
  #!/usr/bin/env bas
  printf "\033c"
  #found this randomly and it seems to "work"
-fi
-if [ $cmdf = date ]; then
+elif [[ $cmdf = date ]]; then
  #!/usr/bin/env bash
  #
  # date in pure bash.
@@ -51,8 +49,7 @@ if [ $cmdf = date ]; then
      date_format="${date_format/+}"
  
  printf "%($date_format)T\\n"
-fi
-if [ $cmdf = dirname ]; then
+elif [[ $cmdf = dirname ]]; then
  #!/usr/bin/env bash
  #
  # dirname in pure bash.
@@ -60,15 +57,13 @@ if [ $cmdf = dirname ]; then
  for file in "$@"; do
      printf '%s\n' "${file%/*}/"
  done
-fi
-if [ $cmdf = echo ]; then
+elif [[ $cmdf = echo ]]; then
  #!/usr/bin/env bash
  #
  # echo in pure bash.
  
  echo "$@"
-fi
-if [ $cmdf = env ]; then
+elif [[ $cmdf = env ]]; then
  #!/usr/bin/env bash
  #
  # env in pure bash.
@@ -78,8 +73,7 @@ if [ $cmdf = env ]; then
  for var in "${envars[@]}"; do
      printf '%s=%s\n' "$var" "${!var}"
  done
-fi
-if [ $cmdf = expand ]; then
+elif [[ $cmdf = expand ]]; then
  #!/usr/bin/env bash
  #
  # expand in pure bash.
@@ -91,22 +85,19 @@ if [ $cmdf = expand ]; then
  
  file="$(< "$1")"
  printf '%s\n' "${file//$'\t'/'        '}"
-fi
-if [ $cmdf = expr ]; then
+elif [[ $cmdf = expr ]]; then
  #!/usr/bin/env bash
  #
  # expr in pure bash.
  
  printf '%s\n' "$(($@))"
-fi
-if [ $cmdf = false ]; then
+elif [[ $cmdf = false ]]; then
  #!/usr/bin/env bash
  #
  # false in pure bash.
  
  exit 1
-fi
-if [ $cmdf = head ]; then
+elif [[ $cmdf = head ]]; then
  #!/usr/bin/env bash
  #
  # head in pure bash.
@@ -139,16 +130,14 @@ if [ $cmdf = head ]; then
  mapfile file_data < "$1"
  [[ ${max_lines##-*} || $((max_lines += ${#file_data[@]})) ]]
  printf '%s' "${file_data[@]0:max_lines}"
-fi
-if [ $cmdf = hostname ]; then
+elif [[ $cmdf = hostname ]]; then
  #!/usr/bin/env bash
  #
  # hostname in pure bash.
  
  : '\h'
  printf '%s\n' "${_@P}"
-fi
-if [ $cmdf = locale ]; then
+elif [[ $cmdf = locale ]]; then
  #!/usr/bin/env bash
  #
  # locale in pure bash.
@@ -174,21 +163,18 @@ if [ $cmdf = locale ]; then
      printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
  done
  printf '%s=%s\n' "LC_ALL" "$LC_ALL"
-fi
-if [ $cmdf = logname ]; then
+elif [[ $cmdf = logname ]]; then
  #!/usr/bin/env bash
  #
  # logname in pure bash.
  
  : '\u'
  printf '%s\n' "${_@P}"
-fi
-if [ $cmdf = ls ]; then
+elif [[ $cmdf = ls ]]; then
  #!/usr/bin/bash
  #found this randomly and it kinda works
  printf '%s\n' *
-fi
-if [ $cmdf = printenv ]; then
+elif [[ $cmdf = printenv ]]; then
  #!/usr/bin/env bash
  #
  # printenv in pure bash.
@@ -203,22 +189,19 @@ if [ $cmdf = printenv ]; then
  for var in "${envars[@]}"; do
      printf '%s=%s\n' "$var" "${!var}"
  done
-fi
-if [ $cmdf = printf ]; then
+elif [[ $cmdf = printf ]]; then
  #!/usr/bin/env bash
  #
  # printf in pure bash.
  
  printf "$@"
-fi
-if [ $cmdf = pwd ]; then
+elif [[ $cmdf = pwd ]]; then
  #!/usr/bin/env bash
  #
  # pwd in pure bash.
  
  printf '%s\n' "$PWD"
-fi
-if [ $cmdf = realpath ]; then
+elif [[ $cmdf = realpath ]]; then
  #!/usr/bin/env bash
  #
  # realpath in pure bash.
@@ -233,8 +216,7 @@ if [ $cmdf = realpath ]; then
  
  cd "$parent_dir" &>/dev/null || exit 1 &&
      printf '%s\n' "${PWD}/${file##*/}"
-fi
-if [ $cmdf = seq ]; then
+elif [[ $cmdf = seq ]]; then
  #!/usr/bin/env bash
  #
  # seq in pure bash.
@@ -255,16 +237,13 @@ if [ $cmdf = seq ]; then
  for ((i=${first:=1};i<=last;i+=${increment:=1})); {
      printf '%s\n' "$i"
  }
-fi
-if [ $cmdf = sh ]; then
+elif [[ $cmdf = sh ]]; then
  #!/usr/bin/env bash
  bash --posix
-fi
-if [ $cmdf = sleep ]; then
+elif [[ $cmdf = sleep ]]; then
  #!/usr/bin/env bash
  read -d "" -rt $1
-fi
-if [ $cmdf = tail ]; then
+elif [[ $cmdf = tail ]]; then
  #!/usr/bin/env bash
  #
  # tail in pure bash.
@@ -298,21 +277,18 @@ if [ $cmdf = tail ]; then
      max_lines="${#file_data[@]}"
  
  printf '%s\n' "${file_data[@]: -$max_lines}"
-fi
-if [ $cmdf = touch ]; then
+elif [[ $cmdf = touch ]]; then
  #!/usr/bin/env bash
  #touch in pure bash
  if [ ! -f $1 ]; then
   echo "" > $1
  fi
-fi
-if [ $cmdf = true ]; then
+elif [[ $cmdf = true ]]; then
  #!/usr/bin/env bash
  #
  # true in pure bash.
  exit 0
-fi
-if [ $cmdf = uname ]; then
+elif [[ $cmdf = uname ]]; then
  #!/usr/bin/env bash
  if [ -z $1 ]; then
   info="${MACHTYPE}"
@@ -322,8 +298,7 @@ if [ $cmdf = uname ]; then
  elif [ $1 = -m ]; then
   printf '%s\n' "${MACHTYPE%%-*}"
  fi
-fi
-if [ $cmdf = uptime ]; then
+elif [[ $cmdf = uptime ]]; then
  #!/usr/bin/env bash
  #
  # uptime in pure bash.
@@ -355,8 +330,7 @@ if [ $cmdf = uptime ]; then
  Usage: $0 [-ps]">&2;;
      esac
  fi
-fi
-if [ $cmdf = wc ]; then
+elif [[ $cmdf = wc ]]; then
  #!/usr/bin/env bash
  #
  # wc in pure bash.
@@ -397,16 +371,14 @@ if [ $cmdf = wc ]; then
  [[ $bytes ]] && printf '%s ' "$chars"
  
  printf '%s\n' "$file"
-fi
-if [ $cmdf = whoami ]; then
+elif [[ $cmdf = whoami ]]; then
  #!/usr/bin/env bash
  #
  # logname in pure bash.
  
  : '\u'
  printf '%s\n' "${_@P}"
-fi
-if [ $cmdf = yes ]; then
+elif [[ $cmdf = yes ]]; then
  #!/usr/bin/env bash
  #
  # yes in pure bash.
@@ -420,4 +392,6 @@ if [ $cmdf = yes ]; then
          printf y\\n
      }
  fi
+else
+ echo arch basename cat clear date dirname echo env expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
 fi

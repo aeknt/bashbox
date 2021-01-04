@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 if [ -z $1 ]; then
+ echo $OSTYPE
+elif [ $1 = -m ]; then
+ printf '%s\n' "${MACHTYPE%%-*}"
+elif [ $1 = --old ]; then
  info="${MACHTYPE}"
  os="${info%-*}"
  os="${os##*-}"
  echo $os
-elif [ $1 = -m ]; then
- printf '%s\n' "${MACHTYPE%%-*}"
+elif [ $1 = --type ]; then
+ echo $MACHTYPE
+else 
+ echo "flags: -m --old --type"
 fi

@@ -1,8 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) 2016-2018 Dylan Araps (bareutils)
-
-Copyright (c) 2020-2020 Pan Pernicek
+Copyright (c) 2020-2021 Pan Pernicek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

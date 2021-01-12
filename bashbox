@@ -73,6 +73,11 @@ elif [[ $cmdf = env ]]; then
  for var in "${envars[@]}"; do
      printf '%s=%s\n' "$var" "${!var}"
  done
+elif [[ $cmdf = exec ]]; then
+ #!/usr/bin/env bash
+ $1
+ exit
+ #test
 elif [[ $cmdf = expand ]]; then
  #!/usr/bin/env bash
  #
@@ -239,7 +244,7 @@ elif [[ $cmdf = seq ]]; then
  }
 elif [[ $cmdf = sh ]]; then
  #!/usr/bin/env bash
- bash --posix
+ bash --posix $@
 elif [[ $cmdf = sleep ]]; then
  #!/usr/bin/env bash
  read -d "" -rt $1
@@ -291,12 +296,18 @@ elif [[ $cmdf = true ]]; then
 elif [[ $cmdf = uname ]]; then
  #!/usr/bin/env bash
  if [ -z $1 ]; then
+  echo $OSTYPE
+ elif [ $1 = -m ]; then
+  printf '%s\n' "${MACHTYPE%%-*}"
+ elif [ $1 = --old ]; then
   info="${MACHTYPE}"
   os="${info%-*}"
   os="${os##*-}"
   echo $os
- elif [ $1 = -m ]; then
-  printf '%s\n' "${MACHTYPE%%-*}"
+ elif [ $1 = --type ]; then
+  echo $MACHTYPE
+ else 
+  echo "flags: -m --old --type"
  fi
 elif [[ $cmdf = uptime ]]; then
  #!/usr/bin/env bash
@@ -393,5 +404,5 @@ elif [[ $cmdf = yes ]]; then
      }
  fi
 else
- echo arch basename cat clear date dirname echo env expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
+ echo arch basename cat clear date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
 fi

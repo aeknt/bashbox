@@ -1,0 +1,4 @@
+#!/bin/sh
+printf '%s\n' "$(<"$1")" > $2
+#cp in pure sh
+#test

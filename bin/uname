@@ -10,6 +10,8 @@ elif [ $1 = --old ]; then
  echo $os
 elif [ $1 = --type ]; then
  echo $MACHTYPE
+elif [ $1 = -a ]; then
+ printf '%s\n' "$(<"/proc/version")"
 else 
- echo "flags: -m --old --type"
+ echo "flags: -m --old --type -a"
 fi

@@ -38,6 +38,23 @@ elif [[ $cmdf = clear ]]; then
  #!/usr/bin/env bas
  printf "\033c"
  #found this randomly and it seems to "work"
+elif [[ $cmdf = cp ]]; then
+ #!/bin/sh
+ if [ -z $1 ]; then
+   echo "cp: missing file name"
+   exit
+ fi
+ if [ -z $2 ]; then
+   echo "cp: missing target file name"
+   exit
+ fi
+ if [ ! -f $1 ]; then
+   echo "cp: file not found"
+   exit
+ fi
+ printf '%s\n' "$(<"$1")" > $2
+ #cp in pure sh
+ #test
 elif [[ $cmdf = date ]]; then
  #!/usr/bin/env bash
  #
@@ -75,9 +92,9 @@ elif [[ $cmdf = env ]]; then
  done
 elif [[ $cmdf = exec ]]; then
  #!/usr/bin/env bash
- $1
+ shift
+ $@
  exit
- #test
 elif [[ $cmdf = expand ]]; then
  #!/usr/bin/env bash
  #
@@ -306,8 +323,10 @@ elif [[ $cmdf = uname ]]; then
   echo $os
  elif [ $1 = --type ]; then
   echo $MACHTYPE
+ elif [ $1 = -a ]; then
+  printf '%s\n' "$(<"/proc/version")"
  else 
-  echo "flags: -m --old --type"
+  echo "flags: -m --old --type -a"
  fi
 elif [[ $cmdf = uptime ]]; then
  #!/usr/bin/env bash
@@ -404,5 +423,5 @@ elif [[ $cmdf = yes ]]; then
      }
  fi
 else
- echo arch basename cat clear date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
+ echo arch basename cat clear cp date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
 fi

@@ -1,4 +1,16 @@
 #!/bin/sh
+if [ -z $1 ]; then
+  echo "cp: missing file name"
+  exit
+fi
+if [ -z $2 ]; then
+  echo "cp: missing target file name"
+  exit
+fi
+if [ ! -f $1 ]; then
+  echo "cp: file not found"
+  exit
+fi
 printf '%s\n' "$(<"$1")" > $2
 #cp in pure sh
 #test

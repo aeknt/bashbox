@@ -1,2 +1,6 @@
 #!/usr/bin/env bash
+if [ -z $1 ]; then
+  echo "sleep: syntax error"
+  exit
+fi
 read -d "" -rt $1

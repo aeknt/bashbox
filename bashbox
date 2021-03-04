@@ -304,10 +304,8 @@ elif [[ $cmdf = tail ]]; then
 	
 	printf '%s\n' "${file_data[@]: -$max_lines}"
 elif [[ $cmdf = time ]]; then
-	tims=$(printf "%(%s)T\\n")
 	$@
-	time=$(printf "%(%s)T\\n")
-	echo $(( time - tims ))s
+	echo "$SECONDS"
 elif [[ $cmdf = touch ]]; then
 	#!/usr/bin/env bash
 	#touch in pure bash

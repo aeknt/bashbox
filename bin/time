@@ -1,0 +1,4 @@
+tims=$(printf "%(%s)T\\n")
+$@
+time=$(printf "%(%s)T\\n")
+echo $(( time - tims ))s

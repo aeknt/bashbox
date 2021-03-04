@@ -8,7 +8,7 @@ elif [[ $cmdf = arch ]]; then
 	#
 	# arch in pure bash.
 	
-	printf '%s\n' "${MACHTYPE%%-*}"
+	echo "$HOSTTYPE"
 elif [[ $cmdf = basename ]]; then
 	#!/usr/bin/env bash
 	#
@@ -320,20 +320,18 @@ elif [[ $cmdf = true ]]; then
 elif [[ $cmdf = uname ]]; then
 	#!/usr/bin/env bash
 	if [ -z $1 ]; then
-	 echo $OSTYPE
+		echo $OSTYPE
 	elif [ $1 = -m ]; then
-	 printf '%s\n' "${MACHTYPE%%-*}"
-	elif [ $1 = --old ]; then
-	 info="${MACHTYPE}"
-	 os="${info%-*}"
-	 os="${os##*-}"
-	 echo $os
+		printf '%s\n' "$HOSTTYPE"
 	elif [ $1 = --type ]; then
-	 echo $MACHTYPE
-	elif [ $1 = -a ]; then
-	 printf '%s\n' "$(<"/proc/version")"
+		echo $MACHTYPE
+	#elif [ $1 = -a ]; then linux only 
+	#	printf '%s\n' "$(<"/proc/version")" linux only
+	elif [ $1 = -n ]; then
+		: '\h'
+		printf '%s\n' "${_@P}"
 	else 
-	 echo "flags: -m --old --type -a"
+		echo "flags: -m --type -n"
 	fi
 elif [[ $cmdf = uptime ]]; then
 	#!/usr/bin/env bash

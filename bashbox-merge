@@ -19,8 +19,9 @@ do
  lines=$(cat $filern | wc -l)
  for u in `seq $lines`
  do
-  rn=" "$( head -n $u $filern | tail -1)
+  rn="	"$( head -n $u $filern | tail -1)
   cat <<< "$rn" >> "bashbox"
+  echo merging line $u in $i
  done
 done
 echo else >> bashbox

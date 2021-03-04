@@ -2,13 +2,22 @@
 
 A single script that gives coreutils like things written in pure `bash`.
 
-This isnt intended to be really posix, it is missing lot of things from posix and it have things that posix doesnt have.
+This isnt intended to be really posix, it is missing lot of things from posix and some things behave differently.
 
-# bashbox-merge?
-script to download latest parts of bashbox and merge them into single script
+# bashbox-bin
+merge things in bin/ to one executable script
 
 needs git, and bash and coreutils (tested only with gnu and freebsd ones)
 
-if you want contribute, **do not edit "bashbox" file, its just automerged file, edit things in /bin or bashbox-merge.**
+# bashbox-lib
+merge things on bin/ to one sourceable library called "bxlib"
 
-._.
+wip
+
+# bashbox-include
+same as bashbox-lib but include code at start of another selected script
+
+wip
+
+# contributing
+if you want contribute, **do not edit "bashbox/bxlib" file, its just automerged file, edit things in /bin or bashbox-bin/-lib/-include.**

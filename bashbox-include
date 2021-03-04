@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+if [ -z $1 ]; then
+	echo no script selected!!!
+	echo exiting...
+	exit
+fi
 rm bx_tmp_include
 touch bx_tmp_include
 chmod +x bx_tmp_include
@@ -27,4 +32,4 @@ rm bx_alias_tmp
 mv $1 "$1_bx_tmp_copy"
 mv bx_tmp_include $1
 cat "$1_bx_tmp_copy" >> $1
-rm bx_tmp_copy
+rm "$1_bx_tmp_copy"

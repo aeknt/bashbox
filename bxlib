@@ -1,0 +1,493 @@
+#!/usr/bin/env bash
+bashbox_arch() {
+	#!/usr/bin/env bash
+	#
+	# arch in pure bash.
+	
+	echo "$HOSTTYPE"
+}
+bashbox_basename() {
+	#!/usr/bin/env bash
+	#
+	# basename in pure bash.
+	
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
+bashbox_cat() {
+	#!/usr/bin/env bash
+	#
+	# cat in pure bash.
+	
+	if [[ "$#" == 0 ]]; then
+	    while read -rn1; do echo "$REPLY"; done
+	else
+	    for file in "$@"; do
+	        if [[ -f $file ]]; then
+	            printf '%s\n' "$(<"$file")"
+	        else
+	            printf '%s\n' "cat: $file: No such file or directory" >&2
+	        fi
+	    done
+	fi
+}
+bashbox_clear() {
+	#!/usr/bin/env bas
+	printf "\033c"
+	#found this randomly and it seems to "work"
+}
+bashbox_cp() {
+	#!/bin/sh
+	if [ -z $1 ]; then
+	  echo "cp: missing file name"
+	  exit
+	fi
+	if [ -z $2 ]; then
+	  echo "cp: missing target file name"
+	  exit
+	fi
+	if [ ! -f $1 ]; then
+	  echo "cp: file not found"
+	  exit
+	fi
+	printf '%s\n' "$(<"$1")" > $2
+	#cp in pure sh
+	#test
+}
+bashbox_date() {
+	#!/usr/bin/env bash
+	#
+	# date in pure bash.
+	
+	date_format="$1"
+	
+	[[ ${date_format:0:1} == + ]] &&
+	    date_format="${date_format/+}"
+	
+	printf "%($date_format)T\\n"
+}
+bashbox_dirname() {
+	#!/usr/bin/env bash
+	#
+	# dirname in pure bash.
+	
+	for file in "$@"; do
+	    printf '%s\n' "${file%/*}/"
+	done
+}
+bashbox_echo() {
+	#!/usr/bin/env bash
+	#
+	# echo in pure bash.
+	
+	echo "$@"
+}
+bashbox_env() {
+	#!/usr/bin/env bash
+	#
+	# env in pure bash.
+	
+	mapfile -t envars < <(compgen -v)
+	
+	for var in "${envars[@]}"; do
+	    printf '%s=%s\n' "$var" "${!var}"
+	done
+}
+bashbox_exec() {
+	#!/usr/bin/env bash
+	shift
+	$@
+	exit
+}
+bashbox_expand() {
+	#!/usr/bin/env bash
+	#
+	# expand in pure bash.
+	
+	[[ ! -f $1 ]] && {
+	    printf '%s\n' "expand: $1: No such file or directory." >&2
+	    exit 1
+	}
+	
+	file="$(< "$1")"
+	printf '%s\n' "${file//$'\t'/'        '}"
+}
+bashbox_expr() {
+	#!/usr/bin/env bash
+	#
+	# expr in pure bash.
+	
+	printf '%s\n' "$(($@))"
+}
+bashbox_false() {
+	#!/usr/bin/env bash
+	#
+	# false in pure bash.
+	
+	exit 1
+}
+bashbox_head() {
+	#!/usr/bin/env bash
+	#
+	# head in pure bash.
+	
+	max_lines=10
+	
+	while getopts ":n:" opt; do
+	    case $opt in
+	        n) max_lines="$OPTARG" ;;
+	
+	        :)
+	            printf '%s\n' "option -$OPTARG requires an argument." >&2
+	            exit 1
+	        ;;
+	
+	        ?)
+	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+	            exit 1
+	        ;;
+	    esac
+	
+	    shift "$((OPTIND - 1))"
+	done
+	
+	[[ ! -f $1 ]] && {
+	    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
+	    exit 1
+	}
+	
+	mapfile file_data < "$1"
+	[[ ${max_lines##-*} || $((max_lines += ${#file_data[@]})) ]]
+	printf '%s' "${file_data[@]0:max_lines}"
+}
+bashbox_hostname() {
+	#!/usr/bin/env bash
+	#
+	# hostname in pure bash.
+	
+	: '\h'
+	printf '%s\n' "${_@P}"
+}
+bashbox_locale() {
+	#!/usr/bin/env bash
+	#
+	# locale in pure bash.
+	
+	locale_vars=(
+	    LANG
+	    LC_CTYPE
+	    LC_NUMERIC
+	    LC_TIME
+	    LC_COLLATE
+	    LC_MONETARY
+	    LC_MESSAGES
+	    LC_PAPER
+	    LC_NAME
+	    LC_ADDRESS
+	    LC_TELEPHONE
+	    LC_MEASUREMENT
+	    LC_IDENTIFICATION
+	)
+	
+	
+	for var in "${locale_vars[@]}"; do
+	    printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
+	done
+	printf '%s=%s\n' "LC_ALL" "$LC_ALL"
+}
+bashbox_logname() {
+	#!/usr/bin/env bash
+	#
+	# logname in pure bash.
+	
+	: '\u'
+	printf '%s\n' "${_@P}"
+}
+bashbox_ls() {
+	#!/usr/bin/bash
+	#found this randomly and it kinda works
+	printf '%s\n' *
+}
+bashbox_printenv() {
+	#!/usr/bin/env bash
+	#
+	# printenv in pure bash.
+	
+	[[ $1 ]] && {
+	    printf '%s\n' "${!1}"
+	    exit 0
+	}
+	
+	mapfile -t envars < <(compgen -v)
+	
+	for var in "${envars[@]}"; do
+	    printf '%s=%s\n' "$var" "${!var}"
+	done
+}
+bashbox_printf() {
+	#!/usr/bin/env bash
+	#
+	# printf in pure bash.
+	
+	printf "$@"
+}
+bashbox_pwd() {
+	#!/usr/bin/env bash
+	#
+	# pwd in pure bash.
+	
+	printf '%s\n' "$PWD"
+}
+bashbox_realpath() {
+	#!/usr/bin/env bash
+	#
+	# realpath in pure bash.
+	
+	file="${1%/}"
+	parent_dir="${file%/*}"
+	
+	[[ -f ${PWD}/${file##*/} ]] && {
+	    printf '%s\n' "${PWD}/${file##*/}"
+	    exit 0
+	}
+	
+	cd "$parent_dir" &>/dev/null || exit 1 &&
+	    printf '%s\n' "${PWD}/${file##*/}"
+}
+bashbox_seq() {
+	#!/usr/bin/env bash
+	#
+	# seq in pure bash.
+	
+	[[ -z $1 ]] && {
+	    printf '%s\n' "seq: error: missing arguments." >&2
+	    exit 1
+	}
+	
+	[[ $2 ]] &&
+	    first="$1"
+	
+	[[ $3 ]] &&
+	    increment="$2"
+	
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+}
+bashbox_sh() {
+	#!/usr/bin/env bash
+	bash --posix $@
+}
+bashbox_sleep() {
+	#!/usr/bin/env bash
+	if [ -z $1 ]; then
+	  echo "sleep: syntax error"
+	  exit
+	fi
+	read -d "" -rt $1
+}
+bashbox_tail() {
+	#!/usr/bin/env bash
+	#
+	# tail in pure bash.
+	
+	while getopts ":n:" opt; do
+	    case $opt in
+	        n) max_lines="$OPTARG" ;;
+	
+	        :)
+	            printf '%s\n' "option -$OPTARG requires an argument." >&2
+	            exit 1
+	        ;;
+	
+	        ?)
+	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+	            exit 1
+	        ;;
+	    esac
+	
+	    shift "$((OPTIND - 1))"
+	done
+	
+	[[ ! -f $1 ]] && {
+	    printf '%s\n' "tail: ${1:-null}: No such file or directory." >&2
+	    exit 1
+	}
+	
+	mapfile -tn 0 file_data < "$1"
+	
+	[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
+	    max_lines="${#file_data[@]}"
+	
+	printf '%s\n' "${file_data[@]: -$max_lines}"
+}
+bashbox_time() {
+	$@
+	echo "$SECONDS"
+}
+bashbox_touch() {
+	#!/usr/bin/env bash
+	#touch in pure bash
+	if [ ! -f $1 ]; then
+	 >$1
+	fi
+}
+bashbox_true() {
+	#!/usr/bin/env bash
+	#
+	# true in pure bash.
+	exit 0
+}
+bashbox_uname() {
+	#!/usr/bin/env bash
+	if [ -z $1 ]; then
+		echo $OSTYPE
+	elif [ $1 = -m ]; then
+		printf '%s\n' "$HOSTTYPE"
+	elif [ $1 = --type ]; then
+		echo $MACHTYPE
+	#elif [ $1 = -a ]; then linux only 
+	#	printf '%s\n' "$(<"/proc/version")" linux only
+	elif [ $1 = -n ]; then
+		: '\h'
+		printf '%s\n' "${_@P}"
+	else 
+		echo "flags: -m --type -n"
+	fi
+}
+bashbox_uptime() {
+	#!/usr/bin/env bash
+	#
+	# uptime in pure bash.
+	
+	: "$(</proc/uptime)"
+	seconds_up=${_%%.*}
+	if [[ "$#" == 0 ]]; then
+	    printf ' %(%H:%M:%S)T up '
+	    if [[ $((minutes_up)) -ge 1440 ]]; then
+	        printf '%d days, ' $((minutes_up/1440))
+	    fi
+	    if [[ $((minutes_up)) -ge 60 ]]; then
+	        printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+	    else
+	        printf '%d min' $minutes_up
+	    fi 
+	else
+	    getopts sp options
+	    case $options in
+	        s) current_timestamp=$(printf '%(%s)T')
+	           printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
+	        p) minutes_up=$((seconds_up/60))
+	           printf 'up '
+	           if [[ $((minutes_up)) -ge 60 ]]; then
+	               printf '%d hours, ' $((minutes_up/60))
+	           fi
+	           printf '%d minutes\n' $((minutes_up%60));;
+	        ?) echo "$0: invalid option -- '$options'
+	Usage: $0 [-ps]">&2;;
+	    esac
+	fi
+}
+bashbox_wc() {
+	#!/usr/bin/env bash
+	#
+	# wc in pure bash.
+	
+	while getopts "lcw" opt; do
+	    case $opt in
+	        l) lines=1 ;;
+	        c) bytes=1 ;;
+	        w) words=1 ;;
+	
+	        ?)
+	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+	            exit 1
+	        ;;
+	    esac
+	done
+	
+	[[ -t 0 && -f ${*: -1} ]] &&
+	    file=${*: -1}
+	
+	[[ -t 0 && ! -f $file ]] && {
+	    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
+	    exit 1
+	}
+	
+	mapfile file_data < "${file:-/dev/stdin}"
+	
+	for line in "${file_data[@]}"; do
+	    read -ra line_split <<< "$line"
+	    ((splits+=${#line_split[@]}, chars+=${#line}))
+	done
+	
+	[[ -z $lines && -z $bytes && -z $words ]] &&
+	    ((lines=1, bytes=1, words=1))
+	
+	[[ $lines ]] && printf '%s ' "${#file_data[@]}"
+	[[ $words ]] && printf '%s ' "$splits"
+	[[ $bytes ]] && printf '%s ' "$chars"
+	
+	printf '%s\n' "$file"
+}
+bashbox_whoami() {
+	#!/usr/bin/env bash
+	#
+	# logname in pure bash.
+	
+	: '\u'
+	printf '%s\n' "${_@P}"
+}
+bashbox_yes() {
+	#!/usr/bin/env bash
+	#
+	# yes in pure bash.
+	
+	if [[ "$1" ]]; then
+	    for ((;;)); {
+	        printf '%s\n' "$1"
+	    }
+	else
+	    for ((;;)); {
+	        printf y\\n
+	    }
+	fi
+}
+alias arch=bashbox_arch
+alias basename=bashbox_basename
+alias cat=bashbox_cat
+alias clear=bashbox_clear
+alias cp=bashbox_cp
+alias date=bashbox_date
+alias dirname=bashbox_dirname
+alias echo=bashbox_echo
+alias env=bashbox_env
+alias exec=bashbox_exec
+alias expand=bashbox_expand
+alias expr=bashbox_expr
+alias false=bashbox_false
+alias head=bashbox_head
+alias hostname=bashbox_hostname
+alias locale=bashbox_locale
+alias logname=bashbox_logname
+alias ls=bashbox_ls
+alias printenv=bashbox_printenv
+alias printf=bashbox_printf
+alias pwd=bashbox_pwd
+alias realpath=bashbox_realpath
+alias seq=bashbox_seq
+alias sh=bashbox_sh
+alias sleep=bashbox_sleep
+alias tail=bashbox_tail
+alias time=bashbox_time
+alias touch=bashbox_touch
+alias true=bashbox_true
+alias uname=bashbox_uname
+alias uptime=bashbox_uptime
+alias wc=bashbox_wc
+alias whoami=bashbox_whoami
+alias yes=bashbox_yes

@@ -264,6 +264,10 @@ elif [[ $cmdf = sh ]]; then
  bash --posix $@
 elif [[ $cmdf = sleep ]]; then
  #!/usr/bin/env bash
+ if [ -z $1 ]; then
+   echo "sleep: syntax error"
+   exit
+ fi
  read -d "" -rt $1
 elif [[ $cmdf = tail ]]; then
  #!/usr/bin/env bash
@@ -299,11 +303,16 @@ elif [[ $cmdf = tail ]]; then
      max_lines="${#file_data[@]}"
  
  printf '%s\n' "${file_data[@]: -$max_lines}"
+elif [[ $cmdf = time ]]; then
+ tims=$(printf "%(%s)T\\n")
+ $@
+ time=$(printf "%(%s)T\\n")
+ echo $(( time - tims ))s
 elif [[ $cmdf = touch ]]; then
  #!/usr/bin/env bash
  #touch in pure bash
  if [ ! -f $1 ]; then
-  echo "" > $1
+  >$1
  fi
 elif [[ $cmdf = true ]]; then
  #!/usr/bin/env bash
@@ -423,5 +432,5 @@ elif [[ $cmdf = yes ]]; then
      }
  fi
 else
- echo arch basename cat clear cp date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail touch true uname uptime wc whoami yes
+ echo arch basename cat clear cp date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tail time touch true uname uptime wc whoami yes
 fi

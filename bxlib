@@ -33,6 +33,14 @@ bashbox_cat() {
 	    done
 	fi
 }
+bashbox_chr() {
+	chr() {
+	  [ "$1" -lt 256 ] || return 1
+	  printf "\\$(printf '%03o' "$1")"
+	}
+	
+	chr "$@"
+}
 bashbox_clear() {
 	#!/usr/bin/env bas
 	printf "\033c"
@@ -274,6 +282,12 @@ bashbox_ls() {
 	#found this randomly and it kinda works
 	printf '%s\n' *
 }
+bashbox_ord() {
+	ord() {
+	  LC_CTYPE=C printf '%d' "'$1"
+	}
+	ord "$@"
+}
 bashbox_printenv() {
 	#!/usr/bin/env bash
 	#
@@ -414,6 +428,173 @@ bashbox_touch() {
 	#touch in pure bash
 	if [ ! -f $1 ]; then
 	 >$1
+	fi
+}
+bashbox_tput() {
+	#!/usr/bin/env bash
+	shopt -s checkwinsize; (:;:)
+	printhelp() {
+	 echo "Usage: tput [command]
+	colors:
+	 16 colors:
+	  native:
+	   set - set color and property
+	   set 0 0 - reset terminal
+	  tput mode:
+	   setaf - set foreground color
+	   setab - set background color
+	   sgr0 - reset terminal
+	  256 colors:
+	  esetf - set foreground color 
+	  esetb - set backgroud color
+	 24-bit colors:
+	  rgb format:
+	   rsetf - set foreground color
+	   rsetb - set background color
+	  hex format:
+	   hsetf - set foreground color
+	   hsetb - set background color
+	cursor:
+	 moving:
+	  cup - moves cursor to given position
+	etc:
+	 patch - replaces tput in script with cput (does not always work)
+	info:
+	 cols - width of terminal
+	 lines - height of terminal
+	 pos - position of cursor
+	 "
+	}
+	##colors
+	get_cursor_pos() {
+	    # Usage: get_cursor_pos
+	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
+	    printf '%s\n' "$x $y"
+	}
+	modeput() {
+	 printf "\033[$1;$2m"
+	}
+	rgbputf() {
+	 printf "\033[38;2;$1;$2;$3m"
+	}
+	rgbputb() {
+	 printf "\033[48;2;$1;$2;$3m"
+	}
+	if [ -z $1 ]; then
+	 printhelp
+	elif [ $1 = rsetf ]; then
+	 printf "\033[38;2;$2;$3;$4m"
+	elif [ $1 = rsetb ]; then
+	 printf "\033[48;2;$2;$3;$4m"
+	elif [ $1 = esetf ]; then
+	 printf "\033[38;5;$2m"
+	elif [ $1 = esetb ]; then
+	 printf "\033[48;5;$2m"
+	elif [ $1 = set ]; then
+	 modeput $2 $3
+	elif [ $1 = setaf ]; then
+	 if [ $2 = 0 ]; then
+	  modeput 0 30
+	 elif [ $2 = 1 ]; then
+	  modeput 0 31
+	 elif [ $2 = 2 ]; then
+	  modeput 0 32
+	 elif [ $2 = 3 ]; then
+	  modeput 0 33
+	 elif [ $2 = 4 ]; then
+	  modeput 0 34
+	 elif [ $2 = 5 ]; then
+	  modeput 0 35
+	 elif [ $2 = 6 ]; then
+	  modeput 0 36
+	 elif [ $2 = 7 ]; then
+	  modeput 0 37
+	 elif [ $2 = 8 ]; then
+	  modeput 0 90
+	 elif [ $2 = 9 ]; then
+	  modeput 0 91
+	 elif [ $2 = 10 ]; then
+	  modeput 0 92
+	 elif [ $2 = 11 ]; then
+	  modeput 0 93
+	 elif [ $2 = 12 ]; then
+	  modeput 0 94
+	 elif [ $2 = 13 ]; then
+	  modeput 0 95
+	 elif [ $2 = 14 ]; then
+	  modeput 0 96
+	 elif [ $2 = 15 ]; then
+	  modeput 0 97
+	 elif [ $2 = 16 ]; then
+	  modeput 0 98
+	 else
+	  modeput 0 31;echo cput: tput-mode: unknown color; modeput 0 0
+	 fi
+	elif [ $1 = setab ]; then
+	 if [ $2 = 0 ]; then
+	  modeput 0 40
+	 elif [ $2 = 1 ]; then
+	  modeput 0 41
+	 elif [ $2 = 2 ]; then
+	  modeput 0 42
+	 elif [ $2 = 3 ]; then
+	  modeput 0 43
+	 elif [ $2 = 4 ]; then
+	  modeput 0 44
+	 elif [ $2 = 5 ]; then
+	  modeput 0 45
+	 elif [ $2 = 6 ]; then
+	  modeput 0 46
+	 elif [ $2 = 7 ]; then
+	  modeput 0 47
+	 elif [ $2 = 8 ]; then
+	  modeput 0 100
+	 elif [ $2 = 9 ]; then
+	  modeput 0 101
+	 elif [ $2 = 10 ]; then
+	  modeput 0 102
+	 elif [ $2 = 11 ]; then
+	  modeput 0 103
+	 elif [ $2 = 12 ]; then
+	  modeput 0 104
+	 elif [ $2 = 13 ]; then
+	  modeput 0 105
+	 elif [ $2 = 14 ]; then
+	  modeput 0 106
+	 elif [ $2 = 15 ]; then
+	  modeput 0 107
+	 elif [ $2 = 16 ]; then
+	  modeput 0 108
+	 else
+	  modeput 0 41;echo cput: tput-mode: unknown color; modeput 0 0
+	 fi
+	elif [ $1 = sgr0 ]; then
+	 modeput 0 0
+	elif [ $1 = patch ]; then
+	 sed -i 's/tput/cput/g' $2
+	elif [ $1 = cup ]; then
+	 printf "\033[$2;$3H"
+	elif [ $1 = hsetf ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputf $r $g $b
+	elif [ $1 = hsetb ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputb $r $g $b
+	elif [ $1 = clear ]; then
+	  printf "\033c"
+	elif [ $1 = cols ]; then
+	 echo $COLUMNS
+	elif [ $1 = lines ]; then
+	 echo $LINES
+	elif [ $1 = pos ]; then
+	 get_cursor_pos
+	else
+	 modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
+	 printhelp
 	fi
 }
 bashbox_true() {
@@ -1084,6 +1265,7 @@ bashbox_yes() {
 alias arch=bashbox_arch
 alias basename=bashbox_basename
 alias cat=bashbox_cat
+alias chr=bashbox_chr
 alias clear=bashbox_clear
 alias cp=bashbox_cp
 alias curl=bashbox_curl
@@ -1101,6 +1283,7 @@ alias hostname=bashbox_hostname
 alias locale=bashbox_locale
 alias logname=bashbox_logname
 alias ls=bashbox_ls
+alias ord=bashbox_ord
 alias printenv=bashbox_printenv
 alias printf=bashbox_printf
 alias pwd=bashbox_pwd
@@ -1112,6 +1295,7 @@ alias tac=bashbox_tac
 alias tail=bashbox_tail
 alias time=bashbox_time
 alias touch=bashbox_touch
+alias tput=bashbox_tput
 alias true=bashbox_true
 alias uname=bashbox_uname
 alias uptime=bashbox_uptime

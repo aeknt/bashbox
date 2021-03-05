@@ -27,10 +27,20 @@ in bashbox is used:
 
 https://github.com/lijaesela/bim (unlicense)
 
+https://github.com/dylanaraps/bareutils (bashbox is fork of this)
+
+https://github.com/dylanaraps/pure-bash-bible (mit)
+
 and other random scripts i found on iternet and were without license:
+
 	- curl
+	
 	- ord
+	
 	- chr
+	
 	- hd
+	
 	- tac (most of)
+
 

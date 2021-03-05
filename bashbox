@@ -153,6 +153,37 @@ elif [[ $cmdf = false ]]; then
 	# false in pure bash.
 	
 	exit 1
+elif [[ $cmdf = hd ]]; then
+	#!/usr/bin/env bash
+	hd() {
+	  if (($#)); then
+	    hd <"$1"
+	    return
+	  fi
+	  local IFS='' # disables interpretation of \t, \n and space
+	  local LANG=C # allows characters > 0x7F
+	  local bytes=0 char chars=''
+	  declare -i bytes
+	  printf '%08x  ' 0
+	  while read -s -d '' -r -n 1 char; do  # -d '' allows newlines, -r allows \
+	    printf '%02x ' "'$char" # see https://pubs.opengroup.org/onlinepubs/009695399/utilities/printf.html
+	    [[ "$char" =~ [[:print:]] ]] || char='.' # display non-printables as a dot
+	    chars+=$char
+	    ((++bytes % 8)) && continue
+	    printf ' '
+	    ((bytes % 16)) && continue
+	    printf '|%s|\n%08x  ' "$chars" "$bytes"
+	    chars=''
+	  done
+	  if [[ "$chars" ]]; then
+	    len=${#chars}
+	    ((len > 7 && len--, len += (16 - (bytes % 16)) * 3 + 4))
+	    printf "%${len}s\n%08x  " "|$chars|" "$bytes"
+	  fi
+	  printf '\n'
+	}
+	
+	hd "$@"
 elif [[ $cmdf = head ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1017,5 +1048,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename cat clear cp curl date dirname echo env exec expand expr false head hostname locale logname ls printenv printf pwd realpath seq sh sleep tac tail time touch true uname uptime vi wc whoami yes
+ echo arch basename cat clear cp curl date dirname echo env exec expand expr false hd head hostname locale logname ls printenv printf pwd realpath seq sh sleep tac tail time touch true uname uptime vi wc whoami yes
 fi

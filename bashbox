@@ -440,7 +440,7 @@ elif [[ $cmdf = tput ]]; then
 	get_cursor_pos() {
 	    # Usage: get_cursor_pos
 	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
-	    printf '%s\n' "$x $y"
+	    printf '%s\n' "$y $x"
 	}
 	modeput() {
 	 printf "\033[$1;$2m"

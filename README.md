@@ -33,7 +33,7 @@ https://github.com/dylanaraps/pure-bash-bible (mit)
 
 https://github.com/greymd/pure-bash-alternatives (mit)
 
-https://github.com/greymd/pure-bash-alternatives (unknown)
+https://github.com/catmin/purebash (unknown)
 
 https://github.com/agriffis/pure-getopt (mit)
 

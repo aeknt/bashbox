@@ -15,7 +15,7 @@ if [[ "$#" == 0 ]]; then
         printf '%d min' $minutes_up
     fi 
 else
-    getopts sp options
+   	getopts sp options
     case $options in
         s) current_timestamp=$(printf '%(%s)T')
            printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;

@@ -1,0 +1,16 @@
+#!/bin/bash
+PATTERN="$1"
+shift
+IFS=$'\n'
+INPUT=( "${@:-"-"}" )
+for i in "${INPUT[@]}"; do
+	if [[ "$i" == "-" ]]; then
+		exec 3<&0
+	else
+		exec 3< "$i" || exit 1
+	fi
+
+	while read -ru 3 line; do
+		[[ "$line" =~ .*$PATTERN.* ]] && echo -E "$line"
+	done
+done

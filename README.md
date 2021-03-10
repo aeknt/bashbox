@@ -27,9 +27,15 @@ in bashbox is used:
 
 https://github.com/lijaesela/bim (unlicense)
 
-https://github.com/dylanaraps/bareutils (bashbox is fork of this)
+https://github.com/dylanaraps/bareutils ((mit) bashbox is fork of this)
 
 https://github.com/dylanaraps/pure-bash-bible (mit)
+
+https://github.com/greymd/pure-bash-alternatives (mit)
+
+https://github.com/greymd/pure-bash-alternatives (unknown)
+
+https://github.com/agriffis/pure-getopt (mit)
 
 and other random scripts i found on iternet and were without license:
 

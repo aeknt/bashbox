@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Usage: bash_sed <before> <after> filename
+# s command + global option (s///g) only.
+bash_sed () {
+  local _pat="$1" ;shift
+  local _pat_update="$1" ;shift
+  local _fname=${1:-/dev/stdin}
+  while read -r line ; do
+    if [[ "${line}" =~ $_pat ]];then
+      printf "%s\\n" "${line//$_pat/$_pat_update}"
+    else
+      printf "%s\\n" "${line}"
+    fi
+  done < "$_fname"
+}

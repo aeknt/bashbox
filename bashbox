@@ -168,6 +168,532 @@ elif [[ $cmdf = false ]]; then
 	# false in pure bash.
 	
 	exit 1
+elif [[ $cmdf = find ]]; then
+	#!/usr/bin env bash
+	recurse() {  
+	    if [ ! -d "$1" ] ; then return ; fi
+	    for i in $1/* ; do
+		path=${i//\/\//\/} # replace all double slashes
+	        echo "$path"
+		# dont follow symbolic links
+		if [ -L "$path" ] ; then continue ; fi
+		# recurse down dirs
+	        if [ -d "$path" ] ; then recurse "$path" ; fi
+	    done
+	}    
+	for file in "$@"
+	do
+		recurse "$file"
+	done
+elif [[ $cmdf = getopt ]]; then
+	getopt() {
+	  # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
+	  # version 1.4.5
+	  #
+	  # Copyright 2012-2021 Aron Griffis <aron@scampersand.com>
+	  #
+	  # Permission is hereby granted, free of charge, to any person obtaining
+	  # a copy of this software and associated documentation files (the
+	  # "Software"), to deal in the Software without restriction, including
+	  # without limitation the rights to use, copy, modify, merge, publish,
+	  # distribute, sublicense, and/or sell copies of the Software, and to
+	  # permit persons to whom the Software is furnished to do so, subject to
+	  # the following conditions:
+	  #
+	  # The above copyright notice and this permission notice shall be included
+	  # in all copies or substantial portions of the Software.
+	  #
+	  # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	  # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	  # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+	  # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+	  # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+	  # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+	  # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	
+	  _getopt_main() {
+	    # Returns one of the following statuses:
+	    #   0 success
+	    #   1 error parsing parameters
+	    #   2 error in getopt invocation
+	    #   3 internal error
+	    #   4 reserved for -T
+	    #
+	    # For statuses 0 and 1, generates normalized and shell-quoted
+	    # "options -- parameters" on stdout.
+	
+	    declare parsed status
+	    declare short long='' name flags=''
+	    declare have_short=false
+	
+	    # Synopsis from getopt man-page:
+	    #
+	    #   getopt optstring parameters
+	    #   getopt [options] [--] optstring parameters
+	    #   getopt [options] -o|--options optstring [options] [--] parameters
+	    #
+	    # The first form can be normalized to the third form which
+	    # _getopt_parse() understands. The second form can be recognized after
+	    # first parse when $short hasn't been set.
+	
+	    if [[ -n ${GETOPT_COMPATIBLE+isset} || $1 == [^-]* ]]; then
+	      # Enable compatibility mode
+	      flags=c$flags
+	      # Normalize first to third synopsis form
+	      set -- -o "$1" -- "${@:2}"
+	    fi
+	
+	    # First parse always uses flags=p since getopt always parses its own
+	    # arguments effectively in this mode.
+	    parsed=$(_getopt_parse getopt ahl:n:o:qQs:TuV \
+	      alternative,help,longoptions:,name:,options:,quiet,quiet-output,shell:,test,version \
+	      p "$@")
+	    status=$?
+	    if [[ $status != 0 ]]; then
+	      if [[ $status == 1 ]]; then
+	        echo "Try 'getopt --help' for more information." >&2
+	        # Since this is the first parse, convert status 1 to 2
+	        status=2
+	      fi
+	      return $status
+	    fi
+	    eval "set -- $parsed"
+	
+	    while [[ $# -gt 0 ]]; do
+	      case $1 in
+	        (-a|--alternative)
+	          flags=a$flags ;;
+	
+	        (-h|--help)
+	          _getopt_help
+	          return 0
+	          ;;
+	
+	        (-l|--longoptions)
+	          long="$long${long:+,}$2"
+	          shift ;;
+	
+	        (-n|--name)
+	          name=$2
+	          shift ;;
+	
+	        (-o|--options)
+	          short=$2
+	          have_short=true
+	          shift ;;
+	
+	        (-q|--quiet)
+	          flags=q$flags ;;
+	
+	        (-Q|--quiet-output)
+	          flags=Q$flags ;;
+	
+	        (-s|--shell)
+	          case $2 in
+	            (sh|bash)
+	              flags=${flags//t/} ;;
+	            (csh|tcsh)
+	              flags=t$flags ;;
+	            (*)
+	              echo 'getopt: unknown shell after -s or --shell argument' >&2
+	              echo "Try 'getopt --help' for more information." >&2
+	              return 2 ;;
+	          esac
+	          shift ;;
+	
+	        (-u|--unquoted)
+	          flags=u$flags ;;
+	
+	        (-T|--test)
+	          return 4 ;;
+	
+	        (-V|--version)
+	          echo "pure-getopt 1.4.4"
+	          return 0 ;;
+	
+	        (--)
+	          shift
+	          break ;;
+	      esac
+	
+	      shift
+	    done
+	
+	    if ! $have_short; then
+	      # $short was declared but never set, not even to an empty string.
+	      # This implies the second form in the synopsis.
+	      if [[ $# == 0 ]]; then
+	        echo 'getopt: missing optstring argument' >&2
+	        echo "Try 'getopt --help' for more information." >&2
+	        return 2
+	      fi
+	      short=$1
+	      have_short=true
+	      shift
+	    fi
+	
+	    if [[ $short == -* ]]; then
+	      # Leading dash means generate output in place rather than reordering,
+	      # unless we're already in compatibility mode.
+	      [[ $flags == *c* ]] || flags=i$flags
+	      short=${short#?}
+	    elif [[ $short == +* ]]; then
+	      # Leading plus means POSIXLY_CORRECT, unless we're already in
+	      # compatibility mode.
+	      [[ $flags == *c* ]] || flags=p$flags
+	      short=${short#?}
+	    fi
+	
+	    # This should fire if POSIXLY_CORRECT is in the environment, even if
+	    # it's an empty string.  That's the difference between :+ and +
+	    flags=${POSIXLY_CORRECT+p}$flags
+	
+	    _getopt_parse "${name:-getopt}" "$short" "$long" "$flags" "$@"
+	  }
+	
+	  _getopt_parse() {
+	    # Inner getopt parser, used for both first parse and second parse.
+	    # Returns 0 for success, 1 for error parsing, 3 for internal error.
+	    # In the case of status 1, still generates stdout with whatever could
+	    # be parsed.
+	    #
+	    # $flags is a string of characters with the following meanings:
+	    #   a - alternative parsing mode
+	    #   c - GETOPT_COMPATIBLE
+	    #   i - generate output in place rather than reordering
+	    #   p - POSIXLY_CORRECT
+	    #   q - disable error reporting
+	    #   Q - disable normal output
+	    #   t - quote for csh/tcsh
+	    #   u - unquoted output
+	
+	    declare name="$1" short="$2" long="$3" flags="$4"
+	    shift 4
+	
+	    # Split $long on commas, prepend double-dashes, strip colons;
+	    # for use with _getopt_resolve_abbrev
+	    declare -a longarr
+	    _getopt_split longarr "$long"
+	    longarr=( "${longarr[@]/#/--}" )
+	    longarr=( "${longarr[@]%:}" )
+	    longarr=( "${longarr[@]%:}" )
+	
+	    # Parse and collect options and parameters
+	    declare -a opts params
+	    declare o alt_recycled=false error=0
+	
+	    while [[ $# -gt 0 ]]; do
+	      case $1 in
+	        (--)
+	          params=( "${params[@]}" "${@:2}" )
+	          break ;;
+	
+	        (--*=*)
+	          o=${1%%=*}
+	          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
+	            error=1
+	          elif [[ ,"$long", == *,"${o#--}"::,* ]]; then
+	            opts=( "${opts[@]}" "$o" "${1#*=}" )
+	          elif [[ ,"$long", == *,"${o#--}":,* ]]; then
+	            opts=( "${opts[@]}" "$o" "${1#*=}" )
+	          elif [[ ,"$long", == *,"${o#--}",* ]]; then
+	            if $alt_recycled; then o=${o#-}; fi
+	            _getopt_err "$name: option '$o' doesn't allow an argument"
+	            error=1
+	          else
+	            echo "getopt: assertion failed (1)" >&2
+	            return 3
+	          fi
+	          alt_recycled=false
+	          ;;
+	
+	        (--?*)
+	          o=$1
+	          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
+	            error=1
+	          elif [[ ,"$long", == *,"${o#--}",* ]]; then
+	            opts=( "${opts[@]}" "$o" )
+	          elif [[ ,"$long", == *,"${o#--}::",* ]]; then
+	            opts=( "${opts[@]}" "$o" '' )
+	          elif [[ ,"$long", == *,"${o#--}:",* ]]; then
+	            if [[ $# -ge 2 ]]; then
+	              shift
+	              opts=( "${opts[@]}" "$o" "$1" )
+	            else
+	              if $alt_recycled; then o=${o#-}; fi
+	              _getopt_err "$name: option '$o' requires an argument"
+	              error=1
+	            fi
+	          else
+	            echo "getopt: assertion failed (2)" >&2
+	            return 3
+	          fi
+	          alt_recycled=false
+	          ;;
+	
+	        (-*)
+	          if [[ $flags == *a* ]]; then
+	            # Alternative parsing mode!
+	            # Try to handle as a long option if any of the following apply:
+	            #  1. There's an equals sign in the mix -x=3 or -xy=3
+	            #  2. There's 2+ letters and an abbreviated long match -xy
+	            #  3. There's a single letter and an exact long match
+	            #  4. There's a single letter and no short match
+	            o=${1::2} # temp for testing #4
+	            if [[ $1 == *=* || $1 == -?? || \
+	                  ,$long, == *,"${1#-}"[:,]* || \
+	                  ,$short, != *,"${o#-}"[:,]* ]]; then
+	              o=$(_getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" 2>/dev/null)
+	              case $? in
+	                (0)
+	                  # Unambiguous match. Let the long options parser handle
+	                  # it, with a flag to get the right error message.
+	                  set -- "-$1" "${@:2}"
+	                  alt_recycled=true
+	                  continue ;;
+	                (1)
+	                  # Ambiguous match, generate error and continue.
+	                  _getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" >/dev/null
+	                  error=1
+	                  shift
+	                  continue ;;
+	                (2)
+	                  # No match, fall through to single-character check.
+	                  true ;;
+	                (*)
+	                  echo "getopt: assertion failed (3)" >&2
+	                  return 3 ;;
+	              esac
+	            fi
+	          fi
+	
+	          o=${1::2}
+	          if [[ "$short" == *"${o#-}"::* ]]; then
+	            if [[ ${#1} -gt 2 ]]; then
+	              opts=( "${opts[@]}" "$o" "${1:2}" )
+	            else
+	              opts=( "${opts[@]}" "$o" '' )
+	            fi
+	          elif [[ "$short" == *"${o#-}":* ]]; then
+	            if [[ ${#1} -gt 2 ]]; then
+	              opts=( "${opts[@]}" "$o" "${1:2}" )
+	            elif [[ $# -ge 2 ]]; then
+	              shift
+	              opts=( "${opts[@]}" "$o" "$1" )
+	            else
+	              _getopt_err "$name: option requires an argument -- '${o#-}'"
+	              error=1
+	            fi
+	          elif [[ "$short" == *"${o#-}"* ]]; then
+	            opts=( "${opts[@]}" "$o" )
+	            if [[ ${#1} -gt 2 ]]; then
+	              set -- "$o" "-${1:2}" "${@:2}"
+	            fi
+	          else
+	            if [[ $flags == *a* ]]; then
+	              # Alternative parsing mode! Report on the entire failed
+	              # option. GNU includes =value but we omit it for sanity with
+	              # very long values.
+	              _getopt_err "$name: unrecognized option '${1%%=*}'"
+	            else
+	              _getopt_err "$name: invalid option -- '${o#-}'"
+	              if [[ ${#1} -gt 2 ]]; then
+	                set -- "$o" "-${1:2}" "${@:2}"
+	              fi
+	            fi
+	            error=1
+	          fi ;;
+	
+	        (*)
+	          # GNU getopt in-place mode (leading dash on short options)
+	          # overrides POSIXLY_CORRECT
+	          if [[ $flags == *i* ]]; then
+	            opts=( "${opts[@]}" "$1" )
+	          elif [[ $flags == *p* ]]; then
+	            params=( "${params[@]}" "$@" )
+	            break
+	          else
+	            params=( "${params[@]}" "$1" )
+	          fi
+	      esac
+	
+	      shift
+	    done
+	
+	    if [[ $flags == *Q* ]]; then
+	      true  # generate no output
+	    else
+	      echo -n ' '
+	      if [[ $flags == *[cu]* ]]; then
+	        printf '%s -- %s' "${opts[*]}" "${params[*]}"
+	      else
+	        if [[ $flags == *t* ]]; then
+	          _getopt_quote_csh "${opts[@]}" -- "${params[@]}"
+	        else
+	          _getopt_quote "${opts[@]}" -- "${params[@]}"
+	        fi
+	      fi
+	      echo
+	    fi
+	
+	    return $error
+	  }
+	
+	  _getopt_err() {
+	    if [[ $flags != *q* ]]; then
+	      printf '%s\n' "$1" >&2
+	    fi
+	  }
+	
+	  _getopt_resolve_abbrev() {
+	    # Resolves an abbrevation from a list of possibilities.
+	    # If the abbreviation is unambiguous, echoes the expansion on stdout
+	    # and returns 0.  If the abbreviation is ambiguous, prints a message on
+	    # stderr and returns 1. (For first parse this should convert to exit
+	    # status 2.)  If there is no match at all, prints a message on stderr
+	    # and returns 2.
+	    declare a q="$1"
+	    declare -a matches=()
+	    shift
+	    for a; do
+	      if [[ $q == "$a" ]]; then
+	        # Exact match. Squash any other partial matches.
+	        matches=( "$a" )
+	        break
+	      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q" ]]; then
+	        # Exact alternative match. Squash any other partial matches.
+	        matches=( "$a" )
+	        break
+	      elif [[ $a == "$q"* ]]; then
+	        # Abbreviated match.
+	        matches=( "${matches[@]}" "$a" )
+	      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q"* ]]; then
+	        # Abbreviated alternative match.
+	        matches=( "${matches[@]}" "${a#-}" )
+	      fi
+	    done
+	    case ${#matches[@]} in
+	      (0)
+	        [[ $flags == *q* ]] || \
+	        printf "$name: unrecognized option %s\\n" >&2 \
+	          "$(_getopt_quote "$q")"
+	        return 2 ;;
+	      (1)
+	        printf '%s' "${matches[0]}"; return 0 ;;
+	      (*)
+	        [[ $flags == *q* ]] || \
+	        printf "$name: option %s is ambiguous; possibilities: %s\\n" >&2 \
+	          "$(_getopt_quote "$q")" "$(_getopt_quote "${matches[@]}")"
+	        return 1 ;;
+	    esac
+	  }
+	
+	  _getopt_split() {
+	    # Splits $2 at commas to build array specified by $1
+	    declare IFS=,
+	    eval "$1=( \$2 )"
+	  }
+	
+	  _getopt_quote() {
+	    # Quotes arguments with single quotes, escaping inner single quotes
+	    declare s space='' q=\'
+	    for s; do
+	      printf "$space'%s'" "${s//$q/$q\\$q$q}"
+	      space=' '
+	    done
+	  }
+	
+	  _getopt_quote_csh() {
+	    # Quotes arguments with single quotes, escaping inner single quotes,
+	    # bangs, backslashes and newlines
+	    declare s i c space
+	    for s; do
+	      echo -n "$space'"
+	      for ((i=0; i<${#s}; i++)); do
+	        c=${s:i:1}
+	        case $c in
+	          (\\|\'|!)
+	            echo -n "'\\$c'" ;;
+	          ($'\n')
+	            echo -n "\\$c" ;;
+	          (*)
+	            echo -n "$c" ;;
+	        esac
+	      done
+	      echo -n \'
+	      space=' '
+	    done
+	  }
+	
+	  _getopt_help() {
+	    cat <<-EOT
+	
+		Usage:
+		 getopt <optstring> <parameters>
+		 getopt [options] [--] <optstring> <parameters>
+		 getopt [options] -o|--options <optstring> [options] [--] <parameters>
+	
+		Parse command options.
+	
+		Options:
+		 -a, --alternative             allow long options starting with single -
+		 -l, --longoptions <longopts>  the long options to be recognized
+		 -n, --name <progname>         the name under which errors are reported
+		 -o, --options <optstring>     the short options to be recognized
+		 -q, --quiet                   disable error reporting by getopt(3)
+		 -Q, --quiet-output            no normal output
+		 -s, --shell <shell>           set quoting conventions to those of <shell>
+		 -T, --test                    test for getopt(1) version
+		 -u, --unquoted                do not quote the output
+	
+		 -h, --help                    display this help
+		 -V, --version                 display version
+	
+		For more details see getopt(1).
+		EOT
+	  }
+	
+	  _getopt_version_check() {
+	    if [[ -z $BASH_VERSION ]]; then
+	      echo "getopt: unknown version of bash might not be compatible" >&2
+	      return 1
+	    fi
+	
+	    # This is a lexical comparison that should be sufficient forever.
+	    if [[ $BASH_VERSION < 2.05b ]]; then
+	      echo "getopt: bash $BASH_VERSION might not be compatible" >&2
+	      return 1
+	    fi
+	
+	    return 0
+	  }
+	
+	  _getopt_version_check
+	  _getopt_main "$@"
+	  declare status=$?
+	  unset -f _getopt_main _getopt_err _getopt_parse _getopt_quote \
+	    _getopt_quote_csh _getopt_resolve_abbrev _getopt_split _getopt_help \
+	    _getopt_version_check
+	  return $status
+	}
+	getopt $@
+elif [[ $cmdf = grep ]]; then
+	#!/bin/bash
+	PATTERN="$1"
+	shift
+	IFS=$'\n'
+	INPUT=( "${@:-"-"}" )
+	for i in "${INPUT[@]}"; do
+		if [[ "$i" == "-" ]]; then
+			exec 3<&0
+		else
+			exec 3< "$i" || exit 1
+		fi
+	
+		while read -ru 3 line; do
+			[[ "$line" =~ .*$PATTERN.* ]] && echo -E "$line"
+		done
+	done
 elif [[ $cmdf = hd ]]; then
 	#!/usr/bin/env bash
 	hd() {
@@ -273,6 +799,16 @@ elif [[ $cmdf = ls ]]; then
 	#!/usr/bin/bash
 	#found this randomly and it kinda works
 	printf '%s\n' *
+elif [[ $cmdf = od ]]; then
+	#!/bin/bash
+	 
+	while read line
+	do
+	    for ((i=0;i<${#line};i++))
+	    do
+	        printf " %02X" \'${line:$i:1}
+	    done
+	done < ${1:-/dev/fd/0}
 elif [[ $cmdf = ord ]]; then
 	ord() {
 	  LC_CTYPE=C printf '%d' "'$1"
@@ -320,6 +856,22 @@ elif [[ $cmdf = realpath ]]; then
 	
 	cd "$parent_dir" &>/dev/null || exit 1 &&
 	    printf '%s\n' "${PWD}/${file##*/}"
+elif [[ $cmdf = sed ]]; then
+	#!/usr/bin/env bash
+	# Usage: bash_sed <before> <after> filename
+	# s command + global option (s///g) only.
+	bash_sed () {
+	  local _pat="$1" ;shift
+	  local _pat_update="$1" ;shift
+	  local _fname=${1:-/dev/stdin}
+	  while read -r line ; do
+	    if [[ "${line}" =~ $_pat ]];then
+	      printf "%s\\n" "${line//$_pat/$_pat_update}"
+	    else
+	      printf "%s\\n" "${line}"
+	    fi
+	  done < "$_fname"
+	}
 elif [[ $cmdf = seq ]]; then
 	#!/usr/bin/env bash
 	#
@@ -344,6 +896,158 @@ elif [[ $cmdf = seq ]]; then
 elif [[ $cmdf = sh ]]; then
 	#!/usr/bin/env bash
 	bash --posix $@
+elif [[ $cmdf = sha512 ]]; then
+	#!/bin/bash
+	
+	# 64-bit rotate right function
+	# $1 = value to rotate
+	# $2 = magnitude of rotation
+	rotate()
+	{
+		lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
+		tmp=$(($lshtmp>>$(($2-1))))
+		tmp=$(($(($(($1<<$((64-$2))))&$((0xffffffffffffffff))))|$tmp))
+	
+		# "return" $tmp
+		echo $tmp
+	}
+	
+	
+	# Logical left shift: bash provides only an arithmetic left shift, which is not what we want for crypto
+	#this is an ugly hack, but it works and I couldn't think of another way to do this in pure bash
+	lshft()
+	{
+		lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
+		tmp=$(($lshtmp>>$(($2-1))))
+	
+		# "return" $tmp
+		echo $tmp
+	}
+	
+	#Compute and output the sha512 value of the first argument (a string, not a file)
+	sha512()
+	{
+		input=$1
+	
+		input_hex=''
+		for (( i=0; i < ${#input}; i++ ))
+		do
+			input_hex="$input_hex$(printf "%02x" "'${input:$i:1}")"
+		done
+	
+		# Yay! sha512 in pure bash
+	
+		# pure bash = using only bash, no external applications. printf and echo are used, both of which are bash builtins
+	
+		# Initialize hash values
+		#(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+		declare -a h
+		h[0]=$((0x6a09e667f3bcc908))
+		h[1]=$((0xbb67ae8584caa73b))
+		h[2]=$((0x3c6ef372fe94f82b))
+		h[3]=$((0xa54ff53a5f1d36f1))
+		h[4]=$((0x510e527fade682d1))
+		h[5]=$((0x9b05688c2b3e6c1f))
+		h[6]=$((0x1f83d9abfb41bd6b))
+		h[7]=$((0x5be0cd19137e2179))
+	
+		# Initialize array of round constants
+		#(first 64 bits of the fractional parts of the cube roots of the first 80 primes 2..409):
+		declare -a k
+		k=(0x428a2f98d728ae22 0x7137449123ef65cd 0xb5c0fbcfec4d3b2f 0xe9b5dba58189dbbc 0x3956c25bf348b538 0x59f111f1b605d019 0x923f82a4af194f9b 0xab1c5ed5da6d8118 0xd807aa98a3030242 0x12835b0145706fbe 0x243185be4ee4b28c 0x550c7dc3d5ffb4e2 0x72be5d74f27b896f 0x80deb1fe3b1696b1 0x9bdc06a725c71235 0xc19bf174cf692694 0xe49b69c19ef14ad2 0xefbe4786384f25e3 0x0fc19dc68b8cd5b5 0x240ca1cc77ac9c65 0x2de92c6f592b0275 0x4a7484aa6ea6e483 0x5cb0a9dcbd41fbd4 0x76f988da831153b5 0x983e5152ee66dfab 0xa831c66d2db43210 0xb00327c898fb213f 0xbf597fc7beef0ee4 0xc6e00bf33da88fc2 0xd5a79147930aa725 0x06ca6351e003826f 0x142929670a0e6e70 0x27b70a8546d22ffc 0x2e1b21385c26c926 0x4d2c6dfc5ac42aed 0x53380d139d95b3df 0x650a73548baf63de 0x766a0abb3c77b2a8 0x81c2c92e47edaee6 0x92722c851482353b 0xa2bfe8a14cf10364 0xa81a664bbc423001 0xc24b8b70d0f89791 0xc76c51a30654be30 0xd192e819d6ef5218 0xd69906245565a910 0xf40e35855771202a 0x106aa07032bbd1b8 0x19a4c116b8d2d0c8 0x1e376c085141ab53 0x2748774cdf8eeb99 0x34b0bcb5e19b48a8 0x391c0cb3c5c95a63 0x4ed8aa4ae3418acb 0x5b9cca4f7763e373 0x682e6ff3d6b2b8a3 0x748f82ee5defb2fc 0x78a5636f43172f60 0x84c87814a1f0ab72 0x8cc702081a6439ec 0x90befffa23631e28 0xa4506cebde82bde9 0xbef9a3f7b2c67915 0xc67178f2e372532b 0xca273eceea26619c 0xd186b8c721c0c207 0xeada7dd6cde0eb1e 0xf57d4f7fee6ed178 0x06f067aa72176fba 0x0a637dc5a2c898a6 0x113f9804bef90dae 0x1b710b35131c471b 0x28db77f523047d84 0x32caab7b40c72493 0x3c9ebe0a15c9bebc 0x431d67c49c100d4c 0x4cc5d4becb3e42b6 0x597f299cfc657e2a 0x5fcb6fab3ad6faec 0x6c44198c4a475817)
+	
+		# Pad using MD-Compliant padding:
+		input_len=${#input}
+		input_len_bin=$(echo -e "\x"$(printf "%x" $(($input_len*8))))
+		final_len=$(($(($(($input_len+128))>>7))<<7))
+	
+		pad_n=$(($final_len-$input_len))
+		input_hex=$input_hex'80'
+		for (( i=1; i < $(($pad_n-16)); i++ ))
+		do
+			input_hex=$input_hex'00'
+		done
+		input_hex=$input_hex$(printf "%032x" "$(($input_len<<3))")
+	
+		# This is the 80 word message schedule array:
+		declare -a w
+	
+		# Process the message in successive 512-bit chunks:
+		for (( i=0; i<$(($final_len<<1)); i+=256 ))
+		do
+			chunk=${input_hex:$i:256}
+	
+			# Clear message schedule array:
+			for (( j=0; j<64; j++ ))
+			do
+				w[$j]=00000000
+			done
+	
+			# Copy chunk into schedule array:
+			for (( j=0; j<16; j++ ))
+			do
+				w[$j]=$((0x${chunk:$(($j<<4)):16}))
+			done
+	
+	
+			# Extend the first 16 words into the remaining 64 words w[16..80] of the message schedule array:
+			for (( j=16; j<80; j++ ))
+			do
+				sz=$(($(($(rotate ${w[$(($j-15))]} 1)^$(rotate ${w[$(($j-15))]} 8)))^$(lshft ${w[$(($j-15))]} 7)))
+				so=$(($(($(rotate ${w[$(($j-2))]} 19)^$(rotate ${w[$(($j-2))]} 61)))^$(lshft ${w[$(($j-2))]} 6)))
+				w[$j]=$((${w[$(($j-16))]}+$sz+${w[$(($j-7))]}+$so))
+			done
+	
+			# Initialize working variables to current hash value:
+			a=${h[0]}
+			b=${h[1]}
+			c=${h[2]}
+			d=${h[3]}
+			e=${h[4]}
+			f=${h[5]}
+			g=${h[6]}
+			hay=${h[7]}
+	
+			# Compression function main loop:
+			for (( j=0; j<80; j++ ))
+			do
+				SO=$(($(rotate $e 14)^$(rotate $e 18)^$(rotate $e 41)))
+				ch=$(($(($e&$f))^$(($((~$e))&$g))))
+				temp1=$(($hay+$SO+$ch+${k[$j]}+${w[$j]}))
+				SZ=$(($(rotate $a 28)^$(rotate $a 34)^$(rotate $a 39)))
+				maj=$(($(($a&$b))^$(($a&$c))^$(($b&$c))))
+				temp2=$(($SZ+$maj))
+	
+				hay=$g
+				g=$f
+				f=$e
+				e=$(($d+$temp1))
+				d=$c
+				c=$b
+				b=$a
+				a=$(($temp1+$temp2))
+			done
+	
+			# Add the compressed chunk to the current hash value:
+			h[0]=$((${h[0]}+$a))
+			h[1]=$((${h[1]}+$b))
+			h[2]=$((${h[2]}+$c))
+			h[3]=$((${h[3]}+$d))
+			h[4]=$((${h[4]}+$e))
+			h[5]=$((${h[5]}+$f))
+			h[6]=$((${h[6]}+$g))
+			h[7]=$((${h[7]}+$hay))
+		done
+	
+		# Produce the final hash value (big-endian):
+		for (( i=0; i<8; i++ ))
+		do
+			printf "%016x" ${h[$i]}
+		done
+	}
+	
+	sha512 $1
+	echo # newline
 elif [[ $cmdf = sleep ]]; then
 	#!/usr/bin/env bash
 	if [ -z $1 ]; then
@@ -351,6 +1055,34 @@ elif [[ $cmdf = sleep ]]; then
 	  exit
 	fi
 	read -d "" -rt $1
+elif [[ $cmdf = stat ]]; then
+	#!/usr/bin/env bash
+	testfile()
+	{
+	echo $1
+	[ -b $1 ] && echo "block special"
+	[ -c $1 ] && echo "char special"
+	[ -e $1 ] && echo "exists"
+	[ -d $1 ] && echo "dir"
+	[ -f $1 ] && echo "regular"
+	[ -g $1 ] && echo "set-group-ID"
+	[ -G $1 ] && echo "owner by effective group-ID"
+	[ -L $1 ] && echo "symlink"
+	[ -k $1 ] && echo "sticky"
+	[ -O $1 ] && echo "owned by effective user-id"
+	[ -p $1 ] && echo "named pipe"
+	[ -r $1 ] && echo "read permission"
+	[ -s $1 ] && echo "size greater 0"
+	[ -S $1 ] && echo "socket"
+	[ -u $1 ] && echo "set-user-ID"
+	[ -w $1 ] && echo "write permission granted"
+	[ -x $1 ] && echo "execute/search granted"
+	}
+	
+	for file in "$@"
+	do
+		testfile $file
+	done
 elif [[ $cmdf = tac ]]; then
 	#!/usr/bin/env bash
 	for file in "$@"
@@ -618,7 +1350,7 @@ elif [[ $cmdf = uptime ]]; then
 	        printf '%d min' $minutes_up
 	    fi 
 	else
-	    getopts sp options
+	   	getopts sp options
 	    case $options in
 	        s) current_timestamp=$(printf '%(%s)T')
 	           printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
@@ -1238,5 +1970,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false hd head hostname locale logname ls ord printenv printf pwd realpath seq sh sleep tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

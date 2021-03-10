@@ -71,7 +71,7 @@ elif [[ $cmdf = curl ]]; then
 	    IFS=/ read -r _ _ host query <<< "$1"
 	
 	    # Send the HTTP request.
-	    exec 3<"/dev/tcp/${host}/80"; {
+	    exec 3<"/dev/tcp/${host}/$2"; {
 	        printf '%s\r\n%s\r\n\r\n' \
 	               "GET /${query} HTTP/1.0" \
 	               "Host: $host"
@@ -92,9 +92,17 @@ elif [[ $cmdf = curl ]]; then
 	}
 	
 	if [ "$1" = "-o" ]; then
-		download "$3" > "$2"
+		if [ -z $4 ]; then
+			download "$3" 80 > "$2"
+		else 
+			download "$3" "$4" > "$2"
+		fi
 	else
-		download "$1"
+		if [ -z $2 ]; then
+			download "$1" 80
+		else 
+			download "$1" "$2"
+		fi
 	fi
 elif [[ $cmdf = date ]]; then
 	#!/usr/bin/env bash
@@ -572,6 +580,10 @@ elif [[ $cmdf = true ]]; then
 	#
 	# true in pure bash.
 	exit 0
+elif [[ $cmdf = ttysize ]]; then
+	#!/usr/bin/env bash
+	shopt -s checkwinsize; (:;:)
+	echo "$COLUMNS $LINES"
 elif [[ $cmdf = uname ]]; then
 	#!/usr/bin/env bash
 	if [ -z $1 ]; then
@@ -1226,5 +1238,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false hd head hostname locale logname ls ord printenv printf pwd realpath seq sh sleep tac tail time touch tput true uname uptime vi wc whoami yes
+ echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false hd head hostname locale logname ls ord printenv printf pwd realpath seq sh sleep tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

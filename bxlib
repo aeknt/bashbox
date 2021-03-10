@@ -73,7 +73,7 @@ bashbox_curl() {
 	    IFS=/ read -r _ _ host query <<< "$1"
 	
 	    # Send the HTTP request.
-	    exec 3<"/dev/tcp/${host}/80"; {
+	    exec 3<"/dev/tcp/${host}/$2"; {
 	        printf '%s\r\n%s\r\n\r\n' \
 	               "GET /${query} HTTP/1.0" \
 	               "Host: $host"
@@ -94,9 +94,17 @@ bashbox_curl() {
 	}
 	
 	if [ "$1" = "-o" ]; then
-		download "$3" > "$2"
+		if [ -z $4 ]; then
+			download "$3" 80 > "$2"
+		else 
+			download "$3" "$4" > "$2"
+		fi
 	else
-		download "$1"
+		if [ -z $2 ]; then
+			download "$1" 80
+		else 
+			download "$1" "$2"
+		fi
 	fi
 }
 bashbox_date() {
@@ -602,6 +610,11 @@ bashbox_true() {
 	#
 	# true in pure bash.
 	exit 0
+}
+bashbox_ttysize() {
+	#!/usr/bin/env bash
+	shopt -s checkwinsize; (:;:)
+	echo "$COLUMNS $LINES"
 }
 bashbox_uname() {
 	#!/usr/bin/env bash
@@ -1297,6 +1310,7 @@ alias time=bashbox_time
 alias touch=bashbox_touch
 alias tput=bashbox_tput
 alias true=bashbox_true
+alias ttysize=bashbox_ttysize
 alias uname=bashbox_uname
 alias uptime=bashbox_uptime
 alias vi=bashbox_vi

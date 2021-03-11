@@ -125,7 +125,17 @@ bashbox_dirname() {
 	# dirname in pure bash.
 	
 	for file in "$@"; do
-	    printf '%s\n' "${file%/*}/"
+	     # Usage: dirname "path"
+	     tmp=${file:-.}
+	    
+	     tmp=${tmp%%"${tmp##*[!/]}"}
+	    
+	     [[ ${tmp##*/*} ]] && tmp=.
+	    
+	     tmp=${tmp%/*}
+	     tmp=${tmp%%"${tmp##*[!/]}"}
+	    
+	     printf '%s\n' "${tmp:-/}"
 	done
 }
 bashbox_echo() {

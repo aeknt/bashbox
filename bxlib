@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+bashbox_build=1615467949
 bashbox_arch() {
 	#!/usr/bin/env bash
 	#

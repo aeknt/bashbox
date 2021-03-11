@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 cmdf=$1
 shift
-if [[ a = b ]]; then
- exit
+if [[ $cmdf = --build ]]; then
+	echo 1615467949
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#

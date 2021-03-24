@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-bashbox_build=1615467949
+bashbox_build=1616584089
 bashbox_arch() {
 	#!/usr/bin/env bash
 	#
@@ -1215,8 +1215,6 @@ bashbox_tput() {
 	cursor:
 	 moving:
 	  cup - moves cursor to given position
-	etc:
-	 patch - replaces tput in script with cput (does not always work)
 	info:
 	 cols - width of terminal
 	 lines - height of terminal
@@ -1328,8 +1326,6 @@ bashbox_tput() {
 	 fi
 	elif [ $1 = sgr0 ]; then
 	 modeput 0 0
-	elif [ $1 = patch ]; then
-	 sed -i 's/tput/cput/g' $2
 	elif [ $1 = cup ]; then
 	 printf "\033[$2;$3H"
 	elif [ $1 = hsetf ]; then

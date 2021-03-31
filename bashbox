@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1616584089
+	echo 1617170226
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -851,21 +851,33 @@ elif [[ $cmdf = pwd ]]; then
 	# pwd in pure bash.
 	
 	printf '%s\n' "$PWD"
+elif [[ $cmdf = pwdx ]]; then
+	#!/usr/bin/env bash
+	for pid in "$@"
+	do
+		cd -P /proc/$pid/cwd
+		echo $PWD
+	done
+elif [[ $cmdf = readlink ]]; then
+	#!/usr/bin/env bash
+	#
+	# realpath in pure bash.
+	
+	for file in "$@"
+	do
+		cd -P $file
+		echo $PWD
+	done
 elif [[ $cmdf = realpath ]]; then
 	#!/usr/bin/env bash
 	#
 	# realpath in pure bash.
 	
-	file="${1%/}"
-	parent_dir="${file%/*}"
-	
-	[[ -f ${PWD}/${file##*/} ]] && {
-	    printf '%s\n' "${PWD}/${file##*/}"
-	    exit 0
-	}
-	
-	cd "$parent_dir" &>/dev/null || exit 1 &&
-	    printf '%s\n' "${PWD}/${file##*/}"
+	for file in "$@"
+	do
+		cd -P $file
+		echo $PWD
+	done
 elif [[ $cmdf = sed ]]; then
 	#!/usr/bin/env bash
 	# Usage: bash_sed <before> <after> filename
@@ -1976,5 +1988,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

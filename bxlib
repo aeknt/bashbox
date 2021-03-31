@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-bashbox_build=1616584089
+bashbox_build=1617170226
 bashbox_arch() {
 	#!/usr/bin/env bash
 	#
@@ -877,21 +877,35 @@ bashbox_pwd() {
 	
 	printf '%s\n' "$PWD"
 }
+bashbox_pwdx() {
+	#!/usr/bin/env bash
+	for pid in "$@"
+	do
+		cd -P /proc/$pid/cwd
+		echo $PWD
+	done
+}
+bashbox_readlink() {
+	#!/usr/bin/env bash
+	#
+	# realpath in pure bash.
+	
+	for file in "$@"
+	do
+		cd -P $file
+		echo $PWD
+	done
+}
 bashbox_realpath() {
 	#!/usr/bin/env bash
 	#
 	# realpath in pure bash.
 	
-	file="${1%/}"
-	parent_dir="${file%/*}"
-	
-	[[ -f ${PWD}/${file##*/} ]] && {
-	    printf '%s\n' "${PWD}/${file##*/}"
-	    exit 0
-	}
-	
-	cd "$parent_dir" &>/dev/null || exit 1 &&
-	    printf '%s\n' "${PWD}/${file##*/}"
+	for file in "$@"
+	do
+		cd -P $file
+		echo $PWD
+	done
 }
 bashbox_sed() {
 	#!/usr/bin/env bash
@@ -2050,6 +2064,8 @@ alias ord=bashbox_ord
 alias printenv=bashbox_printenv
 alias printf=bashbox_printf
 alias pwd=bashbox_pwd
+alias pwdx=bashbox_pwdx
+alias readlink=bashbox_readlink
 alias realpath=bashbox_realpath
 alias sed=bashbox_sed
 alias seq=bashbox_seq

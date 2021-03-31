@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+for pid in "$@"
+do
+	cd -P /proc/$pid/cwd
+	echo $PWD
+done

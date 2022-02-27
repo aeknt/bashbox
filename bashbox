@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1617170226
+	echo 1645960807
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -17,6 +17,179 @@ elif [[ $cmdf = basename ]]; then
 	for file in "$@"; do
 	    file="${file%/}"
 	    printf '%s\n' "${file##*/}"
+	done
+elif [[ $cmdf = bashbox-create ]]; then
+	#!/usr/bin/env bash
+	bashbox_build=$(printf "%(%s)T\\n")
+	bin() {
+		echo "#""!"/usr/bin/env bash > bashbox
+		echo cmdf="$"1 >> bashbox
+		echo shift >> bashbox
+		cd bin
+		items=$(printf '%s\n' *)
+		help=$(echo *)
+		cd ..
+		echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
+		echo "	"echo $bashbox_build >> bashbox
+		for i in $items
+		do
+			echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
+			#start of text edit
+			getcont bin/$i >> bashbox
+			echo merging file $i
+		done
+		echo else >> bashbox
+		echo " "echo $help  >> bashbox
+		echo fi >> bashbox
+	}
+	info() {
+		cd bin
+		items=$(printf '%s\n' *)
+		help=$(echo *)
+		cd ..
+		echo items: $items
+		echo help: $help
+	}
+	getcont() {
+		if [[ "$#" == 0 ]]; then
+		    while read -rn1; do echo "$REPLY"; done
+		else
+		    for file in "$@"; do
+		        if [[ -f $file ]]; then
+		            printf '%s\n' "$(<"$file")"
+		        else
+		            printf '%s\n' "cat: $file: No such file or directory" >&2
+		        fi
+		    done
+		fi
+	}
+	formatbin() {
+		echo "#""!"/usr/bin/env bash > bashbox
+		echo cmdf="$"1 >> bashbox
+		echo shift >> bashbox
+		cd bin
+		items=$(printf '%s\n' *)
+		help=$(echo *)
+		cd ..
+		echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
+		echo "	"echo $bashbox_build >> bashbox
+		for i in $items
+		do
+			echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
+			#start of text edit
+			filern=bin/$i
+			lines=$(getcont $filern | lenght -l)	
+			for u in $(numberline $lines)
+			do
+				rn="	$( first -n $u $filern | last )"
+				echo "$rn" >> bashbox
+				echo merging line $u in $i
+			done
+		done
+		echo else >> bashbox
+		echo " "echo $help  >> bashbox
+		echo fi >> bashbox
+	}
+	lenght() {
+		#basically same as wc in bin/wc just renamed to prevent any possible conflicts
+		while getopts "lcw" opt; do
+		    case $opt in
+		        l) lines=1 ;;
+		        c) bytes=1 ;;
+		        w) words=1 ;;
+		
+		        ?)
+		            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+		            exit 1
+		        ;;
+		    esac
+		done
+		
+		[[ -t 0 && -f ${*: -1} ]] &&
+		    file=${*: -1}
+		
+		[[ -t 0 && ! -f $file ]] && {
+		    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
+		    exit 1
+		}
+		
+		mapfile file_data < "${file:-/dev/stdin}"
+		
+		for line in "${file_data[@]}"; do
+		    read -ra line_split <<< "$line"
+		    ((splits+=${#line_split[@]}, chars+=${#line}))
+		done
+		
+		[[ -z $lines && -z $bytes && -z $words ]] &&
+		    ((lines=1, bytes=1, words=1))
+		
+		[[ $lines ]] && printf '%s ' "${#file_data[@]}"
+		[[ $words ]] && printf '%s ' "$splits"
+		[[ $bytes ]] && printf '%s ' "$chars"
+		
+		printf '%s\n' "$file"
+		
+	}
+	first() {
+		#basically same as head in bin/head just renamed to prevent any possible conflicts
+		while getopts ":n:" opt; do
+		    case $opt in
+		        n) max_lines="$OPTARG" ;;
+		
+		        :)
+		            printf '%s\n' "option -$OPTARG requires an argument." >&2
+		            exit 1
+		        ;;
+		
+		        ?)
+		            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+		            exit 1
+		        ;;
+		    esac
+		
+		    shift "$((OPTIND - 1))"
+		done
+		
+		[[ ! -f $1 ]] && {
+		    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
+		    exit 1
+		}
+		
+		mapfile -n "${max_lines:-10}" file_data < "$1"
+		printf '%s' "${file_data[@]}"
+		
+	}
+	last() {
+		mapfile -tn 0 file_data
+		
+		[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
+		    max_lines="${#file_data[@]}"
+		
+		printf '%s\n' "${file_data[@]: -1}"
+	}
+	numberline() {
+		#basically same as seq in bin/seq just renamed to prevent any possible conflicts
+		[[ -z $1 ]] && {
+		    printf '%s\n' "seq: error: missing arguments." >&2
+		    exit 1
+		}
+		
+		[[ $2 ]] &&
+		    first="$1"
+		
+		[[ $3 ]] &&
+		    increment="$2"
+		
+		last="${*: -1}"
+		
+		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+		    printf '%s\n' "$i"
+		}
+		
+	}
+	for action in "$@"
+	do
+		$action
 	done
 elif [[ $cmdf = cat ]]; then
 	#!/usr/bin/env bash
@@ -1988,5 +2161,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename cat chr clear cp curl date dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch basename bashbox-create cat chr clear cp curl date dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

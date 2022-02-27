@@ -1,0 +1,169 @@
+#!/usr/bin/bash
+shopt -s checkwinsize; (:;:)
+repeat() {
+	for ((i=${first:=1};i<="${*: -1}";i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+}
+render() {
+	printhelp() {
+	 echo "escape sequence wrapper error"
+	}
+	##colors
+	get_cursor_pos() {
+	    # Usage: get_cursor_pos
+	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
+	    printf '%s\n' "$y $x"
+	}
+	modeput() {
+	 printf "\033[$1;$2m"
+	}
+	rgbputf() {
+	 printf "\033[38;2;$1;$2;$3m"
+	}
+	rgbputb() {
+	 printf "\033[48;2;$1;$2;$3m"
+	}
+	if [ -z $1 ]; then
+	 printhelp
+	elif [ $1 = rsetf ]; then
+	 printf "\033[38;2;$2;$3;$4m"
+	elif [ $1 = rsetb ]; then
+	 printf "\033[48;2;$2;$3;$4m"
+	elif [ $1 = esetf ]; then
+	 printf "\033[38;5;$2m"
+	elif [ $1 = esetb ]; then
+	 printf "\033[48;5;$2m"
+	elif [ $1 = set ]; then
+	 modeput $2 $3
+	elif [ $1 = cup ]; then
+	 printf "\033[$2;$3H"
+	elif [ $1 = hsetf ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputf $r $g $b
+	elif [ $1 = hsetb ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputb $r $g $b
+	elif [ $1 = clear ]; then
+	  printf "\033c"
+	elif [ $1 = cols ]; then
+	 echo $COLUMNS
+	elif [ $1 = lines ]; then
+	 echo $LINES
+	elif [ $1 = pos ]; then
+	 get_cursor_pos
+	else
+		echo "unknown sequence wrapper command error"
+	fi
+}
+msgbox() {
+	half=$(( ( COLUMNS / 2 ) - 6  ))
+	msg="$1"
+	render clear
+	echo "$msg"
+	render set 0 37
+	render cup $(( LINES - 2 )) $half
+	echo -n "┌──────────┐"; render cup $(( LINES - 1 )) $half
+	echo -n "│    ok    │"; render cup $LINES $half
+	echo -n "└──────────┘"
+	render set 0 0
+	read
+}
+yesno() {
+	yes(){
+		echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 1 )) $half
+		echo -n "$(render set 0 33)│   yes    │    $(render set 0 0)│    no    │"; render cup $LINES $half
+		echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
+	}
+	no(){
+		echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 1 )) $half
+		echo -n "│   yes    │    $(render set 0 33)│    no    │$(render set 0 0)"; render cup $LINES $half
+		echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
+	}
+	half=$(( ( COLUMNS / 2 ) - 16  ))
+	msg="$1"
+	render clear
+	echo "$msg"
+	render set 0 37
+	render cup $(( LINES - 2 )) $half
+	yes
+	escape=$(printf "\u1b")
+	while true
+	do
+		read -rsn1 input
+		if [[ $input == $escape ]]; then
+		    read -rsn2 input
+		fi
+		if [ "$input" = '[D' ]; then
+			render cup $(( LINES - 2 )) $half
+			yes
+			answer=0
+		elif [ "$input" = '[C' ]; then
+			render cup $(( LINES - 2 )) $half
+			answer=1
+			no
+		elif [ "$input" = 'y' ]; then
+			render cup $(( LINES - 2 )) $half
+			yes
+			exit 0
+		elif [ "$input" = 'n' ]; then
+			render cup $(( LINES - 2 )) $half
+			no
+			exit 1
+		else
+			exit $answer
+			break
+		fi
+	done
+	render set 0 0
+}
+infobox() {
+	render clear
+	echo "$1"
+	render cup $LINES 0
+}
+gauge() {
+	render clear
+	echo "$1"
+	if [ -n "$4" ]; then
+		per=$4
+	else
+		per=$2
+	fi
+	render cup $(( LINES - 3 )) 0
+	if [ $per -gt 99 ]; then
+		echo "┌──────────┐"
+		echo "│   $per%   │"
+		echo "└──────────┘"
+	elif [ $per -lt 10 ]; then
+		echo "┌──────────┐"
+		echo "│    $per%    │"
+		echo "└──────────┘"
+	else
+		echo "┌──────────┐"
+		echo "│   $per%    │"
+		echo "└──────────┘"
+	fi
+	printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
+	read
+}
+if [ "$1" = "--msgbox" ]; then
+	shift
+	msgbox "$@"
+elif [ "$1" = "--yesno" ]; then
+	shift
+	yesno "$@"
+elif [ "$1" = "--infobox" ]; then
+	shift
+	infobox "$@"
+elif [ "$1" = "--gauge" ]; then
+	shift
+	gauge "$@"
+else
+	msgbox "bashbox: dialog: help:
+	--msgbox --yesno --infobox --gauge"
+fi

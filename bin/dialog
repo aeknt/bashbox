@@ -300,7 +300,8 @@ elif [ "$1" = "--infobox" ]; then
 elif [ "$1" = "--gauge" ]; then
 	shift
 	gauge "$@"
-elif [ "$1" = "box" ]; then
+elif [ "$1" = "--programbox" ]; then
+	render clear
 	shift
 	box "$@"
 elif [ "$1" = "--pause" ]; then

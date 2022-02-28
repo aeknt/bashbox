@@ -1,20 +1,36 @@
 #!/usr/bin/bash
 shopt -s checkwinsize; (:;:)
+hide() {
+	printf '\e[?25l\e[?7l'
+}
+unhide() {
+	printf "\e[?25h\e[?7h"
+}
 repeat() {
 	for ((i=${first:=1};i<="${*: -1}";i+=${increment:=1})); {
 	    printf '%s\n' "$i"
 	}
 }
+get_cursor_posx() {
+	# Usage: get_cursor_pos
+	IFS='[;' read -p $'\e[6n' -d R -rs _ x _
+	printf '%s\n' "$x"
+}
+get_cursor_posy() {
+	# Usage: get_cursor_pos
+	IFS='[;' read -p $'\e[6n' -d R -rs _ y _
+	printf '%s\n' "$y"
+}
 render() {
 	printhelp() {
 	 echo "escape sequence wrapper error"
 	}
-	##colors
 	get_cursor_pos() {
 	    # Usage: get_cursor_pos
 	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
 	    printf '%s\n' "$y $x"
 	}
+	##colors
 	modeput() {
 	 printf "\033[$1;$2m"
 	}
@@ -64,6 +80,7 @@ msgbox() {
 	half=$(( ( COLUMNS / 2 ) - 6  ))
 	msg="$1"
 	render clear
+	hide
 	echo "$msg"
 	render set 0 37
 	render cup $(( LINES - 2 )) $half
@@ -87,6 +104,9 @@ yesno() {
 	half=$(( ( COLUMNS / 2 ) - 16  ))
 	msg="$1"
 	render clear
+	hide
+	#box
+	#render cup 0 0
 	echo "$msg"
 	render set 0 37
 	render cup $(( LINES - 2 )) $half
@@ -109,25 +129,32 @@ yesno() {
 		elif [ "$input" = 'y' ]; then
 			render cup $(( LINES - 2 )) $half
 			yes
+			unhide
+			render cup $LINES 0
 			exit 0
 		elif [ "$input" = 'n' ]; then
 			render cup $(( LINES - 2 )) $half
 			no
+			unhide
+			render cup $LINES 0
 			exit 1
 		else
+			unhide
+			render cup $LINES 0
 			exit $answer
-			break
 		fi
 	done
 	render set 0 0
 }
 infobox() {
 	render clear
+	hide
 	echo "$1"
 	render cup $LINES 0
 }
 gauge() {
 	render clear
+	hide
 	echo "$1"
 	if [ -n "$4" ]; then
 		per=$4
@@ -151,6 +178,23 @@ gauge() {
 	printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
 	read
 }
+box() {
+	render cup 0 0
+	printf '┌'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┐'
+	render cup $LINES 0
+	printf '└'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┘'
+	render cup 2 0
+	printf '%.s│\n' $(repeat $(( LINES - 2 )))
+	render cup 1 0
+	#render cup $(( $(get_cursor_posy) + 1 )) $(( COLUMNS - 1 )); printf '%.se│\n' $(repeat $(( LINES - 2 )))
+	for ((i=1;i<="$(( LINES - 2 ))";i+=1)); {
+		render cup $(( $(get_cursor_posy) + 1 )) $COLUMNS
+		printf "│"
+	}
+	title=$1
+	boxhalf=$(( ( COLUMNS / 2 ) - ( title / 2 )  ))
+	render cup 0 $boxhalf; echo -n $title; render cup 0 0; read
+}
 if [ "$1" = "--msgbox" ]; then
 	shift
 	msgbox "$@"
@@ -163,7 +207,11 @@ elif [ "$1" = "--infobox" ]; then
 elif [ "$1" = "--gauge" ]; then
 	shift
 	gauge "$@"
+elif [ "$1" = "box" ]; then
+	shift
+	box "$@"
 else
 	msgbox "bashbox: dialog: help:
 	--msgbox --yesno --infobox --gauge"
 fi
+unhide

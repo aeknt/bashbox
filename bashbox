@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646009184
+	echo 1646033905
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -444,7 +444,6 @@ elif [[ $cmdf = dialog ]]; then
 		render cup $LINES 0
 	}
 	gauge() {
-		render clear
 		hide
 		echo "$1"
 		if [ -n "$4" ]; then
@@ -468,6 +467,100 @@ elif [[ $cmdf = dialog ]]; then
 		fi
 		printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
 		read
+	}
+	pause() {
+		if [ -n "$4" ]; then
+			waittime=$4
+		else
+			waittime=$2
+		fi
+		printbar() {
+			render clear
+			hide
+			per=$1
+			render cup $(( LINES - 3 )) 0
+			if [ $per -gt 99 ]; then
+				echo "┌──────────┐"
+				echo "│   $per%   │"
+				echo "└──────────┘"
+			elif [ $per -lt 10 ]; then
+				echo "┌──────────┐"
+				echo "│    $per%    │"
+				echo "└──────────┘"
+			else
+				echo "┌──────────┐"
+				echo "│   $per%    │"
+				echo "└──────────┘"
+			fi
+			printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
+		}
+		yes(){
+			echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 2 )) $half
+			echo -n "$(render set 0 33)│    ok    │    $(render set 0 0)│  cancel  │"; render cup $(( LINES - 1 )) $half
+			echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
+		}
+		no(){
+			echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 2 )) $half
+			echo -n "│    ok    │    $(render set 0 33)│  cancel  │$(render set 0 0)"; render cup $(( LINES - 1 )) $half
+			echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
+		}
+		half=$(( ( COLUMNS / 2 ) - 16  ))
+		msg="$1"
+		answer=0
+		for a in $(repeat $waittime)
+		do
+			render clear
+			hide
+			#box
+			#render cup 0 0
+			#render set 0 37
+			printbar $a
+			render cup 0 0
+			echo "$msg"
+			render cup $(( LINES - 3 )) $half
+			if [ $answer = 0 ]; then
+				yes
+			else
+				no
+			fi
+			escape=$(printf "\u1b")
+			end=$((SECONDS+1))
+			while [ $SECONDS -lt $end ]
+			do
+				read -rsn1 -r -t 1 input
+				readexit=$?
+				if [[ $input == $escape ]]; then
+				    read -rsn2 input
+				fi
+				if [ "$input" = '[D' ]; then
+					render cup $(( LINES - 3 )) $half
+					answer=0
+					yes
+				elif [ "$input" = '[C' ]; then
+					render cup $(( LINES - 3 )) $half
+					answer=1
+					no
+				elif [ "$input" = 'y' ]; then
+					render cup $(( LINES - 3 )) $half
+					yes
+					unhide
+					render cup $LINES 0
+					exit 0
+				elif [ "$input" = 'n' ]; then
+					render cup $(( LINES - 3 )) $half
+					no
+					unhide
+					render cup $LINES 0
+					exit 1
+				elif [ -z "$input" ] && [ ! $readexit = 142 ]; then
+					unhide
+					render cup $LINES 0
+					exit $answer
+				fi
+			done
+			render set 0 0
+		done
+		unhide
 	}
 	box() {
 		render cup 0 0
@@ -498,12 +591,17 @@ elif [[ $cmdf = dialog ]]; then
 	elif [ "$1" = "--gauge" ]; then
 		shift
 		gauge "$@"
-	elif [ "$1" = "box" ]; then
+	elif [ "$1" = "--programbox" ]; then
+		render clear
 		shift
 		box "$@"
+	elif [ "$1" = "--pause" ]; then
+		shift
+		pause "$@"
 	else
 		msgbox "bashbox: dialog: help:
 		--msgbox --yesno --infobox --gauge"
+		unhide
 	fi
 	unhide
 elif [[ $cmdf = dirname ]]; then

@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646033905
+	echo 1646241398
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -22,25 +22,29 @@ elif [[ $cmdf = bashbox-create ]]; then
 	#!/usr/bin/env bash
 	bashbox_build=$(printf "%(%s)T\\n")
 	bin() {
-		echo "#""!"/usr/bin/env bash > bashbox
-		echo cmdf="$"1 >> bashbox
-		echo shift >> bashbox
-		cd bin
+		echo '#!/usr/bin/env bash' > bashbox
+		echo 'cmdf=$1' >> bashbox
+		echo 'shift' >> bashbox
+		cd bin || exit 1
 		items=$(printf '%s\n' *)
 		help=$(echo *)
 		cd ..
-		echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
+		echo 'case $cmdf in' >> bashbox
+		echo '--build)' >> bashbox
 		echo "	"echo $bashbox_build >> bashbox
+		echo ';;' >> bashbox
 		for i in $items
 		do
-			echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
+			echo $i')' >> bashbox
 			#start of text edit
 			getcont bin/$i >> bashbox
 			echo merging file $i
+			echo ';;' >> bashbox
 		done
-		echo else >> bashbox
-		echo " "echo $help  >> bashbox
-		echo fi >> bashbox
+		echo '*)' >> bashbox
+		echo "echo $help"  >> bashbox
+		echo ';;' >> bashbox
+		echo 'esac' >> bashbox
 	}
 	info() {
 		cd bin
@@ -527,7 +531,7 @@ elif [[ $cmdf = dialog ]]; then
 			end=$((SECONDS+1))
 			while [ $SECONDS -lt $end ]
 			do
-				read -rsn1 -r -t 1 input
+				read -rsn1 -t 1 input
 				readexit=$?
 				if [[ $input == $escape ]]; then
 				    read -rsn2 input
@@ -562,6 +566,35 @@ elif [[ $cmdf = dialog ]]; then
 		done
 		unhide
 	}
+	inputbox() {
+		ok(){
+			render cup $(( LINES - 3 )) $half
+			render set 0 33
+			echo -n "┌──────────┐"; render cup $(( LINES - 2 )) $half
+			echo -n "│  enter   │"; render cup $(( LINES - 1 )) $half
+			echo -n "└──────────┘"; render set 0 0
+		}
+		half=$(( COLUMNS / 2 ))
+		msg="$1"
+		render clear
+		ok
+		render cup 0 0
+		box $msg
+		render cup 7 2
+		echo -n "(press ctrl-c to cancel):"
+		render cup 8 0
+		printf '│┌'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┐│'
+		render cup 9 0
+		printf "││"
+		render cup 9 $(( COLUMNS - 1 ))
+		printf "││"
+		render cup 10 0
+		printf '│└'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┘│'
+		render cup 9 3
+		read idklmao
+		printf '%.s─' $(repeat $(( COLUMNS - 2 )))
+		render set 0 0
+	}
 	box() {
 		render cup 0 0
 		printf '┌'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┐'
@@ -575,9 +608,9 @@ elif [[ $cmdf = dialog ]]; then
 			render cup $(( $(get_cursor_posy) + 1 )) $COLUMNS
 			printf "│"
 		}
-		title=$1
+		title="$1"
 		boxhalf=$(( ( COLUMNS / 2 ) - ( title / 2 )  ))
-		render cup 0 $boxhalf; echo -n $title; render cup 0 0; read
+		render cup 0 $boxhalf; echo -n $title; render cup 0 0
 	}
 	if [ "$1" = "--msgbox" ]; then
 		shift
@@ -598,6 +631,9 @@ elif [[ $cmdf = dialog ]]; then
 	elif [ "$1" = "--pause" ]; then
 		shift
 		pause "$@"
+	elif [ "$1" = "--inputbox" ]; then
+		shift
+		inputbox "$@"
 	else
 		msgbox "bashbox: dialog: help:
 		--msgbox --yesno --infobox --gauge"
@@ -1313,6 +1349,12 @@ elif [[ $cmdf = ord ]]; then
 	  LC_CTYPE=C printf '%d' "'$1"
 	}
 	ord "$@"
+elif [[ $cmdf = print ]]; then
+	#!/usr/bin/env bash
+	#
+	# echo in pure bash.
+	
+	echo "$@"
 elif [[ $cmdf = printenv ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1561,11 +1603,11 @@ elif [[ $cmdf = sha512 ]]; then
 	echo # newline
 elif [[ $cmdf = sleep ]]; then
 	#!/usr/bin/env bash
-	if [ -z $1 ]; then
-	  echo "sleep: syntax error"
+	if [ -z "$1" ]; then
+	  echo "bashbox: sleep: amount of time to sleep not provided"
 	  exit
 	fi
-	read -d "" -rt $1
+	read -d "" -rt "$1"
 elif [[ $cmdf = stat ]]; then
 	#!/usr/bin/env bash
 	testfile()
@@ -1659,9 +1701,8 @@ elif [[ $cmdf = tput ]]; then
 	 echo "Usage: tput [command]
 	colors:
 	 16 colors:
-	  native:
-	   set - set color and property
-	   set 0 0 - reset terminal
+	  set - set color and property
+	  set 0 0 - reset terminal
 	  tput mode:
 	   setaf - set foreground color
 	   setab - set background color
@@ -1679,10 +1720,13 @@ elif [[ $cmdf = tput ]]; then
 	cursor:
 	 moving:
 	  cup - moves cursor to given position
+	 hide:
+	  hide - hides cursor
+	  unhide - unhides cursor
+	  pos - prints position of cursor
 	info:
 	 cols - width of terminal
 	 lines - height of terminal
-	 pos - position of cursor
 	 "
 	}
 	##colors
@@ -1700,6 +1744,14 @@ elif [[ $cmdf = tput ]]; then
 	rgbputb() {
 	 printf "\033[48;2;$1;$2;$3m"
 	}
+	#cursor
+	hide() {
+		printf '\e[?25l\e[?7l'
+	}
+	unhide() {
+		printf "\e[?25h\e[?7h"
+	}
+	
 	if [ -z $1 ]; then
 	 printhelp
 	elif [ $1 = rsetf ]; then
@@ -1810,6 +1862,10 @@ elif [[ $cmdf = tput ]]; then
 	 echo $LINES
 	elif [ $1 = pos ]; then
 	 get_cursor_pos
+	elif [ $1 = hid ]; then
+	 hide
+	elif [ $1 = unhid ]; then
+	 unhide
 	else
 	 modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
 	 printhelp
@@ -2477,5 +2533,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename bashbox-create cat chr clear cp curl date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch basename bashbox-create cat chr clear cp curl date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

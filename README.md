@@ -17,21 +17,6 @@ options (can be combined):
 	info - print info on what will be merged and how will help message look
 
 	you can call other functions defined in bashbox-create, but they are mostly just copies of stuff in bin/ needed for merging (wc, head, tail, seq, cat)
-
-# bxmerge - outdated, keeping it only for lib and fast-lib until they will be reimplemented to `bashbox bashbox-create`
-merge things in bin/ to one executable script or lib
-
-needs git, and bash and coreutils (tested only with gnu and freebsd ones)
-
-options (can be combined):
-
-	bin - make executable binary
-	
-	fast-bin - same but unformated
-	
-	lib - make sourceable library
-
-	fast-lib - same but unformated
 	
 # contributing
 if you want contribute, **do not edit "bashbox/bxlib" file, its just automerged file, edit things in bin/.**

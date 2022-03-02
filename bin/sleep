@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-if [ -z $1 ]; then
-  echo "sleep: syntax error"
+if [ -z "$1" ]; then
+  echo "bashbox: sleep: amount of time to sleep not provided"
   exit
 fi
-read -d "" -rt $1
+read -d "" -rt "$1"

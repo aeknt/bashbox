@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 bashbox_build=$(printf "%(%s)T\\n")
 bin() {
-	echo "#""!"/usr/bin/env bash > bashbox
-	echo cmdf="$"1 >> bashbox
-	echo shift >> bashbox
-	cd bin
+	echo '#!/usr/bin/env bash' > bashbox
+	echo 'cmdf=$1' >> bashbox
+	echo 'shift' >> bashbox
+	cd bin || exit 1
 	items=$(printf '%s\n' *)
 	help=$(echo *)
 	cd ..
-	echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
+	echo 'case $cmdf in' >> bashbox
+	echo '--build)' >> bashbox
 	echo "	"echo $bashbox_build >> bashbox
+	echo ';;' >> bashbox
 	for i in $items
 	do
-		echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
+		echo $i')' >> bashbox
 		#start of text edit
 		getcont bin/$i >> bashbox
 		echo merging file $i
+		echo ';;' >> bashbox
 	done
-	echo else >> bashbox
-	echo " "echo $help  >> bashbox
-	echo fi >> bashbox
+	echo '*)' >> bashbox
+	echo "echo $help"  >> bashbox
+	echo ';;' >> bashbox
+	echo 'esac' >> bashbox
 }
 info() {
 	cd bin

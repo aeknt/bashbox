@@ -236,7 +236,7 @@ pause() {
 		end=$((SECONDS+1))
 		while [ $SECONDS -lt $end ]
 		do
-			read -rsn1 -r -t 1 input
+			read -rsn1 -t 1 input
 			readexit=$?
 			if [[ $input == $escape ]]; then
 			    read -rsn2 input
@@ -271,6 +271,35 @@ pause() {
 	done
 	unhide
 }
+inputbox() {
+	ok(){
+		render cup $(( LINES - 3 )) $half
+		render set 0 33
+		echo -n "┌──────────┐"; render cup $(( LINES - 2 )) $half
+		echo -n "│  enter   │"; render cup $(( LINES - 1 )) $half
+		echo -n "└──────────┘"; render set 0 0
+	}
+	half=$(( COLUMNS / 2 ))
+	msg="$1"
+	render clear
+	ok
+	render cup 0 0
+	box $msg
+	render cup 7 2
+	echo -n "(press ctrl-c to cancel):"
+	render cup 8 0
+	printf '│┌'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┐│'
+	render cup 9 0
+	printf "││"
+	render cup 9 $(( COLUMNS - 1 ))
+	printf "││"
+	render cup 10 0
+	printf '│└'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┘│'
+	render cup 9 3
+	read idklmao
+	printf '%.s─' $(repeat $(( COLUMNS - 2 )))
+	render set 0 0
+}
 box() {
 	render cup 0 0
 	printf '┌'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┐'
@@ -284,9 +313,9 @@ box() {
 		render cup $(( $(get_cursor_posy) + 1 )) $COLUMNS
 		printf "│"
 	}
-	title=$1
+	title="$1"
 	boxhalf=$(( ( COLUMNS / 2 ) - ( title / 2 )  ))
-	render cup 0 $boxhalf; echo -n $title; render cup 0 0; read
+	render cup 0 $boxhalf; echo -n $title; render cup 0 0
 }
 if [ "$1" = "--msgbox" ]; then
 	shift
@@ -307,6 +336,9 @@ elif [ "$1" = "--programbox" ]; then
 elif [ "$1" = "--pause" ]; then
 	shift
 	pause "$@"
+elif [ "$1" = "--inputbox" ]; then
+	shift
+	inputbox "$@"
 else
 	msgbox "bashbox: dialog: help:
 	--msgbox --yesno --infobox --gauge"

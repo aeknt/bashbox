@@ -4,9 +4,8 @@ printhelp() {
  echo "Usage: tput [command]
 colors:
  16 colors:
-  native:
-   set - set color and property
-   set 0 0 - reset terminal
+  set - set color and property
+  set 0 0 - reset terminal
   tput mode:
    setaf - set foreground color
    setab - set background color
@@ -24,10 +23,13 @@ colors:
 cursor:
  moving:
   cup - moves cursor to given position
+ hide:
+  hide - hides cursor
+  unhide - unhides cursor
+  pos - prints position of cursor
 info:
  cols - width of terminal
  lines - height of terminal
- pos - position of cursor
  "
 }
 ##colors
@@ -45,6 +47,14 @@ rgbputf() {
 rgbputb() {
  printf "\033[48;2;$1;$2;$3m"
 }
+#cursor
+hide() {
+	printf '\e[?25l\e[?7l'
+}
+unhide() {
+	printf "\e[?25h\e[?7h"
+}
+
 if [ -z $1 ]; then
  printhelp
 elif [ $1 = rsetf ]; then
@@ -155,6 +165,10 @@ elif [ $1 = lines ]; then
  echo $LINES
 elif [ $1 = pos ]; then
  get_cursor_pos
+elif [ $1 = hid ]; then
+ hide
+elif [ $1 = unhid ]; then
+ unhide
 else
  modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
  printhelp

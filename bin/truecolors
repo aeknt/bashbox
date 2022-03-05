@@ -87,6 +87,8 @@ genrgb(){
 	done
 }
 printe() {
+	echo '\033[48;2;<r>;<g>;<b>m" - background'
+	echo '\033[38;2;<r>;<g>;<b>m" - foreground'
 	while read wtf
 	do
 		printf "\\${wtf} "

@@ -19,8 +19,8 @@ repeat() {
 	}
 	
 }
-echo '\\033[48;5;<code>m - background'
-echo '\\033[38;5;<code>m - foreground'
+echo '\033[48;5;<code>m - background'
+echo '\033[38;5;<code>m - foreground'
 for a in $(repeat 0 256); do
 	printf "\033[38;5;${a}m ${a}"
 done

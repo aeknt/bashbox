@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646473474
+	echo 1646473943
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1673,6 +1673,106 @@ elif [[ $cmdf = ls ]]; then
 	#!/usr/bin/bash
 	#found this randomly and it kinda works
 	printf '%s\n' *
+elif [[ $cmdf = more ]]; then
+	#!/usr/bin/env bash
+	#stolen from https://github.com/comfies/bed
+	declare -a buffer
+	declare -i line base
+	declare message modified
+	
+	buffer=() # File contents
+	line=0 # Currently selected line (0 means the buffer is empty)
+	base=1 # Top-most line shown
+	modified=false # Tracking whether a file was modified
+	
+	shopt -s extglob # Ensure advanced pattern matching is available
+	shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
+	trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
+	trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
+	trap quit INT
+	
+	read_buffer() {
+	    mapfile -t -O 1 buffer # Read file into an array
+	    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
+	        line=1 # Indicate that we have a buffer loaded
+	        modified=false
+	        message="Read ${#buffer[@]} lines"
+	    else
+	        message="'$file' is empty"
+	    fi
+	}
+	
+	
+	quit() {
+		die
+	}
+	
+	up() {
+	    for ((i = 0; i < ${1:-1}; i++)); do
+	        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
+	        ((line < base)) && ((base--)) # Push back the top if we need to
+	        ((base <= 0)) && base=1 # Don't push back if our base is at 1
+	    done
+	}
+	
+	page_up() {
+	    up $((LINES - 3))
+	}
+	
+	down() {
+	    for ((i = 0; i < ${1:-1}; i++)); do
+	        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
+	        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+	    done
+	}
+	
+	page_down() {
+	    down $((LINES - 3))
+	}
+	
+	die() {
+	    bind 'set disable-completion off' 2>/dev/null # Enable completion
+	    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+	    exit "${errno:-0}" # Assume that we're exiting without an error
+	}
+	
+	redraw() {
+	    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
+	        "$COLUMNS" "$message" "bashbox more" \
+	        "$line" "${#buffer[line]}") # Status line, among others
+	    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
+	        ((i != line)) && printf '\e[90m' # Fade line number if not selected
+	        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
+	            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
+	    done
+	    printf '\n' # Add final newline to seperate commandline
+	}
+	
+	key() {
+	    case "$1" in
+	    ${BED_KEY_PGUP:=$'\E[5~'}) up;;
+	    ${BED_KEY_PGDN:=$'\E[6~'}) down;;
+	    ${BED_KEY_UP:=$'\E[A'}*) page_up;;
+	    ${BED_KEY_DOWN:=$'\E[B'}*) page_down;;
+	    ${BED_KEY_QUIT:=q}) quit;;
+	    esac
+	}
+	
+	main() {
+	    printf '\e[?1047h' # Switch to alternative buffer
+	    redraw # Draw out the UI before loading file
+	    read_buffer
+	    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
+	        local -a k=()
+	        local -i i=1
+	        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0] </dev/tty; then # Check for ready input
+	            while read -rsN1 -t0.0001 k[$i]</dev/tty; do ((i++)); done # Multibyte hack
+	            key "$(printf '%s' "${k[@]}")"
+	        fi
+	    done
+	}
+	
+	main "$@"
 elif [[ $cmdf = nano ]]; then
 	#!/usr/bin/env bash
 	#stolen from https://github.com/comfies/bed
@@ -3043,5 +3143,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 cp curl cut date dialog dirname echo env exec expand expr false find getopt grep hd head hostname less locale logname lolcat ls nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 cp curl cut date dialog dirname echo env exec expand expr false find getopt grep hd head hostname less locale logname lolcat ls more nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

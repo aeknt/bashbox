@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+cut() {
+	local bs=$((64 * 1024)) off=$(($1 * 2)) size=$((($2 + 0) * 2))
+	local sdb=$(((size / bs) * bs)) c i
+	if ((off)) ; then read -N $off ; fi
+	if ((size == 0)) ; then
+		while read -N $bs c ; do echo -n "$c" ; done
+		echo -n "$c" ; return ; fi
+	for ((i = 0; i < sdb; i+=bs)) ; do
+		if ! read -N $bs c ; then echo -n "$c" ; return ; fi
+		echo -n "$c" ; done
+	i=$((size - i)) ; if ((i)) ; then read -N $i c ; echo -n "$c" ; fi
+}
+binop() { enc_hex | $@ | dec_hex ; }
+binop cut ${@:1}

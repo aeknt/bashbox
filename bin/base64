@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+st8() { printf %02x $(($1 & 0xff)) ; }
+b64_luts() {
+	declare -g -A d e
+	local c i j=0 p=printf
+	for ((i = 65; i <= 90; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for ((i = 97; i <= 122; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for ((i = 48; i <= 57; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for i in 43 47 ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; j=$((j+1)) ; done
+	d[=]=-1
+}
+enc_b64() {
+	local c ; b64_luts
+	while read -N 6 c ; do
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+		printf "\x${e[$(((0x${c:2:2} & 15) << 2 | 0x${c:4:2} >> 6))]}"
+		printf "\x${e[$((0x${c:4:2} & 0x3f))]}"
+	done
+	if ((${#c} == 4)) ; then
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+		printf "\x${e[$(((0x${c:2:2} & 15) << 2))]}="
+	elif ((${#c} == 2)) ; then
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4))]}=="
+	fi
+}
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+dec_b64() {
+	local i r s t u ; b64_luts
+	while read -N 4 i ; do
+		r=${d[${i:0:1}]} ; s=${d[${i:1:1}]}
+		t=${d[${i:2:1}]} ; u=${d[${i:3:1}]}
+		if ((u >= 0)) ; then
+			st8 $((r << 2 | s >> 4)) ; st8 $((s << 4 | t >> 2))
+			st8 $(((t << 6) | u)) ; continue
+		fi
+		st8 $((r << 2 | s >> 4))
+		if ((t >= 0)) ; then st8 $((s  << 4 | t >> 2)) ; fi
+		break
+	done
+}
+if [ -z $1 ]; then
+	enc_hex | enc_b64
+elif [ $1 = -d ]; then
+	dec_b64 | dec_hex
+fi

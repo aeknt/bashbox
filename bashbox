@@ -2,13 +2,78 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646441613
+	echo 1646464168
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
 	# arch in pure bash.
 	
 	echo "$HOSTTYPE"
+elif [[ $cmdf = base16 ]]; then
+	#!/usr/bin/env bash
+	enc_hex() { local LC_ALL=C IFS=""
+		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+	if [ -z $1 ]; then
+		enc_hex
+	elif [ $1 = -d ]; then
+		dec_hex
+	fi
+elif [[ $cmdf = base64 ]]; then
+	#!/usr/bin/env bash
+	enc_hex() { local LC_ALL=C IFS=""
+		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+	st8() { printf %02x $(($1 & 0xff)) ; }
+	b64_luts() {
+		declare -g -A d e
+		local c i j=0 p=printf
+		for ((i = 65; i <= 90; i++, j++)) ; do
+			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+		for ((i = 97; i <= 122; i++, j++)) ; do
+			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+		for ((i = 48; i <= 57; i++, j++)) ; do
+			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+		for i in 43 47 ; do
+			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; j=$((j+1)) ; done
+		d[=]=-1
+	}
+	enc_b64() {
+		local c ; b64_luts
+		while read -N 6 c ; do
+			printf "\x${e[$((0x${c:0:2} >> 2))]}"
+			printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+			printf "\x${e[$(((0x${c:2:2} & 15) << 2 | 0x${c:4:2} >> 6))]}"
+			printf "\x${e[$((0x${c:4:2} & 0x3f))]}"
+		done
+		if ((${#c} == 4)) ; then
+			printf "\x${e[$((0x${c:0:2} >> 2))]}"
+			printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+			printf "\x${e[$(((0x${c:2:2} & 15) << 2))]}="
+		elif ((${#c} == 2)) ; then
+			printf "\x${e[$((0x${c:0:2} >> 2))]}"
+			printf "\x${e[$(((0x${c:0:2} & 3) << 4))]}=="
+		fi
+	}
+	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+	dec_b64() {
+		local i r s t u ; b64_luts
+		while read -N 4 i ; do
+			r=${d[${i:0:1}]} ; s=${d[${i:1:1}]}
+			t=${d[${i:2:1}]} ; u=${d[${i:3:1}]}
+			if ((u >= 0)) ; then
+				st8 $((r << 2 | s >> 4)) ; st8 $((s << 4 | t >> 2))
+				st8 $(((t << 6) | u)) ; continue
+			fi
+			st8 $((r << 2 | s >> 4))
+			if ((t >= 0)) ; then st8 $((s  << 4 | t >> 2)) ; fi
+			break
+		done
+	}
+	if [ -z $1 ]; then
+		enc_hex | enc_b64
+	elif [ $1 = -d ]; then
+		dec_b64 | dec_hex
+	fi
 elif [[ $cmdf = basename ]]; then
 	#!/usr/bin/env bash
 	#
@@ -281,6 +346,25 @@ elif [[ $cmdf = curl ]]; then
 			download "$1" "$2"
 		fi
 	fi
+elif [[ $cmdf = cut ]]; then
+	#!/usr/bin/env bash
+	enc_hex() { local LC_ALL=C IFS=""
+		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+	cut() {
+		local bs=$((64 * 1024)) off=$(($1 * 2)) size=$((($2 + 0) * 2))
+		local sdb=$(((size / bs) * bs)) c i
+		if ((off)) ; then read -N $off ; fi
+		if ((size == 0)) ; then
+			while read -N $bs c ; do echo -n "$c" ; done
+			echo -n "$c" ; return ; fi
+		for ((i = 0; i < sdb; i+=bs)) ; do
+			if ! read -N $bs c ; then echo -n "$c" ; return ; fi
+			echo -n "$c" ; done
+		i=$((size - i)) ; if ((i)) ; then read -N $i c ; echo -n "$c" ; fi
+	}
+	binop() { enc_hex | $@ | dec_hex ; }
+	binop cut ${@:1}
 elif [[ $cmdf = date ]]; then
 	#!/usr/bin/env bash
 	#
@@ -2768,5 +2852,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename bashbox-create cat chr clear cp curl date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname lolcat ls nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear cp curl cut date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname lolcat ls nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

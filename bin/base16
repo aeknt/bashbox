@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+if [ -z $1 ]; then
+	enc_hex
+elif [ $1 = -d ]; then
+	dec_hex
+fi

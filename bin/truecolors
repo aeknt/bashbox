@@ -1,0 +1,96 @@
+#!/bin/bash
+#printf "\033[38;2;$1;$2;$3m"
+repeat() {
+	[[ -z $1 ]] && {
+	    printf '%s\n' "seq: error: missing arguments." >&2
+	    exit 1
+	}
+	
+	[[ $2 ]] &&
+	    first="$1"
+	
+	[[ $3 ]] &&
+	    increment="$2"
+	
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+	
+}
+genrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[48;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+	#grey
+	for b in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${b};${b};${b}m"
+	done
+	#red
+	for c in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${c};0;0m"
+	done
+	#green
+	for d in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;${d};0m"
+	done
+	#blue
+	for e in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;0;${e}m"
+	done
+	#yellow
+	for f in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${f};${f};0m"
+	done
+	#cyan
+	for g in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;${g};${g}m"
+	done
+	#magenta
+	for h in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${h};0;${h}m"
+	done
+}
+printe() {
+	while read wtf
+	do
+		printf "\\${wtf} "
+	done
+}
+genrgb | printe
+echo

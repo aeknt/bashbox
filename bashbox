@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646464168
+	echo 1646469581
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -287,6 +287,77 @@ elif [[ $cmdf = clear ]]; then
 	#!/usr/bin/env bash
 	printf "\033c"
 	#found this randomly and it seems to "work"
+elif [[ $cmdf = colors ]]; then
+	#!/bin/bash
+	# colors - terminal color and attribute escape sequences
+	repeat() {
+		[[ -z $1 ]] && {
+		    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
+		    exit 1
+		}
+		
+		[[ $2 ]] &&
+		    first="$1"
+		
+		[[ $3 ]] &&
+		    increment="$2"
+		
+		last="${*: -1}"
+		
+		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+		    printf '%s\n' "$i"
+		}
+		
+	}
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 30 37); do
+			for a in $(repeat 40 48); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
+		done
+	done
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 90 97); do
+			for a in $(repeat 100 108); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
+		done
+	done
+	printf "\n"
+elif [[ $cmdf = colors256 ]]; then
+	#!/bin/bash
+	# colors - terminal color and attribute escape sequences
+	repeat() {
+		[[ -z $1 ]] && {
+		    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
+		    exit 1
+		}
+		
+		[[ $2 ]] &&
+		    first="$1"
+		
+		[[ $3 ]] &&
+		    increment="$2"
+		
+		last="${*: -1}"
+		
+		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+		    printf '%s\n' "$i"
+		}
+		
+	}
+	echo '\\033[48;5;<code>m - background'
+	echo '\\033[38;5;<code>m - foreground'
+	for a in $(repeat 0 256); do
+		printf "\033[38;5;${a}m ${a}"
+	done
+	printf "\n"
+	for a in $(repeat 0 256); do
+		printf "\033[48;5;${a}m${a} "
+	done
+	printf "\n"
 elif [[ $cmdf = cp ]]; then
 	#!/bin/sh
 	if [ -z $1 ]; then
@@ -1418,14 +1489,33 @@ elif [[ $cmdf = lolcat ]]; then
 	#!/bin/bash
 	#based on https://github.com/yokkidack/shaverma
 	#generate colors
+	repeat() {
+		[[ -z $1 ]] && {
+		    printf '%s\n' "seq: error: missing arguments." >&2
+		    exit 1
+		}
+		
+		[[ $2 ]] &&
+		    first="$1"
+		
+		[[ $3 ]] &&
+		    increment="$2"
+		
+		last="${*: -1}"
+		
+		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+		    printf '%s\n' "$i"
+		}
+		
+	}
 	gencol(){
-		for a in $(seq 255)
+		for a in $(repeat 255)
 		do
 			echo "\033[38;5;${a}m"
 		done
 	}
 	igencol(){
-		for a in $(seq 255)
+		for a in $(repeat 255)
 		do
 			echo "\033[48;5;${a}m"
 		done
@@ -1450,13 +1540,14 @@ elif [[ $cmdf = lolcat ]]; then
 	}
 	index=0
 	lolcate(){
-	
 	    string=$1
-	    ((j=$index % ${#Rainbow}))
+	    #((j=$index % ${#Rainbow}))
+	    ((j=$index % 256))
 	    ((index++))
 	    for (( i=0; i<${#string}; i++ )); do
 	        ((j++))
-	        if (($j == ${#Rainbow}))
+	        #if (($j == ${#Rainbow}))
+	        if (($j == 256))
 	        then
 	            ((j=0))
 	        fi
@@ -2852,5 +2943,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear cp curl cut date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname lolcat ls nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 cp curl cut date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname lolcat ls nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

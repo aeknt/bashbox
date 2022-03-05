@@ -1,0 +1,38 @@
+#!/bin/bash
+# colors - terminal color and attribute escape sequences
+repeat() {
+	[[ -z $1 ]] && {
+	    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
+	    exit 1
+	}
+	
+	[[ $2 ]] &&
+	    first="$1"
+	
+	[[ $3 ]] &&
+	    increment="$2"
+	
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+	
+}
+for x in 0 1 4 5 7 8; do
+	for i in $(repeat 30 37); do
+		for a in $(repeat 40 48); do
+				printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+		done
+		printf "\n"
+	done
+done
+for x in 0 1 4 5 7 8; do
+	for i in $(repeat 90 97); do
+		for a in $(repeat 100 108); do
+				printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+		done
+		printf "\n"
+	done
+done
+printf "\n"

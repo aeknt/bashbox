@@ -23,13 +23,46 @@ colors:
 cursor:
  moving:
   cup - moves cursor to given position
+  cbt - moves cursor backwards
+  cha - Move the active position to the n-th character of the active line.
+  cnl - Move cursor to next line.
+  cpl - Move cursor to previous line.
+  cub - moves to left
+  cud - moves down
+  cuf - moves right
+  cuu - moves up
  hide:
   hide - hides cursor
   unhide - unhides cursor
   pos - prints position of cursor
+ etc:
+  dch - delete characters on right
+  decrc - restore cursor
+  decsc - save cursor
 info:
  cols - width of terminal
  lines - height of terminal
+ decaln - fills screen
+ decawm-set - enables autowrap
+ decawm-reset - disables autowrap
+property:
+ deccara - sets attribute in area x y end-x end-y:
+  0
+  (default) 	Attributes off (no bold, no underline, no blink, positive image)
+  1 	Bold
+  4 	Underline
+  5 	Blink
+  7 	Negative image
+  22 	No bold
+  24 	No underline
+  25 	No blink
+  27 	Positive image
+ decdhl:
+  top - sets font to big top half
+  bottm - sets font to big bottom half
+ decdwl - Double-Width, Single-Height Line
+ save - saves screen
+ restore - restore screen
  "
 }
 ##colors
@@ -39,13 +72,13 @@ get_cursor_pos() {
     printf '%s\n' "$y $x"
 }
 modeput() {
- printf "\033[$1;$2m"
+	printf "\033[$1;$2m"
 }
 rgbputf() {
- printf "\033[38;2;$1;$2;$3m"
+	printf "\033[38;2;$1;$2;$3m"
 }
 rgbputb() {
- printf "\033[48;2;$1;$2;$3m"
+	printf "\033[48;2;$1;$2;$3m"
 }
 #cursor
 hide() {
@@ -56,119 +89,93 @@ unhide() {
 }
 
 if [ -z $1 ]; then
- printhelp
+	printhelp
 elif [ $1 = rsetf ]; then
- printf "\033[38;2;$2;$3;$4m"
+	printf "\033[38;2;$2;$3;$4m"
 elif [ $1 = rsetb ]; then
- printf "\033[48;2;$2;$3;$4m"
+	printf "\033[48;2;$2;$3;$4m"
 elif [ $1 = esetf ]; then
- printf "\033[38;5;$2m"
+	printf "\033[38;5;$2m"
 elif [ $1 = esetb ]; then
- printf "\033[48;5;$2m"
+	printf "\033[48;5;$2m"
 elif [ $1 = set ]; then
- modeput $2 $3
-elif [ $1 = setaf ]; then
- if [ $2 = 0 ]; then
-  modeput 0 30
- elif [ $2 = 1 ]; then
-  modeput 0 31
- elif [ $2 = 2 ]; then
-  modeput 0 32
- elif [ $2 = 3 ]; then
-  modeput 0 33
- elif [ $2 = 4 ]; then
-  modeput 0 34
- elif [ $2 = 5 ]; then
-  modeput 0 35
- elif [ $2 = 6 ]; then
-  modeput 0 36
- elif [ $2 = 7 ]; then
-  modeput 0 37
- elif [ $2 = 8 ]; then
-  modeput 0 90
- elif [ $2 = 9 ]; then
-  modeput 0 91
- elif [ $2 = 10 ]; then
-  modeput 0 92
- elif [ $2 = 11 ]; then
-  modeput 0 93
- elif [ $2 = 12 ]; then
-  modeput 0 94
- elif [ $2 = 13 ]; then
-  modeput 0 95
- elif [ $2 = 14 ]; then
-  modeput 0 96
- elif [ $2 = 15 ]; then
-  modeput 0 97
- elif [ $2 = 16 ]; then
-  modeput 0 98
- else
-  modeput 0 31;echo cput: tput-mode: unknown color; modeput 0 0
- fi
+	modeput $2 $3
+elif [ $1 = setaf  ]; then
+	if   [ $2 = 0  ]; then modeput 0 30
+	elif [ $2 = 1  ]; then modeput 0 31
+	elif [ $2 = 2  ]; then modeput 0 32
+	elif [ $2 = 3  ]; then modeput 0 33
+	elif [ $2 = 4  ]; then modeput 0 34
+	elif [ $2 = 5  ]; then modeput 0 35
+	elif [ $2 = 6  ]; then modeput 0 36
+	elif [ $2 = 7  ]; then modeput 0 37
+	elif [ $2 = 8  ]; then modeput 0 90
+	elif [ $2 = 9  ]; then modeput 0 91
+	elif [ $2 = 10 ]; then modeput 0 92
+	elif [ $2 = 11 ]; then modeput 0 93
+	elif [ $2 = 12 ]; then modeput 0 94
+	elif [ $2 = 13 ]; then modeput 0 95
+	elif [ $2 = 14 ]; then modeput 0 96
+	elif [ $2 = 15 ]; then modeput 0 97
+	elif [ $2 = 16 ]; then modeput 0 98
+	else modeput 0 31;echo bashbox tput: tput-mode: unknown color; modeput 0 0; fi
 elif [ $1 = setab ]; then
- if [ $2 = 0 ]; then
-  modeput 0 40
- elif [ $2 = 1 ]; then
-  modeput 0 41
- elif [ $2 = 2 ]; then
-  modeput 0 42
- elif [ $2 = 3 ]; then
-  modeput 0 43
- elif [ $2 = 4 ]; then
-  modeput 0 44
- elif [ $2 = 5 ]; then
-  modeput 0 45
- elif [ $2 = 6 ]; then
-  modeput 0 46
- elif [ $2 = 7 ]; then
-  modeput 0 47
- elif [ $2 = 8 ]; then
-  modeput 0 100
- elif [ $2 = 9 ]; then
-  modeput 0 101
- elif [ $2 = 10 ]; then
-  modeput 0 102
- elif [ $2 = 11 ]; then
-  modeput 0 103
- elif [ $2 = 12 ]; then
-  modeput 0 104
- elif [ $2 = 13 ]; then
-  modeput 0 105
- elif [ $2 = 14 ]; then
-  modeput 0 106
- elif [ $2 = 15 ]; then
-  modeput 0 107
- elif [ $2 = 16 ]; then
-  modeput 0 108
- else
-  modeput 0 41;echo cput: tput-mode: unknown color; modeput 0 0
- fi
-elif [ $1 = sgr0 ]; then
- modeput 0 0
-elif [ $1 = cup ]; then
- printf "\033[$2;$3H"
+	if   [ $2 = 0  ]; then modeput 0 40
+	elif [ $2 = 1  ]; then modeput 0 41
+	elif [ $2 = 2  ]; then modeput 0 42
+	elif [ $2 = 3  ]; then modeput 0 43
+	elif [ $2 = 4  ]; then modeput 0 44
+	elif [ $2 = 5  ]; then modeput 0 45
+	elif [ $2 = 6  ]; then modeput 0 46
+	elif [ $2 = 7  ]; then modeput 0 47
+	elif [ $2 = 8  ]; then modeput 0 100
+	elif [ $2 = 9  ]; then modeput 0 101
+	elif [ $2 = 10 ]; then modeput 0 102
+	elif [ $2 = 11 ]; then modeput 0 103
+	elif [ $2 = 12 ]; then modeput 0 104
+	elif [ $2 = 13 ]; then modeput 0 105
+	elif [ $2 = 14 ]; then modeput 0 106
+	elif [ $2 = 15 ]; then modeput 0 107
+	elif [ $2 = 16 ]; then modeput 0 108
+	else modeput 0 41;echo cput: tput-mode: unknown color; modeput 0 0; fi
+elif [ $1 = sgr0  ]; then modeput 0 0
+elif [ $1 = cup   ]; then printf "\033[$2;$3H"
 elif [ $1 = hsetf ]; then
- r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
- g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
- b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
- rgbputf $r $g $b
+	r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	rgbputf $r $g $b
 elif [ $1 = hsetb ]; then
- r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
- g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
- b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
- rgbputb $r $g $b
-elif [ $1 = clear ]; then
-  printf "\033c"
-elif [ $1 = cols ]; then
- echo $COLUMNS
-elif [ $1 = lines ]; then
- echo $LINES
-elif [ $1 = pos ]; then
- get_cursor_pos
-elif [ $1 = hid ]; then
- hide
-elif [ $1 = unhid ]; then
- unhide
+	r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	rgbputb $r $g $b
+elif [ $1 = clear              ]; then printf "\033c"
+elif [ "$1" = cols             ]; then echo $COLUMNS
+elif [ "$1" = lines            ]; then echo $LINES
+elif [ "$1" = pos              ]; then get_cursor_pos
+elif [ "$1" = hid              ]; then hide
+elif [ "$1" = unhid            ]; then unhide
+elif [ "$1" = cbt              ]; then printf "\e[$2Z"
+elif [ "$1" = cha              ]; then printf "\e[$2G"
+elif [ "$1" = cnl              ]; then printf "\e[$2E"
+elif [ "$1" = cpl              ]; then printf "\e[$2F"
+elif [ "$1" = cub              ]; then printf "\e[$2D"
+elif [ "$1" = cud              ]; then printf "\e[$2B"
+elif [ "$1" = cuf              ]; then printf "\e[$2C"
+elif [ "$1" = cuu              ]; then printf "\e[$2A"
+elif [ "$1" = dch              ]; then printf "\e[$2P"
+elif [ "$1" = decaln           ]; then printf "\e#8"
+elif [ "$1" = decawm-set       ]; then printf "\e[?7h"
+elif [ "$1" = decawm-reset     ]; then printf "\e[?lh"
+elif [ "$1" = deccara          ]; then printf "\e[$2;$3;$4;$5;$6\$r"
+elif [ "$1" = decdhl-top       ]; then printf "\e#3"
+elif [ "$1" = decdhl-bottom    ]; then printf "\e#4"
+elif [ "$1" = decdwl           ]; then printf "\e#6"
+elif [ "$1" = decrc            ]; then printf "\e8"
+elif [ "$1" = decsc            ]; then printf "\e7"
+elif [ "$1" = save             ]; then printf '\e[?1049h'
+elif [ "$1" = restore          ]; then printf '\e[?1049l'
 else
  modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
  printhelp

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #stolen from https://github.com/comfies/bed
+printf '\e[?7l'
 declare -a buffer
 declare -i line base
 declare message modified
@@ -97,3 +98,4 @@ main() {
 }
 
 main "$@"
+printf '\e[?7h'

@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646484506
+	echo 1646485235
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -348,8 +348,8 @@ elif [[ $cmdf = colors256 ]]; then
 		}
 		
 	}
-	echo '\\033[48;5;<code>m - background'
-	echo '\\033[38;5;<code>m - foreground'
+	echo '\033[48;5;<code>m - background'
+	echo '\033[38;5;<code>m - foreground'
 	for a in $(repeat 0 256); do
 		printf "\033[38;5;${a}m ${a}"
 	done
@@ -2645,6 +2645,8 @@ elif [[ $cmdf = truecolors ]]; then
 		done
 	}
 	printe() {
+		echo '\033[48;2;<r>;<g>;<b>m" - background'
+		echo '\033[38;2;<r>;<g>;<b>m" - foreground'
 		while read wtf
 		do
 			printf "\\${wtf} "

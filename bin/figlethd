@@ -1,0 +1,6 @@
+#!/bin/bash
+#it seems to work on xterm but not on alacritty
+printf "\e#3"
+echo "$@"
+printf "\e#4"
+echo "$@"

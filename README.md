@@ -37,7 +37,10 @@ https://github.com/catmin/purebash (unknown)
 https://github.com/agriffis/pure-getopt (mit)
 
 https://github.com/yokkidack/shaverma (mit)
+
 https://github.com/comfies/bed (unlicense)
+
+https://github.com/faragon/lzb (bsd 3)
 
 and other random scripts i found on iternet and were without license:
 

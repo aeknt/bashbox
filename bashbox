@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646241398
+	echo 1646439797
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1330,6 +1330,70 @@ elif [[ $cmdf = logname ]]; then
 	
 	: '\u'
 	printf '%s\n' "${_@P}"
+elif [[ $cmdf = lolcat ]]; then
+	#!/bin/bash
+	#based on https://github.com/yokkidack/shaverma
+	#generate colors
+	gencol(){
+		for a in $(seq 255)
+		do
+			echo "\033[38;5;${a}m"
+		done
+	}
+	igencol(){
+		for a in $(seq 255)
+		do
+			echo "\033[48;5;${a}m"
+		done
+	}
+	#help
+	printhelp(){
+		Rainbow=($(gencol))
+		lolcate "
+	Usage: lolcat [OPTION]...
+	
+	Concatenate standard input, to standard output
+	
+	  -i, --invert          Invert fg and bg
+	  -h, --help            Show this message
+	  -v, --version         Print version and exit
+	
+	Examples:
+	  echo hello | bashbox lolcat   prints hello in rainbow
+	
+	"
+		exit
+	}
+	index=0
+	lolcate(){
+	
+	    string=$1
+	    ((j=$index % ${#Rainbow}))
+	    ((index++))
+	    for (( i=0; i<${#string}; i++ )); do
+	        ((j++))
+	        if (($j == ${#Rainbow}))
+	        then
+	            ((j=0))
+	        fi
+	      echo -ne "${Rainbow[$j]}${string:$i:1}"
+	    done
+	    printf "\033[0;0m"
+	}
+	case "$1" in
+		"-i"|"--invert") Rainbow=($(igencol));;
+		"-h"|"--help") printhelp;;
+		"-v"|"--version") echo "bashbox lolcat";exit;;
+		*)Rainbow=($(gencol));;
+	esac
+		
+	
+	IFS=$'\n'
+	
+	while read string
+	do
+	    lolcate $string
+	done
 elif [[ $cmdf = ls ]]; then
 	#!/usr/bin/bash
 	#found this randomly and it kinda works
@@ -2533,5 +2597,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch basename bashbox-create cat chr clear cp curl date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname ls od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
+ echo arch basename bashbox-create cat chr clear cp curl date dialog dirname echo env exec expand expr false find getopt grep hd head hostname locale logname lolcat ls od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true ttysize uname uptime vi wc whoami yes
 fi

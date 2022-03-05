@@ -20,6 +20,70 @@ repeat() {
 	}
 	
 }
+genrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[38;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[38;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[38;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[38;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[38;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[38;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+}
+igenrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[48;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+}
 gencol(){
 	for a in $(repeat 255)
 	do
@@ -32,20 +96,26 @@ igencol(){
 		echo "\033[48;5;${a}m"
 	done
 }
+#default limit
+limit=255
 #help
 printhelp(){
-	Rainbow=($(gencol))
+	Rainbow=($(genrgb))
+	limit=1536
 	lolcate "
 Usage: lolcat [OPTION]...
 
 Concatenate standard input, to standard output
 
-  -i, --invert          Invert fg and bg
-  -h, --help            Show this message
-  -v, --version         Print version and exit
+  -i, --invert             Invert fg and bg
+  -t, --truecolor          24-bit (truecolor)
+  -it, --invert-truecolor  24-bit (inverted) 
+  -h, --help               Show this message
+  -v, --version            Print version and exit
 
 Examples:
   echo hello | bashbox lolcat   prints hello in rainbow
+  echo hello | bashbox lolcat -t   prints hello in truecolor rainbow
 
 "
 	exit
@@ -53,13 +123,11 @@ Examples:
 index=0
 lolcate(){
     string=$1
-    #((j=$index % ${#Rainbow}))
-    ((j=$index % 256))
+    ((j=$index % $limit))
     ((index++))
     for (( i=0; i<${#string}; i++ )); do
         ((j++))
-        #if (($j == ${#Rainbow}))
-        if (($j == 256))
+        if (($j == $limit))
         then
             ((j=0))
         fi
@@ -68,10 +136,12 @@ lolcate(){
     printf "\033[0;0m"
 }
 case "$1" in
-	"-i"|"--invert") Rainbow=($(igencol));;
+	"-i"|"--invert") Rainbow=($(igencol));limit = 256;;
+	"-t"|"--truecolor") Rainbow=($(genrgb));limit=1536;;
+	"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
 	"-h"|"--help") printhelp;;
 	"-v"|"--version") echo "bashbox lolcat";exit;;
-	*)Rainbow=($(gencol));;
+	*)Rainbow=($(gencol));limit = 256;;
 esac
 	
 

@@ -36,6 +36,8 @@ https://github.com/catmin/purebash (unknown)
 
 https://github.com/agriffis/pure-getopt (mit)
 
+https://github.com/yokkidack/shaverma (mit)
+
 and other random scripts i found on iternet and were without license:
 
 	- curl

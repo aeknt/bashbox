@@ -1,0 +1,63 @@
+#!/bin/bash
+#based on https://github.com/yokkidack/shaverma
+#generate colors
+gencol(){
+	for a in $(seq 255)
+	do
+		echo "\033[38;5;${a}m"
+	done
+}
+igencol(){
+	for a in $(seq 255)
+	do
+		echo "\033[48;5;${a}m"
+	done
+}
+#help
+printhelp(){
+	Rainbow=($(gencol))
+	lolcate "
+Usage: lolcat [OPTION]...
+
+Concatenate standard input, to standard output
+
+  -i, --invert          Invert fg and bg
+  -h, --help            Show this message
+  -v, --version         Print version and exit
+
+Examples:
+  echo hello | bashbox lolcat   prints hello in rainbow
+
+"
+	exit
+}
+index=0
+lolcate(){
+
+    string=$1
+    ((j=$index % ${#Rainbow}))
+    ((index++))
+    for (( i=0; i<${#string}; i++ )); do
+        ((j++))
+        if (($j == ${#Rainbow}))
+        then
+            ((j=0))
+        fi
+      echo -ne "${Rainbow[$j]}${string:$i:1}"
+    done
+    printf "\033[0;0m"
+}
+case "$1" in
+	"-i"|"--invert") Rainbow=($(igencol));;
+	"-h"|"--help") printhelp;;
+	"-v"|"--version") echo "bashbox lolcat";exit;;
+	*)Rainbow=($(gencol));;
+esac
+	
+
+IFS=$'\n'
+
+while read string
+do
+    lolcate $string
+done

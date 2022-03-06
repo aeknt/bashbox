@@ -141,7 +141,7 @@ case "$1" in
 	"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
 	"-h"|"--help") printhelp;;
 	"-v"|"--version") echo "bashbox lolcat";exit;;
-	*)Rainbow=($(gencol));limit = 256;;
+	*)Rainbow=($(gencol));limit=256;;
 esac
 	
 

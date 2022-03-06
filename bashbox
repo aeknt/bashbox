@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646568029
+	echo 1646568142
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1740,7 +1740,7 @@ elif [[ $cmdf = lolcat ]]; then
 		"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
 		"-h"|"--help") printhelp;;
 		"-v"|"--version") echo "bashbox lolcat";exit;;
-		*)Rainbow=($(gencol));limit = 256;;
+		*)Rainbow=($(gencol));limit=256;;
 	esac
 		
 	

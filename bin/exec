@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
-shift
-$@
-exit
+shift #shift so when running bashbox exec command it wont try to exec exec
+exec $@

@@ -1,0 +1,23 @@
+#!/bin/bash
+waittime=2 #default
+waitsleep(){
+	if [ -z "$1" ]; then
+	  echo "watch: waitsleep: amount of time to sleep not provided"
+	  exit
+	fi
+	read -d "" -rt "$1"
+}
+printhelp(){
+	echo "usage: waittime [ -n | -h -v ] [time] cmd"
+}
+[ -n "$WATCH_INTERVAL" ] && waittime="$WATCH_INTERVAL"
+case "$1" in
+	-n|--interval)waittime="$2"; shift 2;;
+	-h|--help)printhelp; exit;;
+esac
+while true
+do
+	printf "\033c"
+	$@
+	sleep "$waittime"
+done

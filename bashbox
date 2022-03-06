@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646507330
+	echo 1646567403
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -362,20 +362,20 @@ elif [[ $cmdf = command ]]; then
 	#!/bin/bash
 	command $@
 elif [[ $cmdf = cp ]]; then
-	#!/bin/sh
-	if [ -z $1 ]; then
+	#!/bin/bash
+	if [ -z "$1" ]; then
 	  echo "cp: missing file name"
 	  exit
 	fi
-	if [ -z $2 ]; then
+	if [ -z "$2" ]; then
 	  echo "cp: missing target file name"
 	  exit
 	fi
-	if [ ! -f $1 ]; then
+	if [ ! -f "$1" ]; then
 	  echo "cp: file not found"
 	  exit
 	fi
-	printf '%s\n' "$(<"$1")" > $2
+	printf '%s\n' "$(<"$1")" > "$2"
 	#cp in pure sh
 	#test
 elif [[ $cmdf = curl ]]; then
@@ -834,9 +834,8 @@ elif [[ $cmdf = env ]]; then
 	done
 elif [[ $cmdf = exec ]]; then
 	#!/usr/bin/env bash
-	shift
-	$@
-	exit
+	shift #shift so when running bashbox exec command it wont try to exec exec
+	exec $@
 elif [[ $cmdf = expand ]]; then
 	#!/usr/bin/env bash
 	#
@@ -2688,8 +2687,8 @@ elif [[ $cmdf = uname ]]; then
 		printf '%s\n' "$HOSTTYPE"
 	elif [ $1 = --type ]; then
 		echo $MACHTYPE
-	#elif [ $1 = -a ]; then linux only 
-	#	printf '%s\n' "$(<"/proc/version")" linux only
+	elif [ $1 = -a ]; then #linux only 
+		printf '%s\n' "$(<"/proc/version")" #linux only
 	elif [ $1 = -n ]; then
 		: '\h'
 		printf '%s\n' "${_@P}"
@@ -3271,6 +3270,30 @@ elif [[ $cmdf = vi ]]; then
 	}
 	
 	main "$@"
+elif [[ $cmdf = watch ]]; then
+	#!/bin/bash
+	waittime=2 #default
+	waitsleep(){
+		if [ -z "$1" ]; then
+		  echo "watch: waitsleep: amount of time to sleep not provided"
+		  exit
+		fi
+		read -d "" -rt "$1"
+	}
+	printhelp(){
+		echo "usage: waittime [ -n | -h -v ] [time] cmd"
+	}
+	[ -n "$WATCH_INTERVAL" ] && waittime="$WATCH_INTERVAL"
+	case "$1" in
+		-n|--interval)waittime="$2"; shift 2;;
+		-h|--help)printhelp; exit;;
+	esac
+	while true
+	do
+		printf "\033c"
+		$@
+		sleep "$waittime"
+	done
 elif [[ $cmdf = wc ]]; then
 	#!/usr/bin/env bash
 	#
@@ -3337,5 +3360,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr false figlethd find getopt grep hd head hostname less locale logname lolcat ls more nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true truecolors ttysize type uname uptime vi wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr false figlethd find getopt grep hd head hostname less locale logname lolcat ls more nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true truecolors ttysize type uname uptime vi watch wc which whoami yes
 fi

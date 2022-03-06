@@ -5,8 +5,8 @@ elif [ $1 = -m ]; then
 	printf '%s\n' "$HOSTTYPE"
 elif [ $1 = --type ]; then
 	echo $MACHTYPE
-#elif [ $1 = -a ]; then linux only 
-#	printf '%s\n' "$(<"/proc/version")" linux only
+elif [ $1 = -a ]; then #linux only 
+	printf '%s\n' "$(<"/proc/version")" #linux only
 elif [ $1 = -n ]; then
 	: '\h'
 	printf '%s\n' "${_@P}"

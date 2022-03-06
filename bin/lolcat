@@ -136,7 +136,7 @@ lolcate(){
     printf "\033[0;0m"
 }
 case "$1" in
-	"-i"|"--invert") Rainbow=($(igencol));limit = 256;;
+	"-i"|"--invert") Rainbow=($(igencol));limit=256;;
 	"-t"|"--truecolor") Rainbow=($(genrgb));limit=1536;;
 	"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
 	"-h"|"--help") printhelp;;

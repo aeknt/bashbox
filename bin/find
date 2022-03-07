@@ -1,16 +1,20 @@
-#!/usr/bin env bash
+#!/bin/bash
 recurse() {  
-    if [ ! -d "$1" ] ; then return ; fi
-    for i in $1/* ; do
-	path=${i//\/\//\/} # replace all double slashes
-        echo "$path"
-	# dont follow symbolic links
-	if [ -L "$path" ] ; then continue ; fi
-	# recurse down dirs
-        if [ -d "$path" ] ; then recurse "$path" ; fi
-    done
-}    
-for file in "$@"
-do
-	recurse "$file"
-done
+	[ ! -d "$1" ] && return
+	for i in "$1"/*; do
+		path=${i//\/\//\/} # replace all double slashes
+		echo "$path"
+		# dont follow symbolic links
+		[ -L "$path" ] && continue
+		# recurse down dirs
+		[ -d "$path" ] && recurse "$path"
+	done
+}
+if [ -z "$1" ]; then
+	recurse .
+else
+	for file in "$@"
+	do
+		recurse "$file"
+	done
+fi

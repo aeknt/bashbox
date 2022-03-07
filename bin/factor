@@ -1,0 +1,6 @@
+#!/bin/bash
+n=$1
+for ((i=n;i>=1;i-=1)); {
+	[ $(( n / i * i )) = $n ] && printf "$i "
+}
+echo

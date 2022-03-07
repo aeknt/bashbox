@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646693431
+	echo 1646696944
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -2739,6 +2739,15 @@ elif [[ $cmdf = truecolors ]]; then
 	}
 	genrgb | printe
 	echo
+elif [[ $cmdf = tst ]]; then
+	a
+	a
+	ae
+	iu
+	i
+	iu
+	i
+	i
 elif [[ $cmdf = ttysize ]]; then
 	#!/usr/bin/env bash
 	shopt -s checkwinsize; (:;:)
@@ -2761,6 +2770,33 @@ elif [[ $cmdf = uname ]]; then
 		printf '%s\n' "${_@P}"
 	else 
 		echo "flags: -m --type -n"
+	fi
+elif [[ $cmdf = uniq ]]; then
+	#!/bin/bash
+	repeat=no
+	if [ "$1" = -d ]; then
+		while read -r line; do
+			for check in "${hab[@]}"
+			do
+				if [ "$line" = "$check" ]; then
+					echo "$line"
+				fi
+			done
+			hab+=("$line")
+		done
+	else
+		while read -r line; do
+			for check in "${hab[@]}"
+			do
+				if [ "$line" = "$check" ]; then
+					repeat=yes
+				fi
+			done
+			#echo $repeat : $line
+			[ "$repeat" = "no" ] && echo "$line"
+			repeat=no
+			hab+=("$line")
+		done
 	fi
 elif [[ $cmdf = upper ]]; then
 	#!/bin/bash
@@ -3431,5 +3467,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors ttysize type uname upper uptime vi watch wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors tst ttysize type uname uniq upper uptime vi watch wc which whoami yes
 fi

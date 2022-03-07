@@ -42,6 +42,8 @@ https://github.com/comfies/bed (unlicense)
 
 https://github.com/faragon/lzb (bsd 3)
 
+https://github.com/dylanaraps/bush (mit)
+
 and other random scripts i found on iternet and were without license:
 
 	- curl

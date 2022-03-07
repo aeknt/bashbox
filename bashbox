@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646652575
+	echo 1646693431
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -309,23 +309,38 @@ elif [[ $cmdf = colors ]]; then
 		}
 		
 	}
-	for x in 0 1 4 5 7 8; do
-		for i in $(repeat 30 37); do
-			for a in $(repeat 40 48); do
-					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+	verbose() {
+		for x in 0 1 4 5 7 8; do
+			for i in $(repeat 30 37); do
+				for a in $(repeat 40 48); do
+						printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+				done
+				printf "\n"
 			done
-			printf "\n"
 		done
-	done
-	for x in 0 1 4 5 7 8; do
-		for i in $(repeat 90 97); do
-			for a in $(repeat 100 108); do
-					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+		for x in 0 1 4 5 7 8; do
+			for i in $(repeat 90 97); do
+				for a in $(repeat 100 108); do
+						printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+				done
+				printf "\n"
 			done
-			printf "\n"
 		done
-	done
-	printf "\n"
+		printf "\n"
+	}
+	simple() {
+	    # Display the terminal palette.
+	    # Usage: colors
+	    for i in {0..15}; do
+	        ((i%8==0)) && printf "\\n"
+	        printf "%b" "\\e[48;05;${i}m  \\e[0m"
+	    done
+	
+	    printf "\\n\\n"
+	}
+	[ -z "$1" ] && verbose
+	[ "$1" = "-s" ] && simple
+	[ "$1" = "-h" ] && echo "usage: colors [ -s ]"
 elif [[ $cmdf = colors256 ]]; then
 	#!/bin/bash
 	# colors - terminal color and attribute escape sequences
@@ -1465,6 +1480,15 @@ elif [[ $cmdf = head ]]; then
 	
 	mapfile -n "${max_lines:-10}" file_data < "$1"
 	printf '%s' "${file_data[@]}"
+elif [[ $cmdf = hextorgb ]]; then
+	#!/bin/bash
+	# Convert a hex color to rgb.
+	# Usage: hex_to_rgb "color"
+	r="${1:1:2}"
+	g="${1:3:2}"
+	b="${1:5:6}"
+	[ -z "$1" ] && echo no color specified && exit
+	printf "%s %s %s\\n" "$((16#$r))" "$((16#$g))" "$((16#$b))"
 elif [[ $cmdf = hostname ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1761,6 +1785,12 @@ elif [[ $cmdf = lolcat ]]; then
 	do
 	    lolcate $string
 	done
+elif [[ $cmdf = lower ]]; then
+	#!/bin/bash
+	# Lowercase a string.
+	# Usage: lower "string"
+	[ -z "$1" ] && echo no string && exit
+	printf "%s\\n" "${1,,}"
 elif [[ $cmdf = ls ]]; then
 	#!/usr/bin/bash
 	#found this randomly and it kinda works
@@ -2114,6 +2144,12 @@ elif [[ $cmdf = realpath ]]; then
 		cd -P $file
 		echo $PWD
 	done
+elif [[ $cmdf = rgbtohex ]]; then
+	#!/bin/bash
+	# Convert an rgb color to hex.
+	# Usage: rgb_to_hex "r" "g" "b"
+	[ -z "$3" ] && echo not enough arguments && exit
+	printf "#%02x%02x%02x\\n" "$1" "$2" "$3"
 elif [[ $cmdf = sed ]]; then
 	#!/usr/bin/env bash
 	# Usage: bash_sed <before> <after> filename
@@ -2341,6 +2377,23 @@ elif [[ $cmdf = stat ]]; then
 	do
 		testfile $file
 	done
+elif [[ $cmdf = strip ]]; then
+	#!/bin/bash
+	# Strip characters from a string.
+	# Usage: strip "string" "chars to remove"
+	if [ "$1" = -e ]; then
+		[ -z "$3" ] && echo not enough arguments && exit
+		printf "%s\\n" "${2%%$3}"
+	elif [ "$1" = -s ]; then
+		printf "%s\\n" "${2##$3}"
+	elif [ "$1" = -h ]; then
+		printf "Usage: strip string chars-to-remove\n"
+		printf "    strip -s to remove from start of string\n"	
+		printf "    strip -e to remove from end of string\n"	
+	else
+		[ -z "$2" ] && echo not enough arguments && exit
+		printf "%s\\n" "${1//$2}"
+	fi
 elif [[ $cmdf = tac ]]; then
 	#!/usr/bin/env bash
 	for file in "$@"
@@ -2709,6 +2762,12 @@ elif [[ $cmdf = uname ]]; then
 	else 
 		echo "flags: -m --type -n"
 	fi
+elif [[ $cmdf = upper ]]; then
+	#!/bin/bash
+	# Uppercase a string.
+	# Usage: upper "string"
+	[ -z "$1" ] && echo no string && exit
+	printf "%s\\n" "${1^^}"
 elif [[ $cmdf = uptime ]]; then
 	#!/usr/bin/env bash
 	#
@@ -3372,5 +3431,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getopt grep hd head hostname less locale logname lolcat ls more nano od ord print printenv printf pwd pwdx readlink realpath sed seq sh sha512 sleep stat tac tail time touch tput true truecolors ttysize type uname uptime vi watch wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors ttysize type uname upper uptime vi watch wc which whoami yes
 fi

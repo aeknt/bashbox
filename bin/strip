@@ -1,0 +1,16 @@
+#!/bin/bash
+# Strip characters from a string.
+# Usage: strip "string" "chars to remove"
+if [ "$1" = -e ]; then
+	[ -z "$3" ] && echo not enough arguments && exit
+	printf "%s\\n" "${2%%$3}"
+elif [ "$1" = -s ]; then
+	printf "%s\\n" "${2##$3}"
+elif [ "$1" = -h ]; then
+	printf "Usage: strip string chars-to-remove\n"
+	printf "    strip -s to remove from start of string\n"	
+	printf "    strip -e to remove from end of string\n"	
+else
+	[ -z "$2" ] && echo not enough arguments && exit
+	printf "%s\\n" "${1//$2}"
+fi

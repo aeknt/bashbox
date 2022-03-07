@@ -1,0 +1,5 @@
+#!/bin/bash
+# Uppercase a string.
+# Usage: upper "string"
+[ -z "$1" ] && echo no string && exit
+printf "%s\\n" "${1^^}"

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Convert an rgb color to hex.
+# Usage: rgb_to_hex "r" "g" "b"
+[ -z "$3" ] && echo not enough arguments && exit
+printf "#%02x%02x%02x\\n" "$1" "$2" "$3"

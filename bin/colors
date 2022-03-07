@@ -19,20 +19,35 @@ repeat() {
 	}
 	
 }
-for x in 0 1 4 5 7 8; do
-	for i in $(repeat 30 37); do
-		for a in $(repeat 40 48); do
-				printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+verbose() {
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 30 37); do
+			for a in $(repeat 40 48); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
 		done
-		printf "\n"
 	done
-done
-for x in 0 1 4 5 7 8; do
-	for i in $(repeat 90 97); do
-		for a in $(repeat 100 108); do
-				printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 90 97); do
+			for a in $(repeat 100 108); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
 		done
-		printf "\n"
 	done
-done
-printf "\n"
+	printf "\n"
+}
+simple() {
+    # Display the terminal palette.
+    # Usage: colors
+    for i in {0..15}; do
+        ((i%8==0)) && printf "\\n"
+        printf "%b" "\\e[48;05;${i}m  \\e[0m"
+    done
+
+    printf "\\n\\n"
+}
+[ -z "$1" ] && verbose
+[ "$1" = "-s" ] && simple
+[ "$1" = "-h" ] && echo "usage: colors [ -s ]"

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 ### SETTINGS ###
-
 # this is what TAB will insert.
 # default value is "  ". possible values are any string.
 tabchar="	"
@@ -376,7 +375,7 @@ quit() {
     if [ "$unsaved_changes" = 0 ]; then
         exit 0
     else
-        message="unsaved changes. force quit with \":qq\""
+        message="unsaved changes. force quit with \":q!\""
     fi
 }
 
@@ -410,10 +409,9 @@ q() {
     quit
 }
 
-qq() {
+q!() {
     exit 0
 }
-
 wq() {
     w "$@" && q
 }
@@ -522,7 +520,7 @@ echo '# navigation
    : - open command line
   :w [FILE] - write to current or given file
   :q - quit
- :qq - force quit
+ :q! - force quit
  :wq - write and quit
   :e [FILE] - open file
   :![COMMAND] - pause to view the output of a command

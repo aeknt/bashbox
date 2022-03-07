@@ -4,6 +4,8 @@ declare -a buffer
 declare -i line base
 declare file message modified
 
+printf "\e[?1049h" #switch to alternative buffer
+
 buffer=() # File contents
 line=0 # Currently selected line (0 means the buffer is empty)
 base=1 # Top-most line shown
@@ -119,6 +121,7 @@ page_down() {
 die() {
     bind 'set disable-completion off' 2>/dev/null # Enable completion
     printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+    printf "\e[?1049l" # switch back to main buffer
     exit "${errno:-0}" # Assume that we're exiting without an error
 }
 

@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646647444
+	echo 1646652575
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1872,6 +1872,8 @@ elif [[ $cmdf = nano ]]; then
 	declare -i line base
 	declare file message modified
 	
+	printf "\e[?1049h" #switch to alternative buffer
+	
 	buffer=() # File contents
 	line=0 # Currently selected line (0 means the buffer is empty)
 	base=1 # Top-most line shown
@@ -1987,6 +1989,7 @@ elif [[ $cmdf = nano ]]; then
 	die() {
 	    bind 'set disable-completion off' 2>/dev/null # Enable completion
 	    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+	    printf "\e[?1049l" # switch back to main buffer
 	    exit "${errno:-0}" # Assume that we're exiting without an error
 	}
 	
@@ -2741,7 +2744,6 @@ elif [[ $cmdf = uptime ]]; then
 elif [[ $cmdf = vi ]]; then
 	#!/usr/bin/env bash
 	### SETTINGS ###
-	
 	# this is what TAB will insert.
 	# default value is "  ". possible values are any string.
 	tabchar="	"
@@ -3117,7 +3119,7 @@ elif [[ $cmdf = vi ]]; then
 	    if [ "$unsaved_changes" = 0 ]; then
 	        exit 0
 	    else
-	        message="unsaved changes. force quit with \":qq\""
+	        message="unsaved changes. force quit with \":q!\""
 	    fi
 	}
 	
@@ -3151,10 +3153,9 @@ elif [[ $cmdf = vi ]]; then
 	    quit
 	}
 	
-	qq() {
+	q!() {
 	    exit 0
 	}
-	
 	wq() {
 	    w "$@" && q
 	}
@@ -3263,7 +3264,7 @@ elif [[ $cmdf = vi ]]; then
 	   : - open command line
 	  :w [FILE] - write to current or given file
 	  :q - quit
-	 :qq - force quit
+	 :q! - force quit
 	 :wq - write and quit
 	  :e [FILE] - open file
 	  :![COMMAND] - pause to view the output of a command

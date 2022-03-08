@@ -1,0 +1,8 @@
+#!/bin/bash
+cd /proc || exit 1
+for item in *; {
+	if [[ ! "$item" =~ [^[:digit:]] ]]; then
+		echo -n "$item "
+		printf '%s\n' "$(<"$item/comm")"
+	fi
+}

@@ -1,0 +1,3 @@
+#!/bin/bash
+#seems like kill is bash builtin so this is another useless script
+kill $@

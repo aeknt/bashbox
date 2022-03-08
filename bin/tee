@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+	printf '%s\n' "$(<"/dev/stdin")"
+elif [ "$1" = "-a" ]; then
+	if [ -z "$2" ]; then
+		printf '%s\n' "$(<"/dev/stdin")"
+	else
+		printf '%s\n' "$(<"/dev/stdin")" >> "$2"
+	fi
+else
+	printf '%s\n' "$(<"/dev/stdin")" > "$1"
+fi

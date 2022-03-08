@@ -1,0 +1,14 @@
+#!/bin/bash
+#today i learned that kill is bash builtin
+
+#basically spawn process which waits the timeout
+#and then kills this script (which means also the command ) if it still runs 
+[ -z "$1" ] && echo timeout not provided && exit 125
+[ -z "$2" ] && echo no command provided && exit 125
+manage() {
+	sleep "$2"
+	[ -d "/proc/$1" ] && kill "$1"
+}
+manage $$ "$1" &
+shift
+"$@"

@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646698451
+	echo 1646782659
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -1510,6 +1510,10 @@ elif [[ $cmdf = hostname ]]; then
 	
 	: '\h'
 	printf '%s\n' "${_@P}"
+elif [[ $cmdf = kill ]]; then
+	#!/bin/bash
+	#seems like kill is bash builtin so this is another useless script
+	kill $@
 elif [[ $cmdf = less ]]; then
 	#!/usr/bin/env bash
 	#stolen from https://github.com/comfies/bed
@@ -2125,6 +2129,15 @@ elif [[ $cmdf = printf ]]; then
 	# printf in pure bash.
 	
 	printf "$@"
+elif [[ $cmdf = ps ]]; then
+	#!/bin/bash
+	cd /proc || exit 1
+	for item in *; {
+		if [[ ! "$item" =~ [^[:digit:]] ]]; then
+			echo -n "$item "
+			printf '%s\n' "$(<"$item/comm")"
+		fi
+	}
 elif [[ $cmdf = pwd ]]; then
 	#!/usr/bin/env bash
 	#
@@ -2158,6 +2171,31 @@ elif [[ $cmdf = realpath ]]; then
 		cd -P $file
 		echo $PWD
 	done
+elif [[ $cmdf = rev ]]; then
+	#!/bin/bash
+	if [[ "$#" == 0 ]]; then
+		while read -r line
+		do
+			rev=
+			len=${#line}
+			for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
+			echo "$rev"
+		done
+	else
+		for file in "$@"; do
+			if [[ -f $file ]]; then
+				while read -r line
+				do
+					rev=
+					len=${#line}
+					for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
+					echo "$rev"
+				done < "$file"
+			else
+				printf '%s\n' "rev: $file: No such file or directory" >&2
+			fi
+		done
+	fi
 elif [[ $cmdf = rgbtohex ]]; then
 	#!/bin/bash
 	# Convert an rgb color to hex.
@@ -2457,9 +2495,37 @@ elif [[ $cmdf = tail ]]; then
 	    max_lines="${#file_data[@]}"
 	
 	printf '%s\n' "${file_data[@]: -$max_lines}"
+elif [[ $cmdf = tee ]]; then
+	#!/bin/bash
+	if [ -z "$1" ]; then
+		printf '%s\n' "$(<"/dev/stdin")"
+	elif [ "$1" = "-a" ]; then
+		if [ -z "$2" ]; then
+			printf '%s\n' "$(<"/dev/stdin")"
+		else
+			printf '%s\n' "$(<"/dev/stdin")" >> "$2"
+		fi
+	else
+		printf '%s\n' "$(<"/dev/stdin")" > "$1"
+	fi
 elif [[ $cmdf = time ]]; then
 	$@
 	echo "$SECONDS"
+elif [[ $cmdf = timeout ]]; then
+	#!/bin/bash
+	#today i learned that kill is bash builtin
+	
+	#basically spawn process which waits the timeout
+	#and then kills this script (which means also the command ) if it still runs 
+	[ -z "$1" ] && echo timeout not provided && exit 125
+	[ -z "$2" ] && echo no command provided && exit 125
+	manage() {
+		sleep "$2"
+		[ -d "/proc/$1" ] && kill "$1"
+	}
+	manage $$ "$1" &
+	shift
+	"$@"
 elif [[ $cmdf = touch ]]; then
 	#!/usr/bin/env bash
 	#touch in pure bash
@@ -3472,5 +3538,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getlines getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors ttysize type uname uniq upper uptime vi watch wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout touch tput true truecolors ttysize type uname uniq upper uptime vi watch wc which whoami yes
 fi

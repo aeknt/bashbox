@@ -1,0 +1,13 @@
+#!/bin/bash
+#make array with all lines mapped to line numbers
+n=0
+while read -r line
+do
+	n=$(( n + 1 ))
+	lines[$n]="$line"
+done
+for arg in "$@"
+do
+	#echo the line requested from the array
+	echo "${lines[$arg]}"
+done

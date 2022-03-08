@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646697086
+	echo 1646698451
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -910,6 +910,20 @@ elif [[ $cmdf = find ]]; then
 			recurse "$file"
 		done
 	fi
+elif [[ $cmdf = getlines ]]; then
+	#!/bin/bash
+	#make array with all lines mapped to line numbers
+	n=0
+	while read -r line
+	do
+		n=$(( n + 1 ))
+		lines[$n]="$line"
+	done
+	for arg in "$@"
+	do
+		#echo the line requested from the array
+		echo "${lines[$arg]}"
+	done
 elif [[ $cmdf = getopt ]]; then
 	getopt() {
 	  # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
@@ -3458,5 +3472,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors ttysize type uname uniq upper uptime vi watch wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getlines getopt grep hd head hextorgb hostname less locale logname lolcat lower ls more nano od ord print printenv printf pwd pwdx readlink realpath rgbtohex sed seq sh sha512 sleep stat strip tac tail time touch tput true truecolors ttysize type uname uniq upper uptime vi watch wc which whoami yes
 fi

@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 #stolen from https://github.com/comfies/bed
+basenam() {
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
 declare -a buffer
 declare -i line base
 declare file message modified
@@ -128,7 +134,7 @@ die() {
 redraw() {
     (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
         "$COLUMNS" "$message" "${BED_ICON:=🛏 } bashbox nano" \
-        "$(basename "$file")" "$line" "${#buffer[line]}") # Status line, among others
+        "$(basenam "$file")" "$line" "${#buffer[line]}") # Status line, among others
     for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \

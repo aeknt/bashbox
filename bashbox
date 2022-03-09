@@ -2,7 +2,7 @@
 cmdf=$1
 shift
 if [[ $cmdf = --build ]]; then
-	echo 1646782659
+	echo 1646825630
 elif [[ $cmdf = arch ]]; then
 	#!/usr/bin/env bash
 	#
@@ -910,6 +910,25 @@ elif [[ $cmdf = find ]]; then
 			recurse "$file"
 		done
 	fi
+elif [[ $cmdf = free ]]; then
+	#!/bin/bash
+	line(){
+		#copy of getlines script
+		#make array with all lines mapped to line numbers
+		n=0
+		while read -r line
+		do
+			n=$(( n + 1 ))
+			lines[$n]="$line"
+		done
+		for arg in "$@"
+		do
+			#echo the line requested from the array
+			echo "${lines[$arg]}"
+		done
+		
+	}
+	printf '%s\n' "$(</proc/meminfo)" | line 1 2 21 5 3
 elif [[ $cmdf = getlines ]]; then
 	#!/bin/bash
 	#make array with all lines mapped to line numbers
@@ -2526,6 +2545,104 @@ elif [[ $cmdf = timeout ]]; then
 	manage $$ "$1" &
 	shift
 	"$@"
+elif [[ $cmdf = top ]]; then
+	#!/bin/bash
+	timeup() {
+		: "$(</proc/uptime)"
+		seconds_up=${_%%.*}
+		minutes_up=$((seconds_up/60))
+		printf ' %(%H:%M:%S)T up '
+		if [[ $((minutes_up)) -ge 1440 ]]; then
+			printf '%d days, ' $((minutes_up/1440))
+		fi
+		if [[ $((minutes_up)) -ge 60 ]]; then
+			printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+		else
+			printf '%d min' $minutes_up
+		fi
+	}
+	parseuid() {
+		m=0
+		while IFS=':' read -ra addr; do
+			n=0
+			for i in "${addr[@]}"; do
+				if [ $n = 2 ]; then
+					e=0
+					for y in "${addr[@]}"; do
+						[ $e = 0 ] && uid[$i]="$y"
+						e=notzero
+						break
+					done
+				fi
+				n=$(( n + 1 ))
+			done
+			m=$(( m + 1 ))
+		done < /etc/passwd
+	}
+	linesget() {
+		n=0
+		while read -r line
+		do
+			n=$(( n + 1 ))
+			lines[$n]="$line"
+		done
+		for arg in "$@"
+		do
+			#echo the line requested from the array
+			echo "${lines[$arg]}"
+		done
+	}
+	mem() {
+		printf '%s\n' "$(</proc/meminfo)" | linesget 1 2 21 5 3
+	}
+	getproc() {
+		a=8
+		ignore=$(( $1 + 7 ))
+		for item in $proc; {
+			if [ -d "$item" ]; then
+				if [ "$a" -gt "$ignore" ]; then
+					[ "$a" = $(( LINES + $1 )) ] && break
+					if [[ ! "$item" =~ [^[:digit:]] ]]; then
+						echo -n "$item "
+						c=0
+						for word in $(linesget 9 < "$item"/status); {
+							[ $c = 1 ] && echo -n "${uid[$word]} "
+							c=$(( c + 1 ))
+						}
+						printf '%s\n' "$(<"$item/comm")"
+					fi
+				fi
+				a=$(( a + 1 ))
+			fi
+		}
+	}
+	draw() {
+		#escape
+		escape=$(printf "\u1b")
+		#clear the screen
+		printf "\033c"
+		#print lines
+		echo -n top; timeup; echo
+		mem
+		printf "\033[0;30;107mPID USER COMMAND\033[0;0m\n"
+		#this all is 7 lines
+		getproc "$1"
+		read -rsn1 -t 1 input
+		if [[ $input == "$escape" ]]; then
+			read -rsn2 input
+		fi
+		[ -z "$input" ] && draw "$1"
+		[ "$input" = "[B" ] && draw $(( $1 + 1 ))
+		[ "$input" = "[A" ] && draw $(( $1 - 1 ))
+		[ "$input" = "q" ] && exit
+	}
+	#prepare
+	shopt -s checkwinsize; (:;:)
+	cd /proc || exit 1
+	proc=$(echo *)
+	parseuid
+	
+	draw 0
 elif [[ $cmdf = touch ]]; then
 	#!/usr/bin/env bash
 	#touch in pure bash
@@ -2826,6 +2943,31 @@ elif [[ $cmdf = ttysize ]]; then
 elif [[ $cmdf = type ]]; then
 	#!/bin/bash
 	type $@
+elif [[ $cmdf = uidname ]]; then
+	#!/bin/bash
+	parseuid() {
+		m=0
+		while IFS=':' read -ra addr; do
+			n=0
+			for i in "${addr[@]}"; do
+				if [ $n = 2 ]; then
+					e=0
+					for y in "${addr[@]}"; do
+						[ $e = 0 ] && uid[$i]="$y"
+						e=notzero
+						break
+					done
+				fi
+				n=$(( n + 1 ))
+			done
+			m=$(( m + 1 ))
+		done < /etc/passwd
+	}
+	[ -z "$1" ] && echo no uid provided && exit
+	parseuid
+	for arg in "$@"; {
+		echo "${uid[$arg]}"
+	}
 elif [[ $cmdf = uname ]]; then
 	#!/usr/bin/env bash
 	if [ -z $1 ]; then
@@ -3538,5 +3680,5 @@ elif [[ $cmdf = yes ]]; then
 	    }
 	fi
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout touch tput true truecolors ttysize type uname uniq upper uptime vi watch wc which whoami yes
+ echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
 fi

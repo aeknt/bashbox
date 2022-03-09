@@ -1,0 +1,24 @@
+#!/bin/bash
+parseuid() {
+	m=0
+	while IFS=':' read -ra addr; do
+		n=0
+		for i in "${addr[@]}"; do
+			if [ $n = 2 ]; then
+				e=0
+				for y in "${addr[@]}"; do
+					[ $e = 0 ] && uid[$i]="$y"
+					e=notzero
+					break
+				done
+			fi
+			n=$(( n + 1 ))
+		done
+		m=$(( m + 1 ))
+	done < /etc/passwd
+}
+[ -z "$1" ] && echo no uid provided && exit
+parseuid
+for arg in "$@"; {
+	echo "${uid[$arg]}"
+}

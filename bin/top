@@ -1,0 +1,97 @@
+#!/bin/bash
+timeup() {
+	: "$(</proc/uptime)"
+	seconds_up=${_%%.*}
+	minutes_up=$((seconds_up/60))
+	printf ' %(%H:%M:%S)T up '
+	if [[ $((minutes_up)) -ge 1440 ]]; then
+		printf '%d days, ' $((minutes_up/1440))
+	fi
+	if [[ $((minutes_up)) -ge 60 ]]; then
+		printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+	else
+		printf '%d min' $minutes_up
+	fi
+}
+parseuid() {
+	m=0
+	while IFS=':' read -ra addr; do
+		n=0
+		for i in "${addr[@]}"; do
+			if [ $n = 2 ]; then
+				e=0
+				for y in "${addr[@]}"; do
+					[ $e = 0 ] && uid[$i]="$y"
+					e=notzero
+					break
+				done
+			fi
+			n=$(( n + 1 ))
+		done
+		m=$(( m + 1 ))
+	done < /etc/passwd
+}
+linesget() {
+	n=0
+	while read -r line
+	do
+		n=$(( n + 1 ))
+		lines[$n]="$line"
+	done
+	for arg in "$@"
+	do
+		#echo the line requested from the array
+		echo "${lines[$arg]}"
+	done
+}
+mem() {
+	printf '%s\n' "$(</proc/meminfo)" | linesget 1 2 21 5 3
+}
+getproc() {
+	a=8
+	ignore=$(( $1 + 7 ))
+	for item in $proc; {
+		if [ -d "$item" ]; then
+			if [ "$a" -gt "$ignore" ]; then
+				[ "$a" = $(( LINES + $1 )) ] && break
+				if [[ ! "$item" =~ [^[:digit:]] ]]; then
+					echo -n "$item "
+					c=0
+					for word in $(linesget 9 < "$item"/status); {
+						[ $c = 1 ] && echo -n "${uid[$word]} "
+						c=$(( c + 1 ))
+					}
+					printf '%s\n' "$(<"$item/comm")"
+				fi
+			fi
+			a=$(( a + 1 ))
+		fi
+	}
+}
+draw() {
+	#escape
+	escape=$(printf "\u1b")
+	#clear the screen
+	printf "\033c"
+	#print lines
+	echo -n top; timeup; echo
+	mem
+	printf "\033[0;30;107mPID USER COMMAND\033[0;0m\n"
+	#this all is 7 lines
+	getproc "$1"
+	read -rsn1 -t 1 input
+	if [[ $input == "$escape" ]]; then
+		read -rsn2 input
+	fi
+	[ -z "$input" ] && draw "$1"
+	[ "$input" = "[B" ] && draw $(( $1 + 1 ))
+	[ "$input" = "[A" ] && draw $(( $1 - 1 ))
+	[ "$input" = "q" ] && exit
+}
+#prepare
+shopt -s checkwinsize; (:;:)
+cd /proc || exit 1
+proc=$(echo *)
+parseuid
+
+draw 0

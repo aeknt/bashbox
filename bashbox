@@ -1,270 +1,123 @@
 #!/usr/bin/env bash
 cmdf=$1
 shift
-if [[ $cmdf = --build ]]; then
-	echo 1646825957
-elif [[ $cmdf = arch ]]; then
-	#!/usr/bin/env bash
-	#
-	# arch in pure bash.
-	
-	echo "$HOSTTYPE"
-elif [[ $cmdf = base16 ]]; then
-	#!/usr/bin/env bash
-	enc_hex() { local LC_ALL=C IFS=""
-		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
-	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
-	if [ -z $1 ]; then
-		enc_hex
-	elif [ $1 = -d ]; then
-		dec_hex
-	fi
-elif [[ $cmdf = base64 ]]; then
-	#!/usr/bin/env bash
-	enc_hex() { local LC_ALL=C IFS=""
-		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
-	st8() { printf %02x $(($1 & 0xff)) ; }
-	b64_luts() {
-		declare -g -A d e
-		local c i j=0 p=printf
-		for ((i = 65; i <= 90; i++, j++)) ; do
-			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
-		for ((i = 97; i <= 122; i++, j++)) ; do
-			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
-		for ((i = 48; i <= 57; i++, j++)) ; do
-			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
-		for i in 43 47 ; do
-			c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; j=$((j+1)) ; done
-		d[=]=-1
-	}
-	enc_b64() {
-		local c ; b64_luts
-		while read -N 6 c ; do
-			printf "\x${e[$((0x${c:0:2} >> 2))]}"
-			printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
-			printf "\x${e[$(((0x${c:2:2} & 15) << 2 | 0x${c:4:2} >> 6))]}"
-			printf "\x${e[$((0x${c:4:2} & 0x3f))]}"
-		done
-		if ((${#c} == 4)) ; then
-			printf "\x${e[$((0x${c:0:2} >> 2))]}"
-			printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
-			printf "\x${e[$(((0x${c:2:2} & 15) << 2))]}="
-		elif ((${#c} == 2)) ; then
-			printf "\x${e[$((0x${c:0:2} >> 2))]}"
-			printf "\x${e[$(((0x${c:0:2} & 3) << 4))]}=="
-		fi
-	}
-	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
-	dec_b64() {
-		local i r s t u ; b64_luts
-		while read -N 4 i ; do
-			r=${d[${i:0:1}]} ; s=${d[${i:1:1}]}
-			t=${d[${i:2:1}]} ; u=${d[${i:3:1}]}
-			if ((u >= 0)) ; then
-				st8 $((r << 2 | s >> 4)) ; st8 $((s << 4 | t >> 2))
-				st8 $(((t << 6) | u)) ; continue
-			fi
-			st8 $((r << 2 | s >> 4))
-			if ((t >= 0)) ; then st8 $((s  << 4 | t >> 2)) ; fi
-			break
-		done
-	}
-	if [ -z $1 ]; then
-		enc_hex | enc_b64
-	elif [ $1 = -d ]; then
-		dec_b64 | dec_hex
-	fi
-elif [[ $cmdf = basename ]]; then
-	#!/usr/bin/env bash
-	#
-	# basename in pure bash.
-	
-	for file in "$@"; do
-	    file="${file%/}"
-	    printf '%s\n' "${file##*/}"
+case $cmdf in
+--build)
+	echo 1646927545,724438
+;;
+arch)
+#!/usr/bin/env bash
+#
+# arch in pure bash.
+
+echo "$HOSTTYPE"
+;;
+base16)
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+if [ -z $1 ]; then
+	enc_hex
+elif [ $1 = -d ]; then
+	dec_hex
+fi
+;;
+base64)
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+st8() { printf %02x $(($1 & 0xff)) ; }
+b64_luts() {
+	declare -g -A d e
+	local c i j=0 p=printf
+	for ((i = 65; i <= 90; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for ((i = 97; i <= 122; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for ((i = 48; i <= 57; i++, j++)) ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; done
+	for i in 43 47 ; do
+		c=$(st8 $i) ; e[$j]=$c ; d[$($p "\x$c")]=$j ; j=$((j+1)) ; done
+	d[=]=-1
+}
+enc_b64() {
+	local c ; b64_luts
+	while read -N 6 c ; do
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+		printf "\x${e[$(((0x${c:2:2} & 15) << 2 | 0x${c:4:2} >> 6))]}"
+		printf "\x${e[$((0x${c:4:2} & 0x3f))]}"
 	done
-elif [[ $cmdf = bashbox-create ]]; then
-	#!/usr/bin/env bash
-	bashbox_build=$(printf "%(%s)T\\n")
-	bin() {
-		echo '#!/usr/bin/env bash' > bashbox
-		echo 'cmdf=$1' >> bashbox
-		echo 'shift' >> bashbox
-		cd bin || exit 1
-		items=$(printf '%s\n' *)
-		help=$(echo *)
-		cd ..
-		echo 'case $cmdf in' >> bashbox
-		echo '--build)' >> bashbox
-		echo "	"echo $bashbox_build >> bashbox
-		echo ';;' >> bashbox
-		for i in $items
-		do
-			echo $i')' >> bashbox
-			#start of text edit
-			getcont bin/$i >> bashbox
-			echo merging file $i
-			echo ';;' >> bashbox
-		done
-		echo '*)' >> bashbox
-		echo "echo $help"  >> bashbox
-		echo ';;' >> bashbox
-		echo 'esac' >> bashbox
-	}
-	info() {
-		cd bin
-		items=$(printf '%s\n' *)
-		help=$(echo *)
-		cd ..
-		echo items: $items
-		echo help: $help
-	}
-	getcont() {
-		if [[ "$#" == 0 ]]; then
-		    while read -rn1; do echo "$REPLY"; done
-		else
-		    for file in "$@"; do
-		        if [[ -f $file ]]; then
-		            printf '%s\n' "$(<"$file")"
-		        else
-		            printf '%s\n' "cat: $file: No such file or directory" >&2
-		        fi
-		    done
+	if ((${#c} == 4)) ; then
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4 | (0x${c:2:2}) >> 4))]}"
+		printf "\x${e[$(((0x${c:2:2} & 15) << 2))]}="
+	elif ((${#c} == 2)) ; then
+		printf "\x${e[$((0x${c:0:2} >> 2))]}"
+		printf "\x${e[$(((0x${c:0:2} & 3) << 4))]}=="
+	fi
+}
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+dec_b64() {
+	local i r s t u ; b64_luts
+	while read -N 4 i ; do
+		r=${d[${i:0:1}]} ; s=${d[${i:1:1}]}
+		t=${d[${i:2:1}]} ; u=${d[${i:3:1}]}
+		if ((u >= 0)) ; then
+			st8 $((r << 2 | s >> 4)) ; st8 $((s << 4 | t >> 2))
+			st8 $(((t << 6) | u)) ; continue
 		fi
-	}
-	formatbin() {
-		echo "#""!"/usr/bin/env bash > bashbox
-		echo cmdf="$"1 >> bashbox
-		echo shift >> bashbox
-		cd bin
-		items=$(printf '%s\n' *)
-		help=$(echo *)
-		cd ..
-		echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
-		echo "	"echo $bashbox_build >> bashbox
-		for i in $items
-		do
-			echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
-			#start of text edit
-			filern=bin/$i
-			lines=$(getcont $filern | lenght -l)	
-			for u in $(numberline $lines)
-			do
-				rn="	$( first -n $u $filern | last )"
-				echo "$rn" >> bashbox
-				echo merging line $u in $i
-			done
-		done
-		echo else >> bashbox
-		echo " "echo $help  >> bashbox
-		echo fi >> bashbox
-	}
-	lenght() {
-		#basically same as wc in bin/wc just renamed to prevent any possible conflicts
-		while getopts "lcw" opt; do
-		    case $opt in
-		        l) lines=1 ;;
-		        c) bytes=1 ;;
-		        w) words=1 ;;
-		
-		        ?)
-		            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-		            exit 1
-		        ;;
-		    esac
-		done
-		
-		[[ -t 0 && -f ${*: -1} ]] &&
-		    file=${*: -1}
-		
-		[[ -t 0 && ! -f $file ]] && {
-		    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
-		    exit 1
-		}
-		
-		mapfile file_data < "${file:-/dev/stdin}"
-		
-		for line in "${file_data[@]}"; do
-		    read -ra line_split <<< "$line"
-		    ((splits+=${#line_split[@]}, chars+=${#line}))
-		done
-		
-		[[ -z $lines && -z $bytes && -z $words ]] &&
-		    ((lines=1, bytes=1, words=1))
-		
-		[[ $lines ]] && printf '%s ' "${#file_data[@]}"
-		[[ $words ]] && printf '%s ' "$splits"
-		[[ $bytes ]] && printf '%s ' "$chars"
-		
-		printf '%s\n' "$file"
-		
-	}
-	first() {
-		#basically same as head in bin/head just renamed to prevent any possible conflicts
-		while getopts ":n:" opt; do
-		    case $opt in
-		        n) max_lines="$OPTARG" ;;
-		
-		        :)
-		            printf '%s\n' "option -$OPTARG requires an argument." >&2
-		            exit 1
-		        ;;
-		
-		        ?)
-		            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-		            exit 1
-		        ;;
-		    esac
-		
-		    shift "$((OPTIND - 1))"
-		done
-		
-		[[ ! -f $1 ]] && {
-		    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
-		    exit 1
-		}
-		
-		mapfile -n "${max_lines:-10}" file_data < "$1"
-		printf '%s' "${file_data[@]}"
-		
-	}
-	last() {
-		mapfile -tn 0 file_data
-		
-		[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
-		    max_lines="${#file_data[@]}"
-		
-		printf '%s\n' "${file_data[@]: -1}"
-	}
-	numberline() {
-		#basically same as seq in bin/seq just renamed to prevent any possible conflicts
-		[[ -z $1 ]] && {
-		    printf '%s\n' "seq: error: missing arguments." >&2
-		    exit 1
-		}
-		
-		[[ $2 ]] &&
-		    first="$1"
-		
-		[[ $3 ]] &&
-		    increment="$2"
-		
-		last="${*: -1}"
-		
-		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-		
-	}
-	for action in "$@"
+		st8 $((r << 2 | s >> 4))
+		if ((t >= 0)) ; then st8 $((s  << 4 | t >> 2)) ; fi
+		break
+	done
+}
+if [ -z $1 ]; then
+	enc_hex | enc_b64
+elif [ $1 = -d ]; then
+	dec_b64 | dec_hex
+fi
+;;
+basename)
+#!/usr/bin/env bash
+#
+# basename in pure bash.
+
+for file in "$@"; do
+    file="${file%/}"
+    printf '%s\n' "${file##*/}"
+done
+;;
+bashbox-create)
+#!/usr/bin/env bash
+bashbox_build=$( if [ -z $EPOCHREALTIME ]; then printf "%(%s)T\\n"; else echo $EPOCHREALTIME; fi)
+bin() {
+	echo '#!/usr/bin/env bash' > bashbox
+	echo 'cmdf=$1' >> bashbox
+	echo 'shift' >> bashbox
+	cd bin || exit 1
+	items=$(printf '%s\n' *)
+	help=$(echo *)
+	cd ..
+	echo 'case $cmdf in' >> bashbox
+	echo '--build)' >> bashbox
+	echo "	"echo $bashbox_build >> bashbox
+	echo ';;' >> bashbox
+	for i in $items
 	do
-		$action
+		echo $i')' >> bashbox
+		#start of text edit
+		getcont bin/$i >> bashbox
+		echo merging file $i
+		echo ';;' >> bashbox
 	done
-elif [[ $cmdf = cat ]]; then
-	#!/usr/bin/env bash
-	#
-	# cat in pure bash.
-	
+	echo '*)' >> bashbox
+	echo "echo $help"  >> bashbox
+	echo ';;' >> bashbox
+	echo 'esac' >> bashbox
+}
+getcont() {
 	if [[ "$#" == 0 ]]; then
 	    while read -rn1; do echo "$REPLY"; done
 	else
@@ -276,358 +129,525 @@ elif [[ $cmdf = cat ]]; then
 	        fi
 	    done
 	fi
-elif [[ $cmdf = chr ]]; then
-	chr() {
-	  [ "$1" -lt 256 ] || return 1
-	  printf "\\$(printf '%03o' "$1")"
+}
+bin
+;;
+bf)
+#!/usr/bin/env bash
+#https://esolangs.org/wiki/Extended_Brainfuck
+extension=0 #set which extended type to use
+file=0
+if [ "$1" = -x ]; then
+	extension=1
+	shift
+elif [ "$1" = -x2 ]; then
+	extension=2
+	shift
+elif [ "$1" = -xf2 ]; then
+	extension=2
+	file=1
+	shift
+fi
+if (( $# )); then
+	for arg; do
+		programf+=$(< "$arg") || exit
+	done
+else
+	mapfile -t
+	programf=${MAPFILE[*]}
+fi
+
+#printf "%d\n" \'a #convert ascii to decimal
+
+[ $extension = 0 ] && program=${programf//[^'><+-.,[]']} #basic
+[ $extension = 1 ] && program=${programf//[^'><+-.,[]@$!}{~^&|']} #extended 1
+[ $extension = 2 ] && program=${programf//[^'><+-.,[]@$!}{~^&|'?)(*/=_%]} #extended 2
+IFS= read -d "" -r translation <<'EOF'
+declare -a a
+LC_ALL=C
+IFS=
+p=0
+
+if [ $file = 1 ]; then
+	for (( i=0; i<${#programf}; i++ )); do
+		a[$i]=$(printf "%d\n" \'"${programf:$i:1}")
+		p=$(( $(printf "%d\n" \'"${programf:$i:1}" | wc -c) + 1 ))
+	done
+fi
+
+i(){
+	[[ -z $REPLY ]] && read -r && REPLY+=$'\n'
+
+	[[ $REPLY ]] && {
+		printf -v 'a[$p]' %d "'${REPLY::1}"
+		REPLY=${REPLY:1}
+	}
+}
+o(){
+	local hex
+	printf -v hex %x "${a[$p]}"
+	printf %b "\x$hex"
+}
+save(){
+	storage="${a[$p]}"
+}
+insert(){
+	tmpn=0
+	for byt in "${a[@]}";{
+		[ $tmpn -lt $p ] && a[$tmpn]="$byt"
+		[ $tmpn = $p ] && a[$tmpn]="0" && tmpn=$(( tmpn + 1 ))
+		[ $tmpn -gt $p ] && a[$tmpn]="$byt"
+		tmpn=$(( tmpn + 1 ))
+	}
+}
+uninsert(){
+	a=( "${a[@]:0:$p}" "${a[@]:$(( p + 1 ))}" )
+}
+execat(){
+	a=( "${a[@]:0:$p}" "${a[@]:$(( p + 1 ))}" )
+}
+
+EOF
+
+for (( i = 0; i < ${#program}; ++i )); do
+	case ${program:i:1} in
+		'>'): '(( ++p ))' ;;
+		'<'): '(( --p ))' ;;
+		'+'): '(( a[$p] = a[$p]+1 & 255 ))' ;;
+		'-'): '(( a[$p] = a[$p]-1 & 255 ))' ;;
+		'.'): 'o' ;;
+		','): 'i' ;;
+		'['): 'while (( a[$p] )); do :' ;;
+		']'): 'done' ;;
+		'@'): 'exit' ;;
+		'$'): 'save' ;;
+		'!'): 'a[$p]=$storage' ;;
+		'}'): 'a[$p]=$(( a[$p] >> 1 ))' ;;
+		'{'): 'a[$p]=$(( a[$p] << 1 ))' ;;
+		'o'): 'echo ${a[$p]}' ;; #for debugging
+		'p'): 'echo ${a[@]}' ;; #for debugging
+		'~'): 'a[$p]=$(( ~ a[$p] ))' ;;
+		'^'): 'a[$p]=$(( a[$p] ^ $storage ))' ;;
+		'&'): 'a[$p]=$(( a[$p] & $storage ))' ;;
+		'|'): 'a[$p]=$(( a[$p] | $storage ))' ;;
+		'?'): 'execat' ;;
+		')'): 'insert' ;;
+		'('): 'uninsert' ;;
+		'*'): 'a[$p]=$(( $storage * a[$p] ))' ;;
+		'/'): 'a[$p]=$(( a[$p] / $storage ))' ;;
+		'='): 'a[$p]=$(( a[$p] + $storage ))' ;;
+		'_'): 'a[$p]=$(( a[$p] - $storage ))' ;;
+		'%'): 'a[$p]=$(( a[$p] % $storage ))' ;;
+	esac
+	translation+=$_$'\n'
+done
+eval "$translation"$'\n:' || exit
+;;
+cat)
+#!/usr/bin/env bash
+#
+# cat in pure bash.
+
+if [[ "$#" == 0 ]]; then
+    while read -rn1; do echo "$REPLY"; done
+else
+    for file in "$@"; do
+        if [[ -f $file ]]; then
+            printf '%s\n' "$(<"$file")"
+        else
+            printf '%s\n' "cat: $file: No such file or directory" >&2
+        fi
+    done
+fi
+;;
+chr)
+chr() {
+  [ "$1" -lt 256 ] || return 1
+  printf "\\$(printf '%03o' "$1")"
+}
+
+chr "$@"
+;;
+clear)
+#!/usr/bin/env bash
+printf "\033c"
+#found this randomly and it seems to "work"
+;;
+colors)
+#!/bin/bash
+# colors - terminal color and attribute escape sequences
+repeat() {
+	[[ -z $1 ]] && {
+	    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
+	    exit 1
 	}
 	
-	chr "$@"
-elif [[ $cmdf = clear ]]; then
-	#!/usr/bin/env bash
-	printf "\033c"
-	#found this randomly and it seems to "work"
-elif [[ $cmdf = colors ]]; then
-	#!/bin/bash
-	# colors - terminal color and attribute escape sequences
-	repeat() {
-		[[ -z $1 ]] && {
-		    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
-		    exit 1
-		}
-		
-		[[ $2 ]] &&
-		    first="$1"
-		
-		[[ $3 ]] &&
-		    increment="$2"
-		
-		last="${*: -1}"
-		
-		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-		
-	}
-	verbose() {
-		for x in 0 1 4 5 7 8; do
-			for i in $(repeat 30 37); do
-				for a in $(repeat 40 48); do
-						printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
-				done
-				printf "\n"
-			done
-		done
-		for x in 0 1 4 5 7 8; do
-			for i in $(repeat 90 97); do
-				for a in $(repeat 100 108); do
-						printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
-				done
-				printf "\n"
-			done
-		done
-		printf "\n"
-	}
-	simple() {
-	    # Display the terminal palette.
-	    # Usage: colors
-	    for i in {0..15}; do
-	        ((i%8==0)) && printf "\\n"
-	        printf "%b" "\\e[48;05;${i}m  \\e[0m"
-	    done
+	[[ $2 ]] &&
+	    first="$1"
 	
-	    printf "\\n\\n"
+	[[ $3 ]] &&
+	    increment="$2"
+	
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
 	}
-	[ -z "$1" ] && verbose
-	[ "$1" = "-s" ] && simple
-	[ "$1" = "-h" ] && echo "usage: colors [ -s ]"
-elif [[ $cmdf = colors256 ]]; then
-	#!/bin/bash
-	# colors - terminal color and attribute escape sequences
-	repeat() {
-		[[ -z $1 ]] && {
-		    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
-		    exit 1
-		}
-		
-		[[ $2 ]] &&
-		    first="$1"
-		
-		[[ $3 ]] &&
-		    increment="$2"
-		
-		last="${*: -1}"
-		
-		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-		
-	}
-	echo '\033[48;5;<code>m - background'
-	echo '\033[38;5;<code>m - foreground'
-	for a in $(repeat 0 256); do
-		printf "\033[38;5;${a}m ${a}"
+	
+}
+verbose() {
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 30 37); do
+			for a in $(repeat 40 48); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
+		done
+	done
+	for x in 0 1 4 5 7 8; do
+		for i in $(repeat 90 97); do
+			for a in $(repeat 100 108); do
+					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+			done
+			printf "\n"
+		done
 	done
 	printf "\n"
-	for a in $(repeat 0 256); do
-		printf "\033[48;5;${a}m${a} "
-	done
-	printf "\n"
-elif [[ $cmdf = command ]]; then
-	#!/bin/bash
-	command $@
-elif [[ $cmdf = cp ]]; then
-	#!/bin/bash
-	if [ -z "$1" ]; then
-	  echo "cp: missing file name"
-	  exit
-	fi
-	if [ -z "$2" ]; then
-	  echo "cp: missing target file name"
-	  exit
-	fi
-	if [ ! -f "$1" ]; then
-	  echo "cp: file not found"
-	  exit
-	fi
-	printf '%s\n' "$(<"$1")" > "$2"
-	#cp in pure sh
-	#test
-elif [[ $cmdf = curl ]]; then
-	#!/usr/bin/env bash
-	#
-	# Download a file in pure bash.
-	
-	download() {
-	    IFS=/ read -r _ _ host query <<< "$1"
-	
-	    # Send the HTTP request.
-	    exec 3<"/dev/tcp/${host}/$2"; {
-	        printf '%s\r\n%s\r\n\r\n' \
-	               "GET /${query} HTTP/1.0" \
-	               "Host: $host"
-	    } >&3
-	
-	    # Strip the HTTP headers.
-	    while IFS= read -r line; do
-	        [[ "$line" == $'\r' ]] && break
-	    done <&3
-	
-	    # Output the file.
-	    nul='\0'
-	    while IFS= read -d '' -r line || { nul=""; [[ -n "$line" ]]; }; do
-	        printf "%s%b" "$line" "$nul"
-	    done <&3
-	
-	    exec 3>&-
+}
+simple() {
+    # Display the terminal palette.
+    # Usage: colors
+    for i in {0..15}; do
+        ((i%8==0)) && printf "\\n"
+        printf "%b" "\\e[48;05;${i}m  \\e[0m"
+    done
+
+    printf "\\n\\n"
+}
+[ -z "$1" ] && verbose
+[ "$1" = "-s" ] && simple
+[ "$1" = "-h" ] && echo "usage: colors [ -s ]"
+;;
+colors256)
+#!/bin/bash
+# colors - terminal color and attribute escape sequences
+repeat() {
+	[[ -z $1 ]] && {
+	    printf '%s\n' "bashbox: colors: repeat: error: missing arguments." >&2
+	    exit 1
 	}
 	
-	if [ "$1" = "-o" ]; then
-		if [ -z $4 ]; then
-			download "$3" 80 > "$2"
-		else 
-			download "$3" "$4" > "$2"
-		fi
+	[[ $2 ]] &&
+	    first="$1"
+	
+	[[ $3 ]] &&
+	    increment="$2"
+	
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+	
+}
+echo '\033[48;5;<code>m - background'
+echo '\033[38;5;<code>m - foreground'
+for a in $(repeat 0 256); do
+	printf "\033[38;5;${a}m ${a}"
+done
+printf "\n"
+for a in $(repeat 0 256); do
+	printf "\033[48;5;${a}m${a} "
+done
+printf "\n"
+;;
+command)
+#!/bin/bash
+command $@
+;;
+cp)
+#!/bin/bash
+if [ -z "$1" ]; then
+  echo "cp: missing file name"
+  exit
+fi
+if [ -z "$2" ]; then
+  echo "cp: missing target file name"
+  exit
+fi
+if [ ! -f "$1" ]; then
+  echo "cp: file not found"
+  exit
+fi
+printf '%s\n' "$(<"$1")" > "$2"
+#cp in pure sh
+#test
+;;
+curl)
+#!/usr/bin/env bash
+#
+# Download a file in pure bash.
+
+download() {
+    IFS=/ read -r _ _ host query <<< "$1"
+
+    # Send the HTTP request.
+    exec 3<"/dev/tcp/${host}/$2"; {
+        printf '%s\r\n%s\r\n\r\n' \
+               "GET /${query} HTTP/1.0" \
+               "Host: $host"
+    } >&3
+
+    # Strip the HTTP headers.
+    while IFS= read -r line; do
+        [[ "$line" == $'\r' ]] && break
+    done <&3
+
+    # Output the file.
+    nul='\0'
+    while IFS= read -d '' -r line || { nul=""; [[ -n "$line" ]]; }; do
+        printf "%s%b" "$line" "$nul"
+    done <&3
+
+    exec 3>&-
+}
+
+if [ "$1" = "-o" ]; then
+	if [ -z $4 ]; then
+		download "$3" 80 > "$2"
+	else 
+		download "$3" "$4" > "$2"
+	fi
+else
+	if [ -z $2 ]; then
+		download "$1" 80
+	else 
+		download "$1" "$2"
+	fi
+fi
+;;
+cut)
+#!/usr/bin/env bash
+enc_hex() { local LC_ALL=C IFS=""
+	    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
+dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
+cut() {
+	local bs=$((64 * 1024)) off=$(($1 * 2)) size=$((($2 + 0) * 2))
+	local sdb=$(((size / bs) * bs)) c i
+	if ((off)) ; then read -N $off ; fi
+	if ((size == 0)) ; then
+		while read -N $bs c ; do echo -n "$c" ; done
+		echo -n "$c" ; return ; fi
+	for ((i = 0; i < sdb; i+=bs)) ; do
+		if ! read -N $bs c ; then echo -n "$c" ; return ; fi
+		echo -n "$c" ; done
+	i=$((size - i)) ; if ((i)) ; then read -N $i c ; echo -n "$c" ; fi
+}
+binop() { enc_hex | $@ | dec_hex ; }
+binop cut ${@:1}
+;;
+date)
+#!/usr/bin/env bash
+#
+# date in pure bash.
+
+date_format="$1"
+
+[[ ${date_format:0:1} == + ]] &&
+    date_format="${date_format/+}"
+
+printf "%($date_format)T\\n"
+;;
+dialog)
+#!/usr/bin/bash
+shopt -s checkwinsize; (:;:)
+hide() {
+	printf '\e[?25l\e[?7l'
+}
+unhide() {
+	printf "\e[?25h\e[?7h"
+}
+repeat() {
+	for ((i=${first:=1};i<="${*: -1}";i+=${increment:=1})); {
+	    printf '%s\n' "$i"
+	}
+}
+get_cursor_posx() {
+	# Usage: get_cursor_pos
+	IFS='[;' read -p $'\e[6n' -d R -rs _ x _
+	printf '%s\n' "$x"
+}
+get_cursor_posy() {
+	# Usage: get_cursor_pos
+	IFS='[;' read -p $'\e[6n' -d R -rs _ y _
+	printf '%s\n' "$y"
+}
+render() {
+	printhelp() {
+	 echo "escape sequence wrapper error"
+	}
+	get_cursor_pos() {
+	    # Usage: get_cursor_pos
+	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
+	    printf '%s\n' "$y $x"
+	}
+	##colors
+	modeput() {
+	 printf "\033[$1;$2m"
+	}
+	rgbputf() {
+	 printf "\033[38;2;$1;$2;$3m"
+	}
+	rgbputb() {
+	 printf "\033[48;2;$1;$2;$3m"
+	}
+	if [ -z $1 ]; then
+	 printhelp
+	elif [ $1 = rsetf ]; then
+	 printf "\033[38;2;$2;$3;$4m"
+	elif [ $1 = rsetb ]; then
+	 printf "\033[48;2;$2;$3;$4m"
+	elif [ $1 = esetf ]; then
+	 printf "\033[38;5;$2m"
+	elif [ $1 = esetb ]; then
+	 printf "\033[48;5;$2m"
+	elif [ $1 = set ]; then
+	 modeput $2 $3
+	elif [ $1 = cup ]; then
+	 printf "\033[$2;$3H"
+	elif [ $1 = hsetf ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputf $r $g $b
+	elif [ $1 = hsetb ]; then
+	 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	 rgbputb $r $g $b
+	elif [ $1 = clear ]; then
+	  printf "\033c"
+	elif [ $1 = cols ]; then
+	 echo $COLUMNS
+	elif [ $1 = lines ]; then
+	 echo $LINES
+	elif [ $1 = pos ]; then
+	 get_cursor_pos
 	else
-		if [ -z $2 ]; then
-			download "$1" 80
-		else 
-			download "$1" "$2"
-		fi
+		echo "unknown sequence wrapper command error"
 	fi
-elif [[ $cmdf = cut ]]; then
-	#!/usr/bin/env bash
-	enc_hex() { local LC_ALL=C IFS=""
-		    while read -r -d '' -n 1 c ; do printf "%02x" "'$c" ; done ; }
-	dec_hex() { while read -d '' -n 2 hl ; do printf "\x$hl" ; done ; }
-	cut() {
-		local bs=$((64 * 1024)) off=$(($1 * 2)) size=$((($2 + 0) * 2))
-		local sdb=$(((size / bs) * bs)) c i
-		if ((off)) ; then read -N $off ; fi
-		if ((size == 0)) ; then
-			while read -N $bs c ; do echo -n "$c" ; done
-			echo -n "$c" ; return ; fi
-		for ((i = 0; i < sdb; i+=bs)) ; do
-			if ! read -N $bs c ; then echo -n "$c" ; return ; fi
-			echo -n "$c" ; done
-		i=$((size - i)) ; if ((i)) ; then read -N $i c ; echo -n "$c" ; fi
+}
+msgbox() {
+	half=$(( ( COLUMNS / 2 ) - 6  ))
+	msg="$1"
+	render clear
+	hide
+	echo "$msg"
+	render set 0 37
+	render cup $(( LINES - 2 )) $half
+	echo -n "┌──────────┐"; render cup $(( LINES - 1 )) $half
+	echo -n "│    ok    │"; render cup $LINES $half
+	echo -n "└──────────┘"
+	render set 0 0
+	read
+}
+yesno() {
+	yes(){
+		echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 1 )) $half
+		echo -n "$(render set 0 33)│   yes    │    $(render set 0 0)│    no    │"; render cup $LINES $half
+		echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
 	}
-	binop() { enc_hex | $@ | dec_hex ; }
-	binop cut ${@:1}
-elif [[ $cmdf = date ]]; then
-	#!/usr/bin/env bash
-	#
-	# date in pure bash.
-	
-	date_format="$1"
-	
-	[[ ${date_format:0:1} == + ]] &&
-	    date_format="${date_format/+}"
-	
-	printf "%($date_format)T\\n"
-elif [[ $cmdf = dialog ]]; then
-	#!/usr/bin/bash
-	shopt -s checkwinsize; (:;:)
-	hide() {
-		printf '\e[?25l\e[?7l'
+	no(){
+		echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 1 )) $half
+		echo -n "│   yes    │    $(render set 0 33)│    no    │$(render set 0 0)"; render cup $LINES $half
+		echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
 	}
-	unhide() {
-		printf "\e[?25h\e[?7h"
-	}
-	repeat() {
-		for ((i=${first:=1};i<="${*: -1}";i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-	}
-	get_cursor_posx() {
-		# Usage: get_cursor_pos
-		IFS='[;' read -p $'\e[6n' -d R -rs _ x _
-		printf '%s\n' "$x"
-	}
-	get_cursor_posy() {
-		# Usage: get_cursor_pos
-		IFS='[;' read -p $'\e[6n' -d R -rs _ y _
-		printf '%s\n' "$y"
-	}
-	render() {
-		printhelp() {
-		 echo "escape sequence wrapper error"
-		}
-		get_cursor_pos() {
-		    # Usage: get_cursor_pos
-		    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
-		    printf '%s\n' "$y $x"
-		}
-		##colors
-		modeput() {
-		 printf "\033[$1;$2m"
-		}
-		rgbputf() {
-		 printf "\033[38;2;$1;$2;$3m"
-		}
-		rgbputb() {
-		 printf "\033[48;2;$1;$2;$3m"
-		}
-		if [ -z $1 ]; then
-		 printhelp
-		elif [ $1 = rsetf ]; then
-		 printf "\033[38;2;$2;$3;$4m"
-		elif [ $1 = rsetb ]; then
-		 printf "\033[48;2;$2;$3;$4m"
-		elif [ $1 = esetf ]; then
-		 printf "\033[38;5;$2m"
-		elif [ $1 = esetb ]; then
-		 printf "\033[48;5;$2m"
-		elif [ $1 = set ]; then
-		 modeput $2 $3
-		elif [ $1 = cup ]; then
-		 printf "\033[$2;$3H"
-		elif [ $1 = hsetf ]; then
-		 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
-		 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
-		 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
-		 rgbputf $r $g $b
-		elif [ $1 = hsetb ]; then
-		 r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
-		 g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
-		 b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
-		 rgbputb $r $g $b
-		elif [ $1 = clear ]; then
-		  printf "\033c"
-		elif [ $1 = cols ]; then
-		 echo $COLUMNS
-		elif [ $1 = lines ]; then
-		 echo $LINES
-		elif [ $1 = pos ]; then
-		 get_cursor_pos
-		else
-			echo "unknown sequence wrapper command error"
+	half=$(( ( COLUMNS / 2 ) - 16  ))
+	msg="$1"
+	render clear
+	hide
+	#box
+	#render cup 0 0
+	echo "$msg"
+	render set 0 37
+	render cup $(( LINES - 2 )) $half
+	yes
+	escape=$(printf "\u1b")
+	while true
+	do
+		read -rsn1 input
+		if [[ $input == $escape ]]; then
+		    read -rsn2 input
 		fi
-	}
-	msgbox() {
-		half=$(( ( COLUMNS / 2 ) - 6  ))
-		msg="$1"
-		render clear
-		hide
-		echo "$msg"
-		render set 0 37
-		render cup $(( LINES - 2 )) $half
-		echo -n "┌──────────┐"; render cup $(( LINES - 1 )) $half
-		echo -n "│    ok    │"; render cup $LINES $half
-		echo -n "└──────────┘"
-		render set 0 0
-		read
-	}
-	yesno() {
-		yes(){
-			echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 1 )) $half
-			echo -n "$(render set 0 33)│   yes    │    $(render set 0 0)│    no    │"; render cup $LINES $half
-			echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
-		}
-		no(){
-			echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 1 )) $half
-			echo -n "│   yes    │    $(render set 0 33)│    no    │$(render set 0 0)"; render cup $LINES $half
-			echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
-		}
-		half=$(( ( COLUMNS / 2 ) - 16  ))
-		msg="$1"
-		render clear
-		hide
-		#box
-		#render cup 0 0
-		echo "$msg"
-		render set 0 37
-		render cup $(( LINES - 2 )) $half
-		yes
-		escape=$(printf "\u1b")
-		while true
-		do
-			read -rsn1 input
-			if [[ $input == $escape ]]; then
-			    read -rsn2 input
-			fi
-			if [ "$input" = '[D' ]; then
-				render cup $(( LINES - 2 )) $half
-				yes
-				answer=0
-			elif [ "$input" = '[C' ]; then
-				render cup $(( LINES - 2 )) $half
-				answer=1
-				no
-			elif [ "$input" = 'y' ]; then
-				render cup $(( LINES - 2 )) $half
-				yes
-				unhide
-				render cup $LINES 0
-				exit 0
-			elif [ "$input" = 'n' ]; then
-				render cup $(( LINES - 2 )) $half
-				no
-				unhide
-				render cup $LINES 0
-				exit 1
-			else
-				unhide
-				render cup $LINES 0
-				exit $answer
-			fi
-		done
-		render set 0 0
-	}
-	infobox() {
-		render clear
-		hide
-		echo "$1"
-		render cup $LINES 0
-	}
-	gauge() {
-		hide
-		echo "$1"
-		if [ -n "$4" ]; then
-			per=$4
+		if [ "$input" = '[D' ]; then
+			render cup $(( LINES - 2 )) $half
+			yes
+			answer=0
+		elif [ "$input" = '[C' ]; then
+			render cup $(( LINES - 2 )) $half
+			answer=1
+			no
+		elif [ "$input" = 'y' ]; then
+			render cup $(( LINES - 2 )) $half
+			yes
+			unhide
+			render cup $LINES 0
+			exit 0
+		elif [ "$input" = 'n' ]; then
+			render cup $(( LINES - 2 )) $half
+			no
+			unhide
+			render cup $LINES 0
+			exit 1
 		else
-			per=$2
+			unhide
+			render cup $LINES 0
+			exit $answer
 		fi
+	done
+	render set 0 0
+}
+infobox() {
+	render clear
+	hide
+	echo "$1"
+	render cup $LINES 0
+}
+gauge() {
+	hide
+	echo "$1"
+	if [ -n "$4" ]; then
+		per=$4
+	else
+		per=$2
+	fi
+	render cup $(( LINES - 3 )) 0
+	if [ $per -gt 99 ]; then
+		echo "┌──────────┐"
+		echo "│   $per%   │"
+		echo "└──────────┘"
+	elif [ $per -lt 10 ]; then
+		echo "┌──────────┐"
+		echo "│    $per%    │"
+		echo "└──────────┘"
+	else
+		echo "┌──────────┐"
+		echo "│   $per%    │"
+		echo "└──────────┘"
+	fi
+	printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
+	read
+}
+pause() {
+	if [ -n "$4" ]; then
+		waittime=$4
+	else
+		waittime=$2
+	fi
+	printbar() {
+		render clear
+		hide
+		per=$1
 		render cup $(( LINES - 3 )) 0
 		if [ $per -gt 99 ]; then
 			echo "┌──────────┐"
@@ -643,294 +663,261 @@ elif [[ $cmdf = dialog ]]; then
 			echo "└──────────┘"
 		fi
 		printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
-		read
 	}
-	pause() {
-		if [ -n "$4" ]; then
-			waittime=$4
+	yes(){
+		echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 2 )) $half
+		echo -n "$(render set 0 33)│    ok    │    $(render set 0 0)│  cancel  │"; render cup $(( LINES - 1 )) $half
+		echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
+	}
+	no(){
+		echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 2 )) $half
+		echo -n "│    ok    │    $(render set 0 33)│  cancel  │$(render set 0 0)"; render cup $(( LINES - 1 )) $half
+		echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
+	}
+	half=$(( ( COLUMNS / 2 ) - 16  ))
+	msg="$1"
+	answer=0
+	for a in $(repeat $waittime)
+	do
+		render clear
+		hide
+		#box
+		#render cup 0 0
+		#render set 0 37
+		printbar $a
+		render cup 0 0
+		echo "$msg"
+		render cup $(( LINES - 3 )) $half
+		if [ $answer = 0 ]; then
+			yes
 		else
-			waittime=$2
+			no
 		fi
-		printbar() {
-			render clear
-			hide
-			per=$1
-			render cup $(( LINES - 3 )) 0
-			if [ $per -gt 99 ]; then
-				echo "┌──────────┐"
-				echo "│   $per%   │"
-				echo "└──────────┘"
-			elif [ $per -lt 10 ]; then
-				echo "┌──────────┐"
-				echo "│    $per%    │"
-				echo "└──────────┘"
-			else
-				echo "┌──────────┐"
-				echo "│   $per%    │"
-				echo "└──────────┘"
-			fi
-			printf '%.s█' $(repeat $(( ( COLUMNS * "$per" ) / 100 )))
-		}
-		yes(){
-			echo -n "$(render set 0 33)┌──────────┐    $(render set 0 0)┌──────────┐"; render cup $(( LINES - 2 )) $half
-			echo -n "$(render set 0 33)│    ok    │    $(render set 0 0)│  cancel  │"; render cup $(( LINES - 1 )) $half
-			echo -n "$(render set 0 33)└──────────┘    $(render set 0 0)└──────────┘"
-		}
-		no(){
-			echo -n "┌──────────┐    $(render set 0 33)┌──────────┐$(render set 0 0)"; render cup $(( LINES - 2 )) $half
-			echo -n "│    ok    │    $(render set 0 33)│  cancel  │$(render set 0 0)"; render cup $(( LINES - 1 )) $half
-			echo -n "└──────────┘    $(render set 0 33)└──────────┘$(render set 0 0)"
-		}
-		half=$(( ( COLUMNS / 2 ) - 16  ))
-		msg="$1"
-		answer=0
-		for a in $(repeat $waittime)
+		escape=$(printf "\u1b")
+		end=$((SECONDS+1))
+		while [ $SECONDS -lt $end ]
 		do
-			render clear
-			hide
-			#box
-			#render cup 0 0
-			#render set 0 37
-			printbar $a
-			render cup 0 0
-			echo "$msg"
-			render cup $(( LINES - 3 )) $half
-			if [ $answer = 0 ]; then
+			read -rsn1 -t 1 input
+			readexit=$?
+			if [[ $input == $escape ]]; then
+			    read -rsn2 input
+			fi
+			if [ "$input" = '[D' ]; then
+				render cup $(( LINES - 3 )) $half
+				answer=0
 				yes
-			else
+			elif [ "$input" = '[C' ]; then
+				render cup $(( LINES - 3 )) $half
+				answer=1
 				no
+			elif [ "$input" = 'y' ]; then
+				render cup $(( LINES - 3 )) $half
+				yes
+				unhide
+				render cup $LINES 0
+				exit 0
+			elif [ "$input" = 'n' ]; then
+				render cup $(( LINES - 3 )) $half
+				no
+				unhide
+				render cup $LINES 0
+				exit 1
+			elif [ -z "$input" ] && [ ! $readexit = 142 ]; then
+				unhide
+				render cup $LINES 0
+				exit $answer
 			fi
-			escape=$(printf "\u1b")
-			end=$((SECONDS+1))
-			while [ $SECONDS -lt $end ]
-			do
-				read -rsn1 -t 1 input
-				readexit=$?
-				if [[ $input == $escape ]]; then
-				    read -rsn2 input
-				fi
-				if [ "$input" = '[D' ]; then
-					render cup $(( LINES - 3 )) $half
-					answer=0
-					yes
-				elif [ "$input" = '[C' ]; then
-					render cup $(( LINES - 3 )) $half
-					answer=1
-					no
-				elif [ "$input" = 'y' ]; then
-					render cup $(( LINES - 3 )) $half
-					yes
-					unhide
-					render cup $LINES 0
-					exit 0
-				elif [ "$input" = 'n' ]; then
-					render cup $(( LINES - 3 )) $half
-					no
-					unhide
-					render cup $LINES 0
-					exit 1
-				elif [ -z "$input" ] && [ ! $readexit = 142 ]; then
-					unhide
-					render cup $LINES 0
-					exit $answer
-				fi
-			done
-			render set 0 0
 		done
-		unhide
-	}
-	inputbox() {
-		ok(){
-			render cup $(( LINES - 3 )) $half
-			render set 0 33
-			echo -n "┌──────────┐"; render cup $(( LINES - 2 )) $half
-			echo -n "│  enter   │"; render cup $(( LINES - 1 )) $half
-			echo -n "└──────────┘"; render set 0 0
-		}
-		half=$(( COLUMNS / 2 ))
-		msg="$1"
-		render clear
-		ok
-		render cup 0 0
-		box $msg
-		render cup 7 2
-		echo -n "(press ctrl-c to cancel):"
-		render cup 8 0
-		printf '│┌'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┐│'
-		render cup 9 0
-		printf "││"
-		render cup 9 $(( COLUMNS - 1 ))
-		printf "││"
-		render cup 10 0
-		printf '│└'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┘│'
-		render cup 9 3
-		read idklmao
-		printf '%.s─' $(repeat $(( COLUMNS - 2 )))
 		render set 0 0
-	}
-	box() {
-		render cup 0 0
-		printf '┌'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┐'
-		render cup $LINES 0
-		printf '└'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┘'
-		render cup 2 0
-		printf '%.s│\n' $(repeat $(( LINES - 2 )))
-		render cup 1 0
-		#render cup $(( $(get_cursor_posy) + 1 )) $(( COLUMNS - 1 )); printf '%.se│\n' $(repeat $(( LINES - 2 )))
-		for ((i=1;i<="$(( LINES - 2 ))";i+=1)); {
-			render cup $(( $(get_cursor_posy) + 1 )) $COLUMNS
-			printf "│"
-		}
-		title="$1"
-		boxhalf=$(( ( COLUMNS / 2 ) - ( title / 2 )  ))
-		render cup 0 $boxhalf; echo -n $title; render cup 0 0
-	}
-	if [ "$1" = "--msgbox" ]; then
-		shift
-		msgbox "$@"
-	elif [ "$1" = "--yesno" ]; then
-		shift
-		yesno "$@"
-	elif [ "$1" = "--infobox" ]; then
-		shift
-		infobox "$@"
-	elif [ "$1" = "--gauge" ]; then
-		shift
-		gauge "$@"
-	elif [ "$1" = "--programbox" ]; then
-		render clear
-		shift
-		box "$@"
-	elif [ "$1" = "--pause" ]; then
-		shift
-		pause "$@"
-	elif [ "$1" = "--inputbox" ]; then
-		shift
-		inputbox "$@"
-	else
-		msgbox "bashbox: dialog: help:
-		--msgbox --yesno --infobox --gauge"
-		unhide
-	fi
+	done
 	unhide
-elif [[ $cmdf = dirname ]]; then
-	#!/usr/bin/env bash
-	#
-	# dirname in pure bash.
-	
-	for file in "$@"; do
-	     # Usage: dirname "path"
-	     tmp=${file:-.}
-	    
-	     tmp=${tmp%%"${tmp##*[!/]}"}
-	    
-	     [[ ${tmp##*/*} ]] && tmp=.
-	    
-	     tmp=${tmp%/*}
-	     tmp=${tmp%%"${tmp##*[!/]}"}
-	    
-	     printf '%s\n' "${tmp:-/}"
+}
+inputbox() {
+	ok(){
+		render cup $(( LINES - 3 )) $half
+		render set 0 33
+		echo -n "┌──────────┐"; render cup $(( LINES - 2 )) $half
+		echo -n "│  enter   │"; render cup $(( LINES - 1 )) $half
+		echo -n "└──────────┘"; render set 0 0
+	}
+	half=$(( COLUMNS / 2 ))
+	msg="$1"
+	render clear
+	ok
+	render cup 0 0
+	box $msg
+	render cup 7 2
+	echo -n "(press ctrl-c to cancel):"
+	render cup 8 0
+	printf '│┌'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┐│'
+	render cup 9 0
+	printf "││"
+	render cup 9 $(( COLUMNS - 1 ))
+	printf "││"
+	render cup 10 0
+	printf '│└'; printf '%.s─' $(repeat $(( COLUMNS - 4 ))); printf '┘│'
+	render cup 9 3
+	read idklmao
+	printf '%.s─' $(repeat $(( COLUMNS - 2 )))
+	render set 0 0
+}
+box() {
+	render cup 0 0
+	printf '┌'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┐'
+	render cup $LINES 0
+	printf '└'; printf '%.s─' $(repeat $(( COLUMNS - 2 ))); printf '┘'
+	render cup 2 0
+	printf '%.s│\n' $(repeat $(( LINES - 2 )))
+	render cup 1 0
+	#render cup $(( $(get_cursor_posy) + 1 )) $(( COLUMNS - 1 )); printf '%.se│\n' $(repeat $(( LINES - 2 )))
+	for ((i=1;i<="$(( LINES - 2 ))";i+=1)); {
+		render cup $(( $(get_cursor_posy) + 1 )) $COLUMNS
+		printf "│"
+	}
+	title="$1"
+	boxhalf=$(( ( COLUMNS / 2 ) - ( title / 2 )  ))
+	render cup 0 $boxhalf; echo -n $title; render cup 0 0
+}
+if [ "$1" = "--msgbox" ]; then
+	shift
+	msgbox "$@"
+elif [ "$1" = "--yesno" ]; then
+	shift
+	yesno "$@"
+elif [ "$1" = "--infobox" ]; then
+	shift
+	infobox "$@"
+elif [ "$1" = "--gauge" ]; then
+	shift
+	gauge "$@"
+elif [ "$1" = "--programbox" ]; then
+	render clear
+	shift
+	box "$@"
+elif [ "$1" = "--pause" ]; then
+	shift
+	pause "$@"
+elif [ "$1" = "--inputbox" ]; then
+	shift
+	inputbox "$@"
+else
+	msgbox "bashbox: dialog: help:
+	--msgbox --yesno --infobox --gauge"
+	unhide
+fi
+unhide
+;;
+dirname)
+#!/usr/bin/env bash
+#
+# dirname in pure bash.
+
+for file in "$@"; do
+     # Usage: dirname "path"
+     tmp=${file:-.}
+    
+     tmp=${tmp%%"${tmp##*[!/]}"}
+    
+     [[ ${tmp##*/*} ]] && tmp=.
+    
+     tmp=${tmp%/*}
+     tmp=${tmp%%"${tmp##*[!/]}"}
+    
+     printf '%s\n' "${tmp:-/}"
+done
+;;
+echo)
+#!/usr/bin/env bash
+#
+# echo in pure bash.
+
+echo "$@"
+;;
+env)
+#!/usr/bin/env bash
+#
+# env in pure bash.
+
+mapfile -t envars < <(compgen -v)
+
+for var in "${envars[@]}"; do
+    printf '%s=%s\n' "$var" "${!var}"
+done
+;;
+exec)
+#!/usr/bin/env bash
+shift #shift so when running bashbox exec command it wont try to exec exec
+exec $@
+;;
+expand)
+#!/usr/bin/env bash
+#
+# expand in pure bash.
+
+[[ ! -f $1 ]] && {
+    printf '%s\n' "expand: $1: No such file or directory." >&2
+    exit 1
+}
+
+file="$(< "$1")"
+printf '%s\n' "${file//$'\t'/'        '}"
+;;
+expr)
+#!/usr/bin/env bash
+#
+# expr in pure bash.
+
+printf '%s\n' "$(($@))"
+;;
+factor)
+#!/bin/bash
+n=$1
+for ((i=n;i>=1;i-=1)); {
+	[ $(( n / i * i )) = $n ] && printf "$i "
+}
+echo
+;;
+false)
+#!/usr/bin/env bash
+#
+# false in pure bash.
+
+exit 1
+;;
+figlethd)
+#!/bin/bash
+#it seems to work on xterm but not on alacritty
+printf "\e#3"
+echo "$@"
+printf "\e#4"
+echo "$@"
+;;
+find)
+#!/bin/bash
+recurse() {  
+	[ ! -d "$1" ] && return
+	for i in "$1"/*; do
+		path=${i//\/\//\/} # replace all double slashes
+		echo "$path"
+		# dont follow symbolic links
+		[ -L "$path" ] && continue
+		# recurse down dirs
+		[ -d "$path" ] && recurse "$path"
 	done
-elif [[ $cmdf = echo ]]; then
-	#!/usr/bin/env bash
-	#
-	# echo in pure bash.
-	
-	echo "$@"
-elif [[ $cmdf = env ]]; then
-	#!/usr/bin/env bash
-	#
-	# env in pure bash.
-	
-	mapfile -t envars < <(compgen -v)
-	
-	for var in "${envars[@]}"; do
-	    printf '%s=%s\n' "$var" "${!var}"
+}
+if [ -z "$1" ]; then
+	recurse .
+else
+	for file in "$@"
+	do
+		recurse "$file"
 	done
-elif [[ $cmdf = exec ]]; then
-	#!/usr/bin/env bash
-	shift #shift so when running bashbox exec command it wont try to exec exec
-	exec $@
-elif [[ $cmdf = expand ]]; then
-	#!/usr/bin/env bash
-	#
-	# expand in pure bash.
-	
-	[[ ! -f $1 ]] && {
-	    printf '%s\n' "expand: $1: No such file or directory." >&2
-	    exit 1
-	}
-	
-	file="$(< "$1")"
-	printf '%s\n' "${file//$'\t'/'        '}"
-elif [[ $cmdf = expr ]]; then
-	#!/usr/bin/env bash
-	#
-	# expr in pure bash.
-	
-	printf '%s\n' "$(($@))"
-elif [[ $cmdf = factor ]]; then
-	#!/bin/bash
-	n=$1
-	for ((i=n;i>=1;i-=1)); {
-		[ $(( n / i * i )) = $n ] && printf "$i "
-	}
-	echo
-elif [[ $cmdf = false ]]; then
-	#!/usr/bin/env bash
-	#
-	# false in pure bash.
-	
-	exit 1
-elif [[ $cmdf = figlethd ]]; then
-	#!/bin/bash
-	#it seems to work on xterm but not on alacritty
-	printf "\e#3"
-	echo "$@"
-	printf "\e#4"
-	echo "$@"
-elif [[ $cmdf = find ]]; then
-	#!/bin/bash
-	recurse() {  
-		[ ! -d "$1" ] && return
-		for i in "$1"/*; do
-			path=${i//\/\//\/} # replace all double slashes
-			echo "$path"
-			# dont follow symbolic links
-			[ -L "$path" ] && continue
-			# recurse down dirs
-			[ -d "$path" ] && recurse "$path"
-		done
-	}
-	if [ -z "$1" ]; then
-		recurse .
-	else
-		for file in "$@"
-		do
-			recurse "$file"
-		done
-	fi
-elif [[ $cmdf = free ]]; then
-	#!/bin/bash
-	line(){
-		#copy of getlines script
-		#make array with all lines mapped to line numbers
-		n=0
-		while read -r line
-		do
-			n=$(( n + 1 ))
-			lines[$n]="$line"
-		done
-		for arg in "$@"
-		do
-			#echo the line requested from the array
-			echo "${lines[$arg]}"
-		done
-		
-	}
-	printf '%s\n' "$(</proc/meminfo)" | line 1 2 21 5 3
-elif [[ $cmdf = getlines ]]; then
-	#!/bin/bash
+fi
+;;
+free)
+#!/bin/bash
+line(){
+	#copy of getlines script
 	#make array with all lines mapped to line numbers
 	n=0
 	while read -r line
@@ -943,1311 +930,765 @@ elif [[ $cmdf = getlines ]]; then
 		#echo the line requested from the array
 		echo "${lines[$arg]}"
 	done
-elif [[ $cmdf = getopt ]]; then
-	getopt() {
-	  # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
-	  # version 1.4.5
-	  #
-	  # Copyright 2012-2021 Aron Griffis <aron@scampersand.com>
-	  #
-	  # Permission is hereby granted, free of charge, to any person obtaining
-	  # a copy of this software and associated documentation files (the
-	  # "Software"), to deal in the Software without restriction, including
-	  # without limitation the rights to use, copy, modify, merge, publish,
-	  # distribute, sublicense, and/or sell copies of the Software, and to
-	  # permit persons to whom the Software is furnished to do so, subject to
-	  # the following conditions:
-	  #
-	  # The above copyright notice and this permission notice shall be included
-	  # in all copies or substantial portions of the Software.
-	  #
-	  # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	  # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	  # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-	  # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-	  # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-	  # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-	  # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	
-	  _getopt_main() {
-	    # Returns one of the following statuses:
-	    #   0 success
-	    #   1 error parsing parameters
-	    #   2 error in getopt invocation
-	    #   3 internal error
-	    #   4 reserved for -T
-	    #
-	    # For statuses 0 and 1, generates normalized and shell-quoted
-	    # "options -- parameters" on stdout.
-	
-	    declare parsed status
-	    declare short long='' name flags=''
-	    declare have_short=false
-	
-	    # Synopsis from getopt man-page:
-	    #
-	    #   getopt optstring parameters
-	    #   getopt [options] [--] optstring parameters
-	    #   getopt [options] -o|--options optstring [options] [--] parameters
-	    #
-	    # The first form can be normalized to the third form which
-	    # _getopt_parse() understands. The second form can be recognized after
-	    # first parse when $short hasn't been set.
-	
-	    if [[ -n ${GETOPT_COMPATIBLE+isset} || $1 == [^-]* ]]; then
-	      # Enable compatibility mode
-	      flags=c$flags
-	      # Normalize first to third synopsis form
-	      set -- -o "$1" -- "${@:2}"
-	    fi
-	
-	    # First parse always uses flags=p since getopt always parses its own
-	    # arguments effectively in this mode.
-	    parsed=$(_getopt_parse getopt ahl:n:o:qQs:TuV \
-	      alternative,help,longoptions:,name:,options:,quiet,quiet-output,shell:,test,version \
-	      p "$@")
-	    status=$?
-	    if [[ $status != 0 ]]; then
-	      if [[ $status == 1 ]]; then
-	        echo "Try 'getopt --help' for more information." >&2
-	        # Since this is the first parse, convert status 1 to 2
-	        status=2
-	      fi
-	      return $status
-	    fi
-	    eval "set -- $parsed"
-	
-	    while [[ $# -gt 0 ]]; do
-	      case $1 in
-	        (-a|--alternative)
-	          flags=a$flags ;;
-	
-	        (-h|--help)
-	          _getopt_help
-	          return 0
-	          ;;
-	
-	        (-l|--longoptions)
-	          long="$long${long:+,}$2"
-	          shift ;;
-	
-	        (-n|--name)
-	          name=$2
-	          shift ;;
-	
-	        (-o|--options)
-	          short=$2
-	          have_short=true
-	          shift ;;
-	
-	        (-q|--quiet)
-	          flags=q$flags ;;
-	
-	        (-Q|--quiet-output)
-	          flags=Q$flags ;;
-	
-	        (-s|--shell)
-	          case $2 in
-	            (sh|bash)
-	              flags=${flags//t/} ;;
-	            (csh|tcsh)
-	              flags=t$flags ;;
-	            (*)
-	              echo 'getopt: unknown shell after -s or --shell argument' >&2
-	              echo "Try 'getopt --help' for more information." >&2
-	              return 2 ;;
-	          esac
-	          shift ;;
-	
-	        (-u|--unquoted)
-	          flags=u$flags ;;
-	
-	        (-T|--test)
-	          return 4 ;;
-	
-	        (-V|--version)
-	          echo "pure-getopt 1.4.4"
-	          return 0 ;;
-	
-	        (--)
-	          shift
-	          break ;;
-	      esac
-	
-	      shift
-	    done
-	
-	    if ! $have_short; then
-	      # $short was declared but never set, not even to an empty string.
-	      # This implies the second form in the synopsis.
-	      if [[ $# == 0 ]]; then
-	        echo 'getopt: missing optstring argument' >&2
-	        echo "Try 'getopt --help' for more information." >&2
-	        return 2
-	      fi
-	      short=$1
-	      have_short=true
-	      shift
-	    fi
-	
-	    if [[ $short == -* ]]; then
-	      # Leading dash means generate output in place rather than reordering,
-	      # unless we're already in compatibility mode.
-	      [[ $flags == *c* ]] || flags=i$flags
-	      short=${short#?}
-	    elif [[ $short == +* ]]; then
-	      # Leading plus means POSIXLY_CORRECT, unless we're already in
-	      # compatibility mode.
-	      [[ $flags == *c* ]] || flags=p$flags
-	      short=${short#?}
-	    fi
-	
-	    # This should fire if POSIXLY_CORRECT is in the environment, even if
-	    # it's an empty string.  That's the difference between :+ and +
-	    flags=${POSIXLY_CORRECT+p}$flags
-	
-	    _getopt_parse "${name:-getopt}" "$short" "$long" "$flags" "$@"
-	  }
-	
-	  _getopt_parse() {
-	    # Inner getopt parser, used for both first parse and second parse.
-	    # Returns 0 for success, 1 for error parsing, 3 for internal error.
-	    # In the case of status 1, still generates stdout with whatever could
-	    # be parsed.
-	    #
-	    # $flags is a string of characters with the following meanings:
-	    #   a - alternative parsing mode
-	    #   c - GETOPT_COMPATIBLE
-	    #   i - generate output in place rather than reordering
-	    #   p - POSIXLY_CORRECT
-	    #   q - disable error reporting
-	    #   Q - disable normal output
-	    #   t - quote for csh/tcsh
-	    #   u - unquoted output
-	
-	    declare name="$1" short="$2" long="$3" flags="$4"
-	    shift 4
-	
-	    # Split $long on commas, prepend double-dashes, strip colons;
-	    # for use with _getopt_resolve_abbrev
-	    declare -a longarr
-	    _getopt_split longarr "$long"
-	    longarr=( "${longarr[@]/#/--}" )
-	    longarr=( "${longarr[@]%:}" )
-	    longarr=( "${longarr[@]%:}" )
-	
-	    # Parse and collect options and parameters
-	    declare -a opts params
-	    declare o alt_recycled=false error=0
-	
-	    while [[ $# -gt 0 ]]; do
-	      case $1 in
-	        (--)
-	          params=( "${params[@]}" "${@:2}" )
-	          break ;;
-	
-	        (--*=*)
-	          o=${1%%=*}
-	          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
-	            error=1
-	          elif [[ ,"$long", == *,"${o#--}"::,* ]]; then
-	            opts=( "${opts[@]}" "$o" "${1#*=}" )
-	          elif [[ ,"$long", == *,"${o#--}":,* ]]; then
-	            opts=( "${opts[@]}" "$o" "${1#*=}" )
-	          elif [[ ,"$long", == *,"${o#--}",* ]]; then
-	            if $alt_recycled; then o=${o#-}; fi
-	            _getopt_err "$name: option '$o' doesn't allow an argument"
-	            error=1
-	          else
-	            echo "getopt: assertion failed (1)" >&2
-	            return 3
-	          fi
-	          alt_recycled=false
-	          ;;
-	
-	        (--?*)
-	          o=$1
-	          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
-	            error=1
-	          elif [[ ,"$long", == *,"${o#--}",* ]]; then
-	            opts=( "${opts[@]}" "$o" )
-	          elif [[ ,"$long", == *,"${o#--}::",* ]]; then
-	            opts=( "${opts[@]}" "$o" '' )
-	          elif [[ ,"$long", == *,"${o#--}:",* ]]; then
-	            if [[ $# -ge 2 ]]; then
-	              shift
-	              opts=( "${opts[@]}" "$o" "$1" )
-	            else
-	              if $alt_recycled; then o=${o#-}; fi
-	              _getopt_err "$name: option '$o' requires an argument"
-	              error=1
-	            fi
-	          else
-	            echo "getopt: assertion failed (2)" >&2
-	            return 3
-	          fi
-	          alt_recycled=false
-	          ;;
-	
-	        (-*)
-	          if [[ $flags == *a* ]]; then
-	            # Alternative parsing mode!
-	            # Try to handle as a long option if any of the following apply:
-	            #  1. There's an equals sign in the mix -x=3 or -xy=3
-	            #  2. There's 2+ letters and an abbreviated long match -xy
-	            #  3. There's a single letter and an exact long match
-	            #  4. There's a single letter and no short match
-	            o=${1::2} # temp for testing #4
-	            if [[ $1 == *=* || $1 == -?? || \
-	                  ,$long, == *,"${1#-}"[:,]* || \
-	                  ,$short, != *,"${o#-}"[:,]* ]]; then
-	              o=$(_getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" 2>/dev/null)
-	              case $? in
-	                (0)
-	                  # Unambiguous match. Let the long options parser handle
-	                  # it, with a flag to get the right error message.
-	                  set -- "-$1" "${@:2}"
-	                  alt_recycled=true
-	                  continue ;;
-	                (1)
-	                  # Ambiguous match, generate error and continue.
-	                  _getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" >/dev/null
-	                  error=1
-	                  shift
-	                  continue ;;
-	                (2)
-	                  # No match, fall through to single-character check.
-	                  true ;;
-	                (*)
-	                  echo "getopt: assertion failed (3)" >&2
-	                  return 3 ;;
-	              esac
-	            fi
-	          fi
-	
-	          o=${1::2}
-	          if [[ "$short" == *"${o#-}"::* ]]; then
-	            if [[ ${#1} -gt 2 ]]; then
-	              opts=( "${opts[@]}" "$o" "${1:2}" )
-	            else
-	              opts=( "${opts[@]}" "$o" '' )
-	            fi
-	          elif [[ "$short" == *"${o#-}":* ]]; then
-	            if [[ ${#1} -gt 2 ]]; then
-	              opts=( "${opts[@]}" "$o" "${1:2}" )
-	            elif [[ $# -ge 2 ]]; then
-	              shift
-	              opts=( "${opts[@]}" "$o" "$1" )
-	            else
-	              _getopt_err "$name: option requires an argument -- '${o#-}'"
-	              error=1
-	            fi
-	          elif [[ "$short" == *"${o#-}"* ]]; then
-	            opts=( "${opts[@]}" "$o" )
-	            if [[ ${#1} -gt 2 ]]; then
-	              set -- "$o" "-${1:2}" "${@:2}"
-	            fi
-	          else
-	            if [[ $flags == *a* ]]; then
-	              # Alternative parsing mode! Report on the entire failed
-	              # option. GNU includes =value but we omit it for sanity with
-	              # very long values.
-	              _getopt_err "$name: unrecognized option '${1%%=*}'"
-	            else
-	              _getopt_err "$name: invalid option -- '${o#-}'"
-	              if [[ ${#1} -gt 2 ]]; then
-	                set -- "$o" "-${1:2}" "${@:2}"
-	              fi
-	            fi
-	            error=1
-	          fi ;;
-	
-	        (*)
-	          # GNU getopt in-place mode (leading dash on short options)
-	          # overrides POSIXLY_CORRECT
-	          if [[ $flags == *i* ]]; then
-	            opts=( "${opts[@]}" "$1" )
-	          elif [[ $flags == *p* ]]; then
-	            params=( "${params[@]}" "$@" )
-	            break
-	          else
-	            params=( "${params[@]}" "$1" )
-	          fi
-	      esac
-	
-	      shift
-	    done
-	
-	    if [[ $flags == *Q* ]]; then
-	      true  # generate no output
-	    else
-	      echo -n ' '
-	      if [[ $flags == *[cu]* ]]; then
-	        printf '%s -- %s' "${opts[*]}" "${params[*]}"
-	      else
-	        if [[ $flags == *t* ]]; then
-	          _getopt_quote_csh "${opts[@]}" -- "${params[@]}"
-	        else
-	          _getopt_quote "${opts[@]}" -- "${params[@]}"
-	        fi
-	      fi
-	      echo
-	    fi
-	
-	    return $error
-	  }
-	
-	  _getopt_err() {
-	    if [[ $flags != *q* ]]; then
-	      printf '%s\n' "$1" >&2
-	    fi
-	  }
-	
-	  _getopt_resolve_abbrev() {
-	    # Resolves an abbrevation from a list of possibilities.
-	    # If the abbreviation is unambiguous, echoes the expansion on stdout
-	    # and returns 0.  If the abbreviation is ambiguous, prints a message on
-	    # stderr and returns 1. (For first parse this should convert to exit
-	    # status 2.)  If there is no match at all, prints a message on stderr
-	    # and returns 2.
-	    declare a q="$1"
-	    declare -a matches=()
-	    shift
-	    for a; do
-	      if [[ $q == "$a" ]]; then
-	        # Exact match. Squash any other partial matches.
-	        matches=( "$a" )
-	        break
-	      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q" ]]; then
-	        # Exact alternative match. Squash any other partial matches.
-	        matches=( "$a" )
-	        break
-	      elif [[ $a == "$q"* ]]; then
-	        # Abbreviated match.
-	        matches=( "${matches[@]}" "$a" )
-	      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q"* ]]; then
-	        # Abbreviated alternative match.
-	        matches=( "${matches[@]}" "${a#-}" )
-	      fi
-	    done
-	    case ${#matches[@]} in
-	      (0)
-	        [[ $flags == *q* ]] || \
-	        printf "$name: unrecognized option %s\\n" >&2 \
-	          "$(_getopt_quote "$q")"
-	        return 2 ;;
-	      (1)
-	        printf '%s' "${matches[0]}"; return 0 ;;
-	      (*)
-	        [[ $flags == *q* ]] || \
-	        printf "$name: option %s is ambiguous; possibilities: %s\\n" >&2 \
-	          "$(_getopt_quote "$q")" "$(_getopt_quote "${matches[@]}")"
-	        return 1 ;;
-	    esac
-	  }
-	
-	  _getopt_split() {
-	    # Splits $2 at commas to build array specified by $1
-	    declare IFS=,
-	    eval "$1=( \$2 )"
-	  }
-	
-	  _getopt_quote() {
-	    # Quotes arguments with single quotes, escaping inner single quotes
-	    declare s space='' q=\'
-	    for s; do
-	      printf "$space'%s'" "${s//$q/$q\\$q$q}"
-	      space=' '
-	    done
-	  }
-	
-	  _getopt_quote_csh() {
-	    # Quotes arguments with single quotes, escaping inner single quotes,
-	    # bangs, backslashes and newlines
-	    declare s i c space
-	    for s; do
-	      echo -n "$space'"
-	      for ((i=0; i<${#s}; i++)); do
-	        c=${s:i:1}
-	        case $c in
-	          (\\|\'|!)
-	            echo -n "'\\$c'" ;;
-	          ($'\n')
-	            echo -n "\\$c" ;;
-	          (*)
-	            echo -n "$c" ;;
-	        esac
-	      done
-	      echo -n \'
-	      space=' '
-	    done
-	  }
-	
-	  _getopt_help() {
-	    cat <<-EOT
-	
-		Usage:
-		 getopt <optstring> <parameters>
-		 getopt [options] [--] <optstring> <parameters>
-		 getopt [options] -o|--options <optstring> [options] [--] <parameters>
-	
-		Parse command options.
-	
-		Options:
-		 -a, --alternative             allow long options starting with single -
-		 -l, --longoptions <longopts>  the long options to be recognized
-		 -n, --name <progname>         the name under which errors are reported
-		 -o, --options <optstring>     the short options to be recognized
-		 -q, --quiet                   disable error reporting by getopt(3)
-		 -Q, --quiet-output            no normal output
-		 -s, --shell <shell>           set quoting conventions to those of <shell>
-		 -T, --test                    test for getopt(1) version
-		 -u, --unquoted                do not quote the output
-	
-		 -h, --help                    display this help
-		 -V, --version                 display version
-	
-		For more details see getopt(1).
-		EOT
-	  }
-	
-	  _getopt_version_check() {
-	    if [[ -z $BASH_VERSION ]]; then
-	      echo "getopt: unknown version of bash might not be compatible" >&2
-	      return 1
-	    fi
-	
-	    # This is a lexical comparison that should be sufficient forever.
-	    if [[ $BASH_VERSION < 2.05b ]]; then
-	      echo "getopt: bash $BASH_VERSION might not be compatible" >&2
-	      return 1
-	    fi
-	
-	    return 0
-	  }
-	
-	  _getopt_version_check
-	  _getopt_main "$@"
-	  declare status=$?
-	  unset -f _getopt_main _getopt_err _getopt_parse _getopt_quote \
-	    _getopt_quote_csh _getopt_resolve_abbrev _getopt_split _getopt_help \
-	    _getopt_version_check
-	  return $status
-	}
-	getopt $@
-elif [[ $cmdf = grep ]]; then
-	#!/bin/bash
-	PATTERN="$1"
-	shift
-	IFS=$'\n'
-	INPUT=( "${@:-"-"}" )
-	for i in "${INPUT[@]}"; do
-		if [[ "$i" == "-" ]]; then
-			exec 3<&0
-		else
-			exec 3< "$i" || exit 1
-		fi
-	
-		while read -ru 3 line; do
-			[[ "$line" =~ .*$PATTERN.* ]] && echo -E "$line"
-		done
-	done
-elif [[ $cmdf = hd ]]; then
-	#!/usr/bin/env bash
-	hd() {
-	  if (($#)); then
-	    hd <"$1"
-	    return
-	  fi
-	  local IFS='' # disables interpretation of \t, \n and space
-	  local LANG=C # allows characters > 0x7F
-	  local bytes=0 char chars=''
-	  declare -i bytes
-	  printf '%08x  ' 0
-	  while read -s -d '' -r -n 1 char; do  # -d '' allows newlines, -r allows \
-	    printf '%02x ' "'$char" # see https://pubs.opengroup.org/onlinepubs/009695399/utilities/printf.html
-	    [[ "$char" =~ [[:print:]] ]] || char='.' # display non-printables as a dot
-	    chars+=$char
-	    ((++bytes % 8)) && continue
-	    printf ' '
-	    ((bytes % 16)) && continue
-	    printf '|%s|\n%08x  ' "$chars" "$bytes"
-	    chars=''
-	  done
-	  if [[ "$chars" ]]; then
-	    len=${#chars}
-	    ((len > 7 && len--, len += (16 - (bytes % 16)) * 3 + 4))
-	    printf "%${len}s\n%08x  " "|$chars|" "$bytes"
-	  fi
-	  printf '\n'
-	}
-	
-	hd "$@"
-elif [[ $cmdf = head ]]; then
-	#!/usr/bin/env bash
-	#
-	# head in pure bash.
-	
-	while getopts ":n:" opt; do
-	    case $opt in
-	        n) max_lines="$OPTARG" ;;
-	
-	        :)
-	            printf '%s\n' "option -$OPTARG requires an argument." >&2
-	            exit 1
-	        ;;
-	
-	        ?)
-	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-	            exit 1
-	        ;;
-	    esac
-	
-	    shift "$((OPTIND - 1))"
-	done
-	
-	[[ ! -f $1 ]] && {
-	    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
-	    exit 1
-	}
-	
-	mapfile -n "${max_lines:-10}" file_data < "$1"
-	printf '%s' "${file_data[@]}"
-elif [[ $cmdf = hextorgb ]]; then
-	#!/bin/bash
-	# Convert a hex color to rgb.
-	# Usage: hex_to_rgb "color"
-	r="${1:1:2}"
-	g="${1:3:2}"
-	b="${1:5:6}"
-	[ -z "$1" ] && echo no color specified && exit
-	printf "%s %s %s\\n" "$((16#$r))" "$((16#$g))" "$((16#$b))"
-elif [[ $cmdf = hostname ]]; then
-	#!/usr/bin/env bash
-	#
-	# hostname in pure bash.
-	
-	: '\h'
-	printf '%s\n' "${_@P}"
-elif [[ $cmdf = kill ]]; then
-	#!/bin/bash
-	#seems like kill is bash builtin so this is another useless script
-	kill $@
-elif [[ $cmdf = less ]]; then
-	#!/usr/bin/env bash
-	#stolen from https://github.com/comfies/bed
-	printf '\e[?7l'
-	declare -a buffer
-	declare -i line base
-	declare message modified
-	
-	buffer=() # File contents
-	line=0 # Currently selected line (0 means the buffer is empty)
-	base=1 # Top-most line shown
-	modified=false # Tracking whether a file was modified
-	
-	shopt -s extglob # Ensure advanced pattern matching is available
-	shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
-	trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
-	trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
-	trap quit INT
-	
-	read_buffer() {
-	    mapfile -t -O 1 buffer # Read file into an array
-	    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
-	        line=1 # Indicate that we have a buffer loaded
-	        modified=false
-	        message="Read ${#buffer[@]} lines"
-	    else
-	        message="'$file' is empty"
-	    fi
-	}
-	
-	
-	quit() {
-		die
-	}
-	
-	up() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
-	        ((line < base)) && ((base--)) # Push back the top if we need to
-	        ((base <= 0)) && base=1 # Don't push back if our base is at 1
-	    done
-	}
-	
-	page_up() {
-	    up $((LINES - 3))
-	}
-	
-	down() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
-	        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
-	    done
-	}
-	
-	page_down() {
-	    down $((LINES - 3))
-	}
-	
-	die() {
-	    bind 'set disable-completion off' 2>/dev/null # Enable completion
-	    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
-	    exit "${errno:-0}" # Assume that we're exiting without an error
-	}
-	
-	redraw() {
-	    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
-	        "$COLUMNS" "$message" "bashbox less" \
-	        "$line" "${#buffer[line]}") # Status line, among others
-	    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
-	        ((i != line)) && printf '\e[90m' # Fade line number if not selected
-	        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-	            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
-	    done
-	    printf '\n' # Add final newline to seperate commandline
-	}
-	
-	key() {
-	    case "$1" in
-	    ${BED_KEY_PGUP:=$'\E[5~'}) page_up;;
-	    ${BED_KEY_PGDN:=$'\E[6~'}) page_down;;
-	    ${BED_KEY_UP:=$'\E[A'}*) up;;
-	    ${BED_KEY_DOWN:=$'\E[B'}*) down;;
-	    ${BED_KEY_QUIT:=q}) quit;;
-	    esac
-	}
-	
-	main() {
-	    printf '\e[?1047h' # Switch to alternative buffer
-	    redraw # Draw out the UI before loading file
-	    read_buffer
-	    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
-	        local -a k=()
-	        local -i i=1
-	        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0] </dev/tty; then # Check for ready input
-	            while read -rsN1 -t0.0001 k[$i]</dev/tty; do ((i++)); done # Multibyte hack
-	            key "$(printf '%s' "${k[@]}")"
-	        fi
-	    done
-	}
-	
-	main "$@"
-	printf '\e[?7h'
-elif [[ $cmdf = locale ]]; then
-	#!/usr/bin/env bash
-	#
-	# locale in pure bash.
-	
-	locale_vars=(
-	    LANG
-	    LC_CTYPE
-	    LC_NUMERIC
-	    LC_TIME
-	    LC_COLLATE
-	    LC_MONETARY
-	    LC_MESSAGES
-	    LC_PAPER
-	    LC_NAME
-	    LC_ADDRESS
-	    LC_TELEPHONE
-	    LC_MEASUREMENT
-	    LC_IDENTIFICATION
-	)
-	
-	
-	for var in "${locale_vars[@]}"; do
-	    printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
-	done
-	printf '%s=%s\n' "LC_ALL" "$LC_ALL"
-elif [[ $cmdf = logname ]]; then
-	#!/usr/bin/env bash
-	#
-	# logname in pure bash.
-	
-	: '\u'
-	printf '%s\n' "${_@P}"
-elif [[ $cmdf = lolcat ]]; then
-	#!/bin/bash
-	#based on https://github.com/yokkidack/shaverma
-	#generate colors
-	repeat() {
-		[[ -z $1 ]] && {
-		    printf '%s\n' "seq: error: missing arguments." >&2
-		    exit 1
-		}
-		
-		[[ $2 ]] &&
-		    first="$1"
-		
-		[[ $3 ]] &&
-		    increment="$2"
-		
-		last="${*: -1}"
-		
-		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-		
-	}
-	genrgb(){
-		nummin=255
-		numadd=-1
-		for a in $(repeat 0 1540)
-		do
-			numadd=$(( numadd + 1 ))
-			nummin=$(( nummin - 1 ))
-			[ $a -lt 256 ] && echo -n "\033[38;2;255"
-			[ $a -lt 256 ] && echo -n ";$numadd"
-			[ $a -lt 256 ] && echo -n ";0m" && echo
-			[ $a = 256 ] && numadd=0 && nummin=255
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[38;2;$nummin"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
-			[ $a = 512 ] && numadd=0 && nummin=256
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[38;2;0"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
-			[ $a = 768 ] && numadd=0 && nummin=255
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[38;2;0"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
-			[ $a = 1024 ] && numadd=0 && nummin=255
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[38;2;$numadd"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
-			[ $a = 1280 ] && numadd=0 && nummin=255
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[38;2;255"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
-		done
-	}
-	igenrgb(){
-		nummin=255
-		numadd=-1
-		for a in $(repeat 0 1540)
-		do
-			numadd=$(( numadd + 1 ))
-			nummin=$(( nummin - 1 ))
-			[ $a -lt 256 ] && echo -n "\033[48;2;255"
-			[ $a -lt 256 ] && echo -n ";$numadd"
-			[ $a -lt 256 ] && echo -n ";0m" && echo
-			[ $a = 256 ] && numadd=0 && nummin=255
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
-			[ $a = 512 ] && numadd=0 && nummin=256
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
-			[ $a = 768 ] && numadd=0 && nummin=255
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
-			[ $a = 1024 ] && numadd=0 && nummin=255
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
-			[ $a = 1280 ] && numadd=0 && nummin=255
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
-		done
-	}
-	gencol(){
-		for a in $(repeat 255)
-		do
-			echo "\033[38;5;${a}m"
-		done
-	}
-	igencol(){
-		for a in $(repeat 255)
-		do
-			echo "\033[48;5;${a}m"
-		done
-	}
-	#default limit
-	limit=255
-	#help
-	printhelp(){
-		Rainbow=($(genrgb))
-		limit=1536
-		lolcate "
-	Usage: lolcat [OPTION]...
-	
-	Concatenate standard input, to standard output
-	
-	  -i, --invert             Invert fg and bg
-	  -t, --truecolor          24-bit (truecolor)
-	  -it, --invert-truecolor  24-bit (inverted) 
-	  -h, --help               Show this message
-	  -v, --version            Print version and exit
-	
-	Examples:
-	  echo hello | bashbox lolcat   prints hello in rainbow
-	  echo hello | bashbox lolcat -t   prints hello in truecolor rainbow
-	
-	"
-		exit
-	}
-	index=0
-	lolcate(){
-	    string=$1
-	    ((j=$index % $limit))
-	    ((index++))
-	    for (( i=0; i<${#string}; i++ )); do
-	        ((j++))
-	        if (($j == $limit))
-	        then
-	            ((j=0))
-	        fi
-	      echo -ne "${Rainbow[$j]}${string:$i:1}"
-	    done
-	    printf "\033[0;0m"
-	}
-	case "$1" in
-		"-i"|"--invert") Rainbow=($(igencol));limit=256;;
-		"-t"|"--truecolor") Rainbow=($(genrgb));limit=1536;;
-		"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
-		"-h"|"--help") printhelp;;
-		"-v"|"--version") echo "bashbox lolcat";exit;;
-		*)Rainbow=($(gencol));limit=256;;
-	esac
-		
-	
-	IFS=$'\n'
-	
-	while read string
-	do
-	    lolcate $string
-	done
-elif [[ $cmdf = lower ]]; then
-	#!/bin/bash
-	# Lowercase a string.
-	# Usage: lower "string"
-	[ -z "$1" ] && echo no string && exit
-	printf "%s\\n" "${1,,}"
-elif [[ $cmdf = ls ]]; then
-	#!/usr/bin/bash
-	#found this randomly and it kinda works
-	printf '%s\n' *
-elif [[ $cmdf = more ]]; then
-	#!/usr/bin/env bash
-	#stolen from https://github.com/comfies/bed
-	declare -a buffer
-	declare -i line base
-	declare message modified
-	
-	buffer=() # File contents
-	line=0 # Currently selected line (0 means the buffer is empty)
-	base=1 # Top-most line shown
-	modified=false # Tracking whether a file was modified
-	
-	shopt -s extglob # Ensure advanced pattern matching is available
-	shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
-	trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
-	trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
-	trap quit INT
-	
-	read_buffer() {
-	    mapfile -t -O 1 buffer # Read file into an array
-	    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
-	        line=1 # Indicate that we have a buffer loaded
-	        modified=false
-	        message="Read ${#buffer[@]} lines"
-	    else
-	        message="'$file' is empty"
-	    fi
-	}
-	
-	
-	quit() {
-		die
-	}
-	
-	up() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
-	        ((line < base)) && ((base--)) # Push back the top if we need to
-	        ((base <= 0)) && base=1 # Don't push back if our base is at 1
-	    done
-	}
-	
-	page_up() {
-	    up $((LINES - 3))
-	}
-	
-	down() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
-	        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
-	    done
-	}
-	
-	page_down() {
-	    down $((LINES - 3))
-	}
-	
-	die() {
-	    bind 'set disable-completion off' 2>/dev/null # Enable completion
-	    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
-	    exit "${errno:-0}" # Assume that we're exiting without an error
-	}
-	
-	redraw() {
-	    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
-	        "$COLUMNS" "$message" "bashbox more" \
-	        "$line" "${#buffer[line]}") # Status line, among others
-	    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
-	        ((i != line)) && printf '\e[90m' # Fade line number if not selected
-	        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-	            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
-	    done
-	    printf '\n' # Add final newline to seperate commandline
-	}
-	
-	key() {
-	    case "$1" in
-	    ${BED_KEY_PGUP:=$'\E[5~'}) up;;
-	    ${BED_KEY_PGDN:=$'\E[6~'}) down;;
-	    ${BED_KEY_UP:=$'\E[A'}*) page_up;;
-	    ${BED_KEY_DOWN:=$'\E[B'}*) page_down;;
-	    ${BED_KEY_QUIT:=q}) quit;;
-	    esac
-	}
-	
-	main() {
-	    printf '\e[?1047h' # Switch to alternative buffer
-	    redraw # Draw out the UI before loading file
-	    read_buffer
-	    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
-	        local -a k=()
-	        local -i i=1
-	        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0] </dev/tty; then # Check for ready input
-	            while read -rsN1 -t0.0001 k[$i]</dev/tty; do ((i++)); done # Multibyte hack
-	            key "$(printf '%s' "${k[@]}")"
-	        fi
-	    done
-	}
-	
-	main "$@"
-elif [[ $cmdf = nano ]]; then
-	#!/usr/bin/env bash
-	#stolen from https://github.com/comfies/bed
-	basenam() {
-		for file in "$@"; do
-		    file="${file%/}"
-		    printf '%s\n' "${file##*/}"
-		done
-	}
-	declare -a buffer
-	declare -i line base
-	declare file message modified
-	
-	printf "\e[?1049h" #switch to alternative buffer
-	
-	buffer=() # File contents
-	line=0 # Currently selected line (0 means the buffer is empty)
-	base=1 # Top-most line shown
-	file= # Currently addressed file
-	message="Welcome to nano (bed) (press 'q' to quit)." # Feedback text in the status bar
-	modified=false # Tracking whether a file was modified
-	
-	shopt -s extglob # Ensure advanced pattern matching is available
-	shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
-	trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
-	trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
-	trap quit INT
-	
-	set_buffer_file() {
-	    bind 'set disable-completion off' 2>/dev/null # Enable completion
-	    printf '\e[?25h' # Enable cursor
-	    if read -rei "$1$file" -p "${BED_FILE_PROMPT:=Path: }" file; then
-	        modified=true
-	    fi
-	    bind 'set disable-completion on' 2>/dev/null
-	}
-	
-	read_buffer() {
-	    set_buffer_file "$1" # Update target file (pass on default if present)
-	    mapfile -t -O 1 buffer <"$file" # Read file into an array
-	    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
-	        line=1 # Indicate that we have a buffer loaded
-	        modified=false
-	        message="Read ${#buffer[@]} lines from '$file'"
-	    else
-	        message="'$file' is empty"
-	    fi
-	}
-	
-	write_buffer() {
-	    true >"$file" # Set the file to an empty text file
-	    for ln in "${buffer[@]}"; do # Write in the buffer to the file
-	        echo "$ln" >>"$file"
-	    done
-	    modified=false
-	    message="Wrote ${#buffer[@]} lines to '$file'"
-	}
-	
-	edit_line() {
-	    ((line == 0)) && return # If the line is not possible, do nothing
-	    printf '\e[?25h\e[%sH' "$((line + 2 - base))" # Reset cursor position and enable cursor
-	    read -rei "${buffer[line]}" -p "$(printf '%4s ' "$line")" # Present editable line
-	    if [[ "$REPLY" != "${buffer[line]}" ]]; then # If the line is changed, update and inform
-	        buffer[line]=$REPLY
-	        modified=true
-	    fi
-	}
-	
-	new_line() {
-	    buffer=("" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
-	    unset 'buffer[0]'
-	    modified=true
-	}
-	
-	append_line() {
-	    new_line
-	    down
-	    redraw
-	    edit_line
-	}
-	
-	delete_line() {
-	    buffer=("" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
-	    unset 'buffer[0]'
-	    ((line > ${#buffer[@]})) && up
-	    modified=true
-	}
-	
-	quit() {
-	    if [[ "$modified" == "true" ]]; then
-	        while :; do
-	            read -rsN1 -p "Buffer modified, save before close? [Y/n/c]" choice
-	            case "$choice" in
-	            Y|y) write_buffer; die;;
-	            N|n) die;;
-	            C|c) message="Quit canceled"; break;;
-	            *) continue;;
-	            esac
-	        done
-	    else
-	        die
-	    fi
-	}
-	
-	up() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
-	        ((line < base)) && ((base--)) # Push back the top if we need to
-	        ((base <= 0)) && base=1 # Don't push back if our base is at 1
-	    done
-	}
-	
-	page_up() {
-	    up $((LINES - 3))
-	}
-	
-	down() {
-	    for ((i = 0; i < ${1:-1}; i++)); do
-	        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
-	        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
-	    done
-	}
-	
-	page_down() {
-	    down $((LINES - 3))
-	}
-	
-	die() {
-	    bind 'set disable-completion off' 2>/dev/null # Enable completion
-	    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
-	    printf "\e[?1049l" # switch back to main buffer
-	    exit "${errno:-0}" # Assume that we're exiting without an error
-	}
-	
-	redraw() {
-	    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
-	        "$COLUMNS" "$message" "${BED_ICON:=🛏 } bashbox nano" \
-	        "$(basenam "$file")" "$line" "${#buffer[line]}") # Status line, among others
-	    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
-	        ((i != line)) && printf '\e[90m' # Fade line number if not selected
-	        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-	            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
-	    done
-	    printf '\n' # Add final newline to seperate commandline
-	}
-	
-	key() {
-	    case "$1" in
-	    ${BED_KEY_PGUP:=$'\E[5~'}) page_up;;
-	    ${BED_KEY_PGDN:=$'\E[6~'}) page_down;;
-	    ${BED_KEY_UP:=$'\E[A'}*) up;;
-	    ${BED_KEY_DOWN:=$'\E[B'}*) down;;
-	    ${BED_KEY_QUIT:=q}) quit;;
-	    ${BED_KEY_FILE:=f}) set_buffer_file;;
-	    ${BED_KEY_READ:=r}) read_buffer;;
-	    ${BED_KEY_WRITE:=w}) write_buffer;;
-	    ${BED_KEY_EDIT:=e}|'') edit_line;;
-	    ${BED_KEY_APPEND:=a}) append_line;;
-	    ${BED_KEY_DELETE:=d}) delete_line;;
-	    ${BED_KEY_NEW:=n}) new_line;;
-	    esac
-	}
-	
-	main() {
-	    printf '\e[?1047h' # Switch to alternative buffer
-	    if [[ "$1" ]]; then # If a file was provided in the terminal pre-load it
-	        redraw # Draw out the UI before loading file
-	        read_buffer "$1"
-	    fi
-	    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
-	        local -a k=()
-	        local -i i=1
-	        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0]; then # Check for ready input
-	            while read -rsN1 -t0.0001 k[$i]; do ((i++)); done # Multibyte hack
-	            key "$(printf '%s' "${k[@]}")" # Handle keypress event
-	        fi
-	    done
-	}
-	
-	main "$@"
-elif [[ $cmdf = od ]]; then
-	#!/bin/bash
-	 
-	while read line
-	do
-	    for ((i=0;i<${#line};i++))
-	    do
-	        printf " %02X" \'${line:$i:1}
-	    done
-	done < ${1:-/dev/fd/0}
-elif [[ $cmdf = ord ]]; then
-	ord() {
-	  LC_CTYPE=C printf '%d' "'$1"
-	}
-	ord "$@"
-elif [[ $cmdf = print ]]; then
-	#!/usr/bin/env bash
-	#
-	# echo in pure bash.
-	
-	echo "$@"
-elif [[ $cmdf = printenv ]]; then
-	#!/usr/bin/env bash
-	#
-	# printenv in pure bash.
-	
-	[[ $1 ]] && {
-	    printf '%s\n' "${!1}"
-	    exit 0
-	}
-	
-	mapfile -t envars < <(compgen -v)
-	
-	for var in "${envars[@]}"; do
-	    printf '%s=%s\n' "$var" "${!var}"
-	done
-elif [[ $cmdf = printf ]]; then
-	#!/usr/bin/env bash
-	#
-	# printf in pure bash.
-	
-	printf "$@"
-elif [[ $cmdf = ps ]]; then
-	#!/bin/bash
-	cd /proc || exit 1
-	for item in *; {
-		if [[ ! "$item" =~ [^[:digit:]] ]]; then
-			echo -n "$item "
-			printf '%s\n' "$(<"$item/comm")"
-		fi
-	}
-elif [[ $cmdf = pwd ]]; then
-	#!/usr/bin/env bash
-	#
-	# pwd in pure bash.
-	
-	printf '%s\n' "$PWD"
-elif [[ $cmdf = pwdx ]]; then
-	#!/usr/bin/env bash
-	for pid in "$@"
-	do
-		cd -P /proc/$pid/cwd
-		echo $PWD
-	done
-elif [[ $cmdf = readlink ]]; then
-	#!/usr/bin/env bash
-	#
-	# realpath in pure bash.
-	
-	for file in "$@"
-	do
-		cd -P $file
-		echo $PWD
-	done
-elif [[ $cmdf = realpath ]]; then
-	#!/usr/bin/env bash
-	#
-	# realpath in pure bash.
-	
-	for file in "$@"
-	do
-		cd -P $file
-		echo $PWD
-	done
-elif [[ $cmdf = rev ]]; then
-	#!/bin/bash
-	if [[ "$#" == 0 ]]; then
-		while read -r line
-		do
-			rev=
-			len=${#line}
-			for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
-			echo "$rev"
-		done
+}
+printf '%s\n' "$(</proc/meminfo)" | line 1 2 21 5 3
+;;
+getlines)
+#!/bin/bash
+#make array with all lines mapped to line numbers
+n=0
+while read -r line
+do
+	n=$(( n + 1 ))
+	lines[$n]="$line"
+done
+for arg in "$@"
+do
+	#echo the line requested from the array
+	echo "${lines[$arg]}"
+done
+;;
+getopt)
+getopt() {
+  # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
+  # version 1.4.5
+  #
+  # Copyright 2012-2021 Aron Griffis <aron@scampersand.com>
+  #
+  # Permission is hereby granted, free of charge, to any person obtaining
+  # a copy of this software and associated documentation files (the
+  # "Software"), to deal in the Software without restriction, including
+  # without limitation the rights to use, copy, modify, merge, publish,
+  # distribute, sublicense, and/or sell copies of the Software, and to
+  # permit persons to whom the Software is furnished to do so, subject to
+  # the following conditions:
+  #
+  # The above copyright notice and this permission notice shall be included
+  # in all copies or substantial portions of the Software.
+  #
+  # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  # IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+  # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  _getopt_main() {
+    # Returns one of the following statuses:
+    #   0 success
+    #   1 error parsing parameters
+    #   2 error in getopt invocation
+    #   3 internal error
+    #   4 reserved for -T
+    #
+    # For statuses 0 and 1, generates normalized and shell-quoted
+    # "options -- parameters" on stdout.
+
+    declare parsed status
+    declare short long='' name flags=''
+    declare have_short=false
+
+    # Synopsis from getopt man-page:
+    #
+    #   getopt optstring parameters
+    #   getopt [options] [--] optstring parameters
+    #   getopt [options] -o|--options optstring [options] [--] parameters
+    #
+    # The first form can be normalized to the third form which
+    # _getopt_parse() understands. The second form can be recognized after
+    # first parse when $short hasn't been set.
+
+    if [[ -n ${GETOPT_COMPATIBLE+isset} || $1 == [^-]* ]]; then
+      # Enable compatibility mode
+      flags=c$flags
+      # Normalize first to third synopsis form
+      set -- -o "$1" -- "${@:2}"
+    fi
+
+    # First parse always uses flags=p since getopt always parses its own
+    # arguments effectively in this mode.
+    parsed=$(_getopt_parse getopt ahl:n:o:qQs:TuV \
+      alternative,help,longoptions:,name:,options:,quiet,quiet-output,shell:,test,version \
+      p "$@")
+    status=$?
+    if [[ $status != 0 ]]; then
+      if [[ $status == 1 ]]; then
+        echo "Try 'getopt --help' for more information." >&2
+        # Since this is the first parse, convert status 1 to 2
+        status=2
+      fi
+      return $status
+    fi
+    eval "set -- $parsed"
+
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        (-a|--alternative)
+          flags=a$flags ;;
+
+        (-h|--help)
+          _getopt_help
+          return 0
+          ;;
+
+        (-l|--longoptions)
+          long="$long${long:+,}$2"
+          shift ;;
+
+        (-n|--name)
+          name=$2
+          shift ;;
+
+        (-o|--options)
+          short=$2
+          have_short=true
+          shift ;;
+
+        (-q|--quiet)
+          flags=q$flags ;;
+
+        (-Q|--quiet-output)
+          flags=Q$flags ;;
+
+        (-s|--shell)
+          case $2 in
+            (sh|bash)
+              flags=${flags//t/} ;;
+            (csh|tcsh)
+              flags=t$flags ;;
+            (*)
+              echo 'getopt: unknown shell after -s or --shell argument' >&2
+              echo "Try 'getopt --help' for more information." >&2
+              return 2 ;;
+          esac
+          shift ;;
+
+        (-u|--unquoted)
+          flags=u$flags ;;
+
+        (-T|--test)
+          return 4 ;;
+
+        (-V|--version)
+          echo "pure-getopt 1.4.4"
+          return 0 ;;
+
+        (--)
+          shift
+          break ;;
+      esac
+
+      shift
+    done
+
+    if ! $have_short; then
+      # $short was declared but never set, not even to an empty string.
+      # This implies the second form in the synopsis.
+      if [[ $# == 0 ]]; then
+        echo 'getopt: missing optstring argument' >&2
+        echo "Try 'getopt --help' for more information." >&2
+        return 2
+      fi
+      short=$1
+      have_short=true
+      shift
+    fi
+
+    if [[ $short == -* ]]; then
+      # Leading dash means generate output in place rather than reordering,
+      # unless we're already in compatibility mode.
+      [[ $flags == *c* ]] || flags=i$flags
+      short=${short#?}
+    elif [[ $short == +* ]]; then
+      # Leading plus means POSIXLY_CORRECT, unless we're already in
+      # compatibility mode.
+      [[ $flags == *c* ]] || flags=p$flags
+      short=${short#?}
+    fi
+
+    # This should fire if POSIXLY_CORRECT is in the environment, even if
+    # it's an empty string.  That's the difference between :+ and +
+    flags=${POSIXLY_CORRECT+p}$flags
+
+    _getopt_parse "${name:-getopt}" "$short" "$long" "$flags" "$@"
+  }
+
+  _getopt_parse() {
+    # Inner getopt parser, used for both first parse and second parse.
+    # Returns 0 for success, 1 for error parsing, 3 for internal error.
+    # In the case of status 1, still generates stdout with whatever could
+    # be parsed.
+    #
+    # $flags is a string of characters with the following meanings:
+    #   a - alternative parsing mode
+    #   c - GETOPT_COMPATIBLE
+    #   i - generate output in place rather than reordering
+    #   p - POSIXLY_CORRECT
+    #   q - disable error reporting
+    #   Q - disable normal output
+    #   t - quote for csh/tcsh
+    #   u - unquoted output
+
+    declare name="$1" short="$2" long="$3" flags="$4"
+    shift 4
+
+    # Split $long on commas, prepend double-dashes, strip colons;
+    # for use with _getopt_resolve_abbrev
+    declare -a longarr
+    _getopt_split longarr "$long"
+    longarr=( "${longarr[@]/#/--}" )
+    longarr=( "${longarr[@]%:}" )
+    longarr=( "${longarr[@]%:}" )
+
+    # Parse and collect options and parameters
+    declare -a opts params
+    declare o alt_recycled=false error=0
+
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        (--)
+          params=( "${params[@]}" "${@:2}" )
+          break ;;
+
+        (--*=*)
+          o=${1%%=*}
+          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
+            error=1
+          elif [[ ,"$long", == *,"${o#--}"::,* ]]; then
+            opts=( "${opts[@]}" "$o" "${1#*=}" )
+          elif [[ ,"$long", == *,"${o#--}":,* ]]; then
+            opts=( "${opts[@]}" "$o" "${1#*=}" )
+          elif [[ ,"$long", == *,"${o#--}",* ]]; then
+            if $alt_recycled; then o=${o#-}; fi
+            _getopt_err "$name: option '$o' doesn't allow an argument"
+            error=1
+          else
+            echo "getopt: assertion failed (1)" >&2
+            return 3
+          fi
+          alt_recycled=false
+          ;;
+
+        (--?*)
+          o=$1
+          if ! o=$(_getopt_resolve_abbrev "$o" "${longarr[@]}"); then
+            error=1
+          elif [[ ,"$long", == *,"${o#--}",* ]]; then
+            opts=( "${opts[@]}" "$o" )
+          elif [[ ,"$long", == *,"${o#--}::",* ]]; then
+            opts=( "${opts[@]}" "$o" '' )
+          elif [[ ,"$long", == *,"${o#--}:",* ]]; then
+            if [[ $# -ge 2 ]]; then
+              shift
+              opts=( "${opts[@]}" "$o" "$1" )
+            else
+              if $alt_recycled; then o=${o#-}; fi
+              _getopt_err "$name: option '$o' requires an argument"
+              error=1
+            fi
+          else
+            echo "getopt: assertion failed (2)" >&2
+            return 3
+          fi
+          alt_recycled=false
+          ;;
+
+        (-*)
+          if [[ $flags == *a* ]]; then
+            # Alternative parsing mode!
+            # Try to handle as a long option if any of the following apply:
+            #  1. There's an equals sign in the mix -x=3 or -xy=3
+            #  2. There's 2+ letters and an abbreviated long match -xy
+            #  3. There's a single letter and an exact long match
+            #  4. There's a single letter and no short match
+            o=${1::2} # temp for testing #4
+            if [[ $1 == *=* || $1 == -?? || \
+                  ,$long, == *,"${1#-}"[:,]* || \
+                  ,$short, != *,"${o#-}"[:,]* ]]; then
+              o=$(_getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" 2>/dev/null)
+              case $? in
+                (0)
+                  # Unambiguous match. Let the long options parser handle
+                  # it, with a flag to get the right error message.
+                  set -- "-$1" "${@:2}"
+                  alt_recycled=true
+                  continue ;;
+                (1)
+                  # Ambiguous match, generate error and continue.
+                  _getopt_resolve_abbrev "${1%%=*}" "${longarr[@]}" >/dev/null
+                  error=1
+                  shift
+                  continue ;;
+                (2)
+                  # No match, fall through to single-character check.
+                  true ;;
+                (*)
+                  echo "getopt: assertion failed (3)" >&2
+                  return 3 ;;
+              esac
+            fi
+          fi
+
+          o=${1::2}
+          if [[ "$short" == *"${o#-}"::* ]]; then
+            if [[ ${#1} -gt 2 ]]; then
+              opts=( "${opts[@]}" "$o" "${1:2}" )
+            else
+              opts=( "${opts[@]}" "$o" '' )
+            fi
+          elif [[ "$short" == *"${o#-}":* ]]; then
+            if [[ ${#1} -gt 2 ]]; then
+              opts=( "${opts[@]}" "$o" "${1:2}" )
+            elif [[ $# -ge 2 ]]; then
+              shift
+              opts=( "${opts[@]}" "$o" "$1" )
+            else
+              _getopt_err "$name: option requires an argument -- '${o#-}'"
+              error=1
+            fi
+          elif [[ "$short" == *"${o#-}"* ]]; then
+            opts=( "${opts[@]}" "$o" )
+            if [[ ${#1} -gt 2 ]]; then
+              set -- "$o" "-${1:2}" "${@:2}"
+            fi
+          else
+            if [[ $flags == *a* ]]; then
+              # Alternative parsing mode! Report on the entire failed
+              # option. GNU includes =value but we omit it for sanity with
+              # very long values.
+              _getopt_err "$name: unrecognized option '${1%%=*}'"
+            else
+              _getopt_err "$name: invalid option -- '${o#-}'"
+              if [[ ${#1} -gt 2 ]]; then
+                set -- "$o" "-${1:2}" "${@:2}"
+              fi
+            fi
+            error=1
+          fi ;;
+
+        (*)
+          # GNU getopt in-place mode (leading dash on short options)
+          # overrides POSIXLY_CORRECT
+          if [[ $flags == *i* ]]; then
+            opts=( "${opts[@]}" "$1" )
+          elif [[ $flags == *p* ]]; then
+            params=( "${params[@]}" "$@" )
+            break
+          else
+            params=( "${params[@]}" "$1" )
+          fi
+      esac
+
+      shift
+    done
+
+    if [[ $flags == *Q* ]]; then
+      true  # generate no output
+    else
+      echo -n ' '
+      if [[ $flags == *[cu]* ]]; then
+        printf '%s -- %s' "${opts[*]}" "${params[*]}"
+      else
+        if [[ $flags == *t* ]]; then
+          _getopt_quote_csh "${opts[@]}" -- "${params[@]}"
+        else
+          _getopt_quote "${opts[@]}" -- "${params[@]}"
+        fi
+      fi
+      echo
+    fi
+
+    return $error
+  }
+
+  _getopt_err() {
+    if [[ $flags != *q* ]]; then
+      printf '%s\n' "$1" >&2
+    fi
+  }
+
+  _getopt_resolve_abbrev() {
+    # Resolves an abbrevation from a list of possibilities.
+    # If the abbreviation is unambiguous, echoes the expansion on stdout
+    # and returns 0.  If the abbreviation is ambiguous, prints a message on
+    # stderr and returns 1. (For first parse this should convert to exit
+    # status 2.)  If there is no match at all, prints a message on stderr
+    # and returns 2.
+    declare a q="$1"
+    declare -a matches=()
+    shift
+    for a; do
+      if [[ $q == "$a" ]]; then
+        # Exact match. Squash any other partial matches.
+        matches=( "$a" )
+        break
+      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q" ]]; then
+        # Exact alternative match. Squash any other partial matches.
+        matches=( "$a" )
+        break
+      elif [[ $a == "$q"* ]]; then
+        # Abbreviated match.
+        matches=( "${matches[@]}" "$a" )
+      elif [[ $flags == *a* && $q == -[^-]* && $a == -"$q"* ]]; then
+        # Abbreviated alternative match.
+        matches=( "${matches[@]}" "${a#-}" )
+      fi
+    done
+    case ${#matches[@]} in
+      (0)
+        [[ $flags == *q* ]] || \
+        printf "$name: unrecognized option %s\\n" >&2 \
+          "$(_getopt_quote "$q")"
+        return 2 ;;
+      (1)
+        printf '%s' "${matches[0]}"; return 0 ;;
+      (*)
+        [[ $flags == *q* ]] || \
+        printf "$name: option %s is ambiguous; possibilities: %s\\n" >&2 \
+          "$(_getopt_quote "$q")" "$(_getopt_quote "${matches[@]}")"
+        return 1 ;;
+    esac
+  }
+
+  _getopt_split() {
+    # Splits $2 at commas to build array specified by $1
+    declare IFS=,
+    eval "$1=( \$2 )"
+  }
+
+  _getopt_quote() {
+    # Quotes arguments with single quotes, escaping inner single quotes
+    declare s space='' q=\'
+    for s; do
+      printf "$space'%s'" "${s//$q/$q\\$q$q}"
+      space=' '
+    done
+  }
+
+  _getopt_quote_csh() {
+    # Quotes arguments with single quotes, escaping inner single quotes,
+    # bangs, backslashes and newlines
+    declare s i c space
+    for s; do
+      echo -n "$space'"
+      for ((i=0; i<${#s}; i++)); do
+        c=${s:i:1}
+        case $c in
+          (\\|\'|!)
+            echo -n "'\\$c'" ;;
+          ($'\n')
+            echo -n "\\$c" ;;
+          (*)
+            echo -n "$c" ;;
+        esac
+      done
+      echo -n \'
+      space=' '
+    done
+  }
+
+  _getopt_help() {
+    cat <<-EOT
+
+	Usage:
+	 getopt <optstring> <parameters>
+	 getopt [options] [--] <optstring> <parameters>
+	 getopt [options] -o|--options <optstring> [options] [--] <parameters>
+
+	Parse command options.
+
+	Options:
+	 -a, --alternative             allow long options starting with single -
+	 -l, --longoptions <longopts>  the long options to be recognized
+	 -n, --name <progname>         the name under which errors are reported
+	 -o, --options <optstring>     the short options to be recognized
+	 -q, --quiet                   disable error reporting by getopt(3)
+	 -Q, --quiet-output            no normal output
+	 -s, --shell <shell>           set quoting conventions to those of <shell>
+	 -T, --test                    test for getopt(1) version
+	 -u, --unquoted                do not quote the output
+
+	 -h, --help                    display this help
+	 -V, --version                 display version
+
+	For more details see getopt(1).
+	EOT
+  }
+
+  _getopt_version_check() {
+    if [[ -z $BASH_VERSION ]]; then
+      echo "getopt: unknown version of bash might not be compatible" >&2
+      return 1
+    fi
+
+    # This is a lexical comparison that should be sufficient forever.
+    if [[ $BASH_VERSION < 2.05b ]]; then
+      echo "getopt: bash $BASH_VERSION might not be compatible" >&2
+      return 1
+    fi
+
+    return 0
+  }
+
+  _getopt_version_check
+  _getopt_main "$@"
+  declare status=$?
+  unset -f _getopt_main _getopt_err _getopt_parse _getopt_quote \
+    _getopt_quote_csh _getopt_resolve_abbrev _getopt_split _getopt_help \
+    _getopt_version_check
+  return $status
+}
+getopt $@
+;;
+grep)
+#!/bin/bash
+PATTERN="$1"
+shift
+IFS=$'\n'
+INPUT=( "${@:-"-"}" )
+for i in "${INPUT[@]}"; do
+	if [[ "$i" == "-" ]]; then
+		exec 3<&0
 	else
-		for file in "$@"; do
-			if [[ -f $file ]]; then
-				while read -r line
-				do
-					rev=
-					len=${#line}
-					for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
-					echo "$rev"
-				done < "$file"
-			else
-				printf '%s\n' "rev: $file: No such file or directory" >&2
-			fi
-		done
+		exec 3< "$i" || exit 1
 	fi
-elif [[ $cmdf = rgbtohex ]]; then
-	#!/bin/bash
-	# Convert an rgb color to hex.
-	# Usage: rgb_to_hex "r" "g" "b"
-	[ -z "$3" ] && echo not enough arguments && exit
-	printf "#%02x%02x%02x\\n" "$1" "$2" "$3"
-elif [[ $cmdf = sed ]]; then
-	#!/usr/bin/env bash
-	# Usage: bash_sed <before> <after> filename
-	# s command + global option (s///g) only.
-	bash_sed () {
-	  local _pat="$1" ;shift
-	  local _pat_update="$1" ;shift
-	  local _fname=${1:-/dev/stdin}
-	  while read -r line ; do
-	    if [[ "${line}" =~ $_pat ]];then
-	      printf "%s\\n" "${line//$_pat/$_pat_update}"
-	    else
-	      printf "%s\\n" "${line}"
-	    fi
-	  done < "$_fname"
-	}
-elif [[ $cmdf = seq ]]; then
-	#!/usr/bin/env bash
-	#
-	# seq in pure bash.
-	
+
+	while read -ru 3 line; do
+		[[ "$line" =~ .*$PATTERN.* ]] && echo -E "$line"
+	done
+done
+;;
+hd)
+#!/usr/bin/env bash
+hd() {
+  if (($#)); then
+    hd <"$1"
+    return
+  fi
+  local IFS='' # disables interpretation of \t, \n and space
+  local LANG=C # allows characters > 0x7F
+  local bytes=0 char chars=''
+  declare -i bytes
+  printf '%08x  ' 0
+  while read -s -d '' -r -n 1 char; do  # -d '' allows newlines, -r allows \
+    printf '%02x ' "'$char" # see https://pubs.opengroup.org/onlinepubs/009695399/utilities/printf.html
+    [[ "$char" =~ [[:print:]] ]] || char='.' # display non-printables as a dot
+    chars+=$char
+    ((++bytes % 8)) && continue
+    printf ' '
+    ((bytes % 16)) && continue
+    printf '|%s|\n%08x  ' "$chars" "$bytes"
+    chars=''
+  done
+  if [[ "$chars" ]]; then
+    len=${#chars}
+    ((len > 7 && len--, len += (16 - (bytes % 16)) * 3 + 4))
+    printf "%${len}s\n%08x  " "|$chars|" "$bytes"
+  fi
+  printf '\n'
+}
+
+hd "$@"
+;;
+head)
+#!/usr/bin/env bash
+#
+# head in pure bash.
+
+while getopts ":n:" opt; do
+    case $opt in
+        n) max_lines="$OPTARG" ;;
+
+        :)
+            printf '%s\n' "option -$OPTARG requires an argument." >&2
+            exit 1
+        ;;
+
+        ?)
+            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+            exit 1
+        ;;
+    esac
+
+    shift "$((OPTIND - 1))"
+done
+
+[[ ! -f $1 ]] && {
+    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
+    exit 1
+}
+
+mapfile -n "${max_lines:-10}" file_data < "$1"
+printf '%s' "${file_data[@]}"
+;;
+hextorgb)
+#!/bin/bash
+# Convert a hex color to rgb.
+# Usage: hex_to_rgb "color"
+r="${1:1:2}"
+g="${1:3:2}"
+b="${1:5:6}"
+[ -z "$1" ] && echo no color specified && exit
+printf "%s %s %s\\n" "$((16#$r))" "$((16#$g))" "$((16#$b))"
+;;
+hostname)
+#!/usr/bin/env bash
+#
+# hostname in pure bash.
+
+: '\h'
+printf '%s\n' "${_@P}"
+;;
+kill)
+#!/bin/bash
+#seems like kill is bash builtin so this is another useless script
+kill $@
+;;
+less)
+#!/usr/bin/env bash
+#stolen from https://github.com/comfies/bed
+printf '\e[?7l'
+declare -a buffer
+declare -i line base
+declare message modified
+
+buffer=() # File contents
+line=0 # Currently selected line (0 means the buffer is empty)
+base=1 # Top-most line shown
+modified=false # Tracking whether a file was modified
+
+shopt -s extglob # Ensure advanced pattern matching is available
+shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
+trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
+trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
+trap quit INT
+
+read_buffer() {
+    mapfile -t -O 1 buffer # Read file into an array
+    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
+        line=1 # Indicate that we have a buffer loaded
+        modified=false
+        message="Read ${#buffer[@]} lines"
+    else
+        message="'$file' is empty"
+    fi
+}
+
+
+quit() {
+	die
+}
+
+up() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
+        ((line < base)) && ((base--)) # Push back the top if we need to
+        ((base <= 0)) && base=1 # Don't push back if our base is at 1
+    done
+}
+
+page_up() {
+    up $((LINES - 3))
+}
+
+down() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
+        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+    done
+}
+
+page_down() {
+    down $((LINES - 3))
+}
+
+die() {
+    bind 'set disable-completion off' 2>/dev/null # Enable completion
+    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+    exit "${errno:-0}" # Assume that we're exiting without an error
+}
+
+redraw() {
+    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
+        "$COLUMNS" "$message" "bashbox less" \
+        "$line" "${#buffer[line]}") # Status line, among others
+    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
+        ((i != line)) && printf '\e[90m' # Fade line number if not selected
+        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
+            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
+    done
+    printf '\n' # Add final newline to seperate commandline
+}
+
+key() {
+    case "$1" in
+    ${BED_KEY_PGUP:=$'\E[5~'}) page_up;;
+    ${BED_KEY_PGDN:=$'\E[6~'}) page_down;;
+    ${BED_KEY_UP:=$'\E[A'}*) up;;
+    ${BED_KEY_DOWN:=$'\E[B'}*) down;;
+    ${BED_KEY_QUIT:=q}) quit;;
+    esac
+}
+
+main() {
+    printf '\e[?1047h' # Switch to alternative buffer
+    redraw # Draw out the UI before loading file
+    read_buffer
+    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
+        local -a k=()
+        local -i i=1
+        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0] </dev/tty; then # Check for ready input
+            while read -rsN1 -t0.0001 k[$i]</dev/tty; do ((i++)); done # Multibyte hack
+            key "$(printf '%s' "${k[@]}")"
+        fi
+    done
+}
+
+main "$@"
+printf '\e[?7h'
+;;
+locale)
+#!/usr/bin/env bash
+#
+# locale in pure bash.
+
+locale_vars=(
+    LANG
+    LC_CTYPE
+    LC_NUMERIC
+    LC_TIME
+    LC_COLLATE
+    LC_MONETARY
+    LC_MESSAGES
+    LC_PAPER
+    LC_NAME
+    LC_ADDRESS
+    LC_TELEPHONE
+    LC_MEASUREMENT
+    LC_IDENTIFICATION
+)
+
+
+for var in "${locale_vars[@]}"; do
+    printf '%s=\"%s\"\n' "$var" "${!var:-$LANG}"
+done
+printf '%s=%s\n' "LC_ALL" "$LC_ALL"
+;;
+logname)
+#!/usr/bin/env bash
+#
+# logname in pure bash.
+
+: '\u'
+printf '%s\n' "${_@P}"
+;;
+lolcat)
+#!/bin/bash
+#based on https://github.com/yokkidack/shaverma
+#generate colors
+repeat() {
 	[[ -z $1 ]] && {
 	    printf '%s\n' "seq: error: missing arguments." >&2
 	    exit 1
@@ -2264,1427 +1705,2050 @@ elif [[ $cmdf = seq ]]; then
 	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
 	    printf '%s\n' "$i"
 	}
-elif [[ $cmdf = sh ]]; then
-	#!/usr/bin/env bash
-	bash --posix $@
-elif [[ $cmdf = sha512 ]]; then
-	#!/bin/bash
 	
-	# 64-bit rotate right function
-	# $1 = value to rotate
-	# $2 = magnitude of rotation
-	rotate()
-	{
-		lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
-		tmp=$(($lshtmp>>$(($2-1))))
-		tmp=$(($(($(($1<<$((64-$2))))&$((0xffffffffffffffff))))|$tmp))
+}
+genrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[38;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[38;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[38;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[38;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[38;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[38;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+}
+igenrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[48;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+}
+gencol(){
+	for a in $(repeat 255)
+	do
+		echo "\033[38;5;${a}m"
+	done
+}
+igencol(){
+	for a in $(repeat 255)
+	do
+		echo "\033[48;5;${a}m"
+	done
+}
+#default limit
+limit=255
+#help
+printhelp(){
+	Rainbow=($(genrgb))
+	limit=1536
+	lolcate "
+Usage: lolcat [OPTION]...
+
+Concatenate standard input, to standard output
+
+  -i, --invert             Invert fg and bg
+  -t, --truecolor          24-bit (truecolor)
+  -it, --invert-truecolor  24-bit (inverted) 
+  -h, --help               Show this message
+  -v, --version            Print version and exit
+
+Examples:
+  echo hello | bashbox lolcat   prints hello in rainbow
+  echo hello | bashbox lolcat -t   prints hello in truecolor rainbow
+
+"
+	exit
+}
+index=0
+lolcate(){
+    string=$1
+    ((j=$index % $limit))
+    ((index++))
+    for (( i=0; i<${#string}; i++ )); do
+        ((j++))
+        if (($j == $limit))
+        then
+            ((j=0))
+        fi
+      echo -ne "${Rainbow[$j]}${string:$i:1}"
+    done
+    printf "\033[0;0m"
+}
+case "$1" in
+	"-i"|"--invert") Rainbow=($(igencol));limit=256;;
+	"-t"|"--truecolor") Rainbow=($(genrgb));limit=1536;;
+	"-it"|"--invert-truecolor") Rainbow=($(igenrgb));limit=1536;;
+	"-h"|"--help") printhelp;;
+	"-v"|"--version") echo "bashbox lolcat";exit;;
+	*)Rainbow=($(gencol));limit=256;;
+esac
 	
-		# "return" $tmp
-		echo $tmp
+
+IFS=$'\n'
+
+while read string
+do
+    lolcate $string
+done
+;;
+lower)
+#!/bin/bash
+# Lowercase a string.
+# Usage: lower "string"
+[ -z "$1" ] && echo no string && exit
+printf "%s\\n" "${1,,}"
+;;
+ls)
+#!/usr/bin/bash
+#found this randomly and it kinda works
+printf '%s\n' *
+;;
+more)
+#!/usr/bin/env bash
+#stolen from https://github.com/comfies/bed
+declare -a buffer
+declare -i line base
+declare message modified
+
+buffer=() # File contents
+line=0 # Currently selected line (0 means the buffer is empty)
+base=1 # Top-most line shown
+modified=false # Tracking whether a file was modified
+
+shopt -s extglob # Ensure advanced pattern matching is available
+shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
+trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
+trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
+trap quit INT
+
+read_buffer() {
+    mapfile -t -O 1 buffer # Read file into an array
+    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
+        line=1 # Indicate that we have a buffer loaded
+        modified=false
+        message="Read ${#buffer[@]} lines"
+    else
+        message="'$file' is empty"
+    fi
+}
+
+
+quit() {
+	die
+}
+
+up() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
+        ((line < base)) && ((base--)) # Push back the top if we need to
+        ((base <= 0)) && base=1 # Don't push back if our base is at 1
+    done
+}
+
+page_up() {
+    up $((LINES - 3))
+}
+
+down() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
+        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+    done
+}
+
+page_down() {
+    down $((LINES - 3))
+}
+
+die() {
+    bind 'set disable-completion off' 2>/dev/null # Enable completion
+    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+    exit "${errno:-0}" # Assume that we're exiting without an error
+}
+
+redraw() {
+    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
+        "$COLUMNS" "$message" "bashbox more" \
+        "$line" "${#buffer[line]}") # Status line, among others
+    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
+        ((i != line)) && printf '\e[90m' # Fade line number if not selected
+        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
+            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
+    done
+    printf '\n' # Add final newline to seperate commandline
+}
+
+key() {
+    case "$1" in
+    ${BED_KEY_PGUP:=$'\E[5~'}) up;;
+    ${BED_KEY_PGDN:=$'\E[6~'}) down;;
+    ${BED_KEY_UP:=$'\E[A'}*) page_up;;
+    ${BED_KEY_DOWN:=$'\E[B'}*) page_down;;
+    ${BED_KEY_QUIT:=q}) quit;;
+    esac
+}
+
+main() {
+    printf '\e[?1047h' # Switch to alternative buffer
+    redraw # Draw out the UI before loading file
+    read_buffer
+    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
+        local -a k=()
+        local -i i=1
+        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0] </dev/tty; then # Check for ready input
+            while read -rsN1 -t0.0001 k[$i]</dev/tty; do ((i++)); done # Multibyte hack
+            key "$(printf '%s' "${k[@]}")"
+        fi
+    done
+}
+
+main "$@"
+;;
+nano)
+#!/usr/bin/env bash
+#stolen from https://github.com/comfies/bed
+basenam() {
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
+declare -a buffer
+declare -i line base
+declare file message modified
+
+printf "\e[?1049h" #switch to alternative buffer
+
+buffer=() # File contents
+line=0 # Currently selected line (0 means the buffer is empty)
+base=1 # Top-most line shown
+file= # Currently addressed file
+message="Welcome to nano (bed) (press 'q' to quit)." # Feedback text in the status bar
+modified=false # Tracking whether a file was modified
+
+shopt -s extglob # Ensure advanced pattern matching is available
+shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
+trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
+trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
+trap quit INT
+
+set_buffer_file() {
+    bind 'set disable-completion off' 2>/dev/null # Enable completion
+    printf '\e[?25h' # Enable cursor
+    if read -rei "$1$file" -p "${BED_FILE_PROMPT:=Path: }" file; then
+        modified=true
+    fi
+    bind 'set disable-completion on' 2>/dev/null
+}
+
+read_buffer() {
+    set_buffer_file "$1" # Update target file (pass on default if present)
+    mapfile -t -O 1 buffer <"$file" # Read file into an array
+    if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
+        line=1 # Indicate that we have a buffer loaded
+        modified=false
+        message="Read ${#buffer[@]} lines from '$file'"
+    else
+        message="'$file' is empty"
+    fi
+}
+
+write_buffer() {
+    true >"$file" # Set the file to an empty text file
+    for ln in "${buffer[@]}"; do # Write in the buffer to the file
+        echo "$ln" >>"$file"
+    done
+    modified=false
+    message="Wrote ${#buffer[@]} lines to '$file'"
+}
+
+edit_line() {
+    ((line == 0)) && return # If the line is not possible, do nothing
+    printf '\e[?25h\e[%sH' "$((line + 2 - base))" # Reset cursor position and enable cursor
+    read -rei "${buffer[line]}" -p "$(printf '%4s ' "$line")" # Present editable line
+    if [[ "$REPLY" != "${buffer[line]}" ]]; then # If the line is changed, update and inform
+        buffer[line]=$REPLY
+        modified=true
+    fi
+}
+
+new_line() {
+    buffer=("" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+    unset 'buffer[0]'
+    modified=true
+}
+
+append_line() {
+    new_line
+    down
+    redraw
+    edit_line
+}
+
+delete_line() {
+    buffer=("" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
+    unset 'buffer[0]'
+    ((line > ${#buffer[@]})) && up
+    modified=true
+}
+
+quit() {
+    if [[ "$modified" == "true" ]]; then
+        while :; do
+            read -rsN1 -p "Buffer modified, save before close? [Y/n/c]" choice
+            case "$choice" in
+            Y|y) write_buffer; die;;
+            N|n) die;;
+            C|c) message="Quit canceled"; break;;
+            *) continue;;
+            esac
+        done
+    else
+        die
+    fi
+}
+
+up() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line > 1)) && ((line--)) # As long as we can keep going up, go up
+        ((line < base)) && ((base--)) # Push back the top if we need to
+        ((base <= 0)) && base=1 # Don't push back if our base is at 1
+    done
+}
+
+page_up() {
+    up $((LINES - 3))
+}
+
+down() {
+    for ((i = 0; i < ${1:-1}; i++)); do
+        ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
+        ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+    done
+}
+
+page_down() {
+    down $((LINES - 3))
+}
+
+die() {
+    bind 'set disable-completion off' 2>/dev/null # Enable completion
+    printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
+    printf "\e[?1049l" # switch back to main buffer
+    exit "${errno:-0}" # Assume that we're exiting without an error
+}
+
+redraw() {
+    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
+        "$COLUMNS" "$message" "${BED_ICON:=🛏 } bashbox nano" \
+        "$(basenam "$file")" "$line" "${#buffer[line]}") # Status line, among others
+    for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
+        ((i != line)) && printf '\e[90m' # Fade line number if not selected
+        ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
+            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
+    done
+    printf '\n' # Add final newline to seperate commandline
+}
+
+key() {
+    case "$1" in
+    ${BED_KEY_PGUP:=$'\E[5~'}) page_up;;
+    ${BED_KEY_PGDN:=$'\E[6~'}) page_down;;
+    ${BED_KEY_UP:=$'\E[A'}*) up;;
+    ${BED_KEY_DOWN:=$'\E[B'}*) down;;
+    ${BED_KEY_QUIT:=q}) quit;;
+    ${BED_KEY_FILE:=f}) set_buffer_file;;
+    ${BED_KEY_READ:=r}) read_buffer;;
+    ${BED_KEY_WRITE:=w}) write_buffer;;
+    ${BED_KEY_EDIT:=e}|'') edit_line;;
+    ${BED_KEY_APPEND:=a}) append_line;;
+    ${BED_KEY_DELETE:=d}) delete_line;;
+    ${BED_KEY_NEW:=n}) new_line;;
+    esac
+}
+
+main() {
+    printf '\e[?1047h' # Switch to alternative buffer
+    if [[ "$1" ]]; then # If a file was provided in the terminal pre-load it
+        redraw # Draw out the UI before loading file
+        read_buffer "$1"
+    fi
+    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
+        local -a k=()
+        local -i i=1
+        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0]; then # Check for ready input
+            while read -rsN1 -t0.0001 k[$i]; do ((i++)); done # Multibyte hack
+            key "$(printf '%s' "${k[@]}")" # Handle keypress event
+        fi
+    done
+}
+
+main "$@"
+;;
+od)
+#!/bin/bash
+ 
+while read line
+do
+    for ((i=0;i<${#line};i++))
+    do
+        printf " %02X" \'${line:$i:1}
+    done
+done < ${1:-/dev/fd/0}
+;;
+ord)
+ord() {
+  LC_CTYPE=C printf '%d' "'$1"
+}
+ord "$@"
+;;
+print)
+#!/usr/bin/env bash
+#
+# echo in pure bash.
+
+echo "$@"
+;;
+printenv)
+#!/usr/bin/env bash
+#
+# printenv in pure bash.
+
+[[ $1 ]] && {
+    printf '%s\n' "${!1}"
+    exit 0
+}
+
+mapfile -t envars < <(compgen -v)
+
+for var in "${envars[@]}"; do
+    printf '%s=%s\n' "$var" "${!var}"
+done
+;;
+printf)
+#!/usr/bin/env bash
+#
+# printf in pure bash.
+
+printf "$@"
+;;
+ps)
+#!/bin/bash
+cd /proc || exit 1
+for item in *; {
+	if [[ ! "$item" =~ [^[:digit:]] ]]; then
+		echo -n "$item "
+		printf '%s\n' "$(<"$item/comm")"
+	fi
+}
+;;
+pwd)
+#!/usr/bin/env bash
+#
+# pwd in pure bash.
+
+printf '%s\n' "$PWD"
+;;
+pwdx)
+#!/usr/bin/env bash
+for pid in "$@"
+do
+	cd -P /proc/$pid/cwd
+	echo $PWD
+done
+;;
+readlink)
+#!/usr/bin/env bash
+#
+# realpath in pure bash.
+
+for file in "$@"
+do
+	cd -P $file
+	echo $PWD
+done
+;;
+realpath)
+#!/usr/bin/env bash
+#
+# realpath in pure bash.
+
+for file in "$@"
+do
+	cd -P $file
+	echo $PWD
+done
+;;
+rev)
+#!/bin/bash
+if [[ "$#" == 0 ]]; then
+	while read -r line
+	do
+		rev=
+		len=${#line}
+		for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
+		echo "$rev"
+	done
+else
+	for file in "$@"; do
+		if [[ -f $file ]]; then
+			while read -r line
+			do
+				rev=
+				len=${#line}
+				for((i=len-1;i>=0;i--)); do rev="$rev${line:$i:1}"; done
+				echo "$rev"
+			done < "$file"
+		else
+			printf '%s\n' "rev: $file: No such file or directory" >&2
+		fi
+	done
+fi
+;;
+rgbtohex)
+#!/bin/bash
+# Convert an rgb color to hex.
+# Usage: rgb_to_hex "r" "g" "b"
+[ -z "$3" ] && echo not enough arguments && exit
+printf "#%02x%02x%02x\\n" "$1" "$2" "$3"
+;;
+sed)
+#!/usr/bin/env bash
+# Usage: bash_sed <before> <after> filename
+# s command + global option (s///g) only.
+bash_sed () {
+  local _pat="$1" ;shift
+  local _pat_update="$1" ;shift
+  local _fname=${1:-/dev/stdin}
+  while read -r line ; do
+    if [[ "${line}" =~ $_pat ]];then
+      printf "%s\\n" "${line//$_pat/$_pat_update}"
+    else
+      printf "%s\\n" "${line}"
+    fi
+  done < "$_fname"
+}
+;;
+seq)
+#!/usr/bin/env bash
+#
+# seq in pure bash.
+
+[[ -z $1 ]] && {
+    printf '%s\n' "seq: error: missing arguments." >&2
+    exit 1
+}
+
+[[ $2 ]] &&
+    first="$1"
+
+[[ $3 ]] &&
+    increment="$2"
+
+last="${*: -1}"
+
+for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+    printf '%s\n' "$i"
+}
+;;
+sh)
+#!/usr/bin/env bash
+bash --posix $@
+;;
+sha512)
+#!/bin/bash
+
+# 64-bit rotate right function
+# $1 = value to rotate
+# $2 = magnitude of rotation
+rotate()
+{
+	lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
+	tmp=$(($lshtmp>>$(($2-1))))
+	tmp=$(($(($(($1<<$((64-$2))))&$((0xffffffffffffffff))))|$tmp))
+
+	# "return" $tmp
+	echo $tmp
+}
+
+
+# Logical left shift: bash provides only an arithmetic left shift, which is not what we want for crypto
+#this is an ugly hack, but it works and I couldn't think of another way to do this in pure bash
+lshft()
+{
+	lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
+	tmp=$(($lshtmp>>$(($2-1))))
+
+	# "return" $tmp
+	echo $tmp
+}
+
+#Compute and output the sha512 value of the first argument (a string, not a file)
+sha512()
+{
+	input=$1
+
+	input_hex=''
+	for (( i=0; i < ${#input}; i++ ))
+	do
+		input_hex="$input_hex$(printf "%02x" "'${input:$i:1}")"
+	done
+
+	# Yay! sha512 in pure bash
+
+	# pure bash = using only bash, no external applications. printf and echo are used, both of which are bash builtins
+
+	# Initialize hash values
+	#(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+	declare -a h
+	h[0]=$((0x6a09e667f3bcc908))
+	h[1]=$((0xbb67ae8584caa73b))
+	h[2]=$((0x3c6ef372fe94f82b))
+	h[3]=$((0xa54ff53a5f1d36f1))
+	h[4]=$((0x510e527fade682d1))
+	h[5]=$((0x9b05688c2b3e6c1f))
+	h[6]=$((0x1f83d9abfb41bd6b))
+	h[7]=$((0x5be0cd19137e2179))
+
+	# Initialize array of round constants
+	#(first 64 bits of the fractional parts of the cube roots of the first 80 primes 2..409):
+	declare -a k
+	k=(0x428a2f98d728ae22 0x7137449123ef65cd 0xb5c0fbcfec4d3b2f 0xe9b5dba58189dbbc 0x3956c25bf348b538 0x59f111f1b605d019 0x923f82a4af194f9b 0xab1c5ed5da6d8118 0xd807aa98a3030242 0x12835b0145706fbe 0x243185be4ee4b28c 0x550c7dc3d5ffb4e2 0x72be5d74f27b896f 0x80deb1fe3b1696b1 0x9bdc06a725c71235 0xc19bf174cf692694 0xe49b69c19ef14ad2 0xefbe4786384f25e3 0x0fc19dc68b8cd5b5 0x240ca1cc77ac9c65 0x2de92c6f592b0275 0x4a7484aa6ea6e483 0x5cb0a9dcbd41fbd4 0x76f988da831153b5 0x983e5152ee66dfab 0xa831c66d2db43210 0xb00327c898fb213f 0xbf597fc7beef0ee4 0xc6e00bf33da88fc2 0xd5a79147930aa725 0x06ca6351e003826f 0x142929670a0e6e70 0x27b70a8546d22ffc 0x2e1b21385c26c926 0x4d2c6dfc5ac42aed 0x53380d139d95b3df 0x650a73548baf63de 0x766a0abb3c77b2a8 0x81c2c92e47edaee6 0x92722c851482353b 0xa2bfe8a14cf10364 0xa81a664bbc423001 0xc24b8b70d0f89791 0xc76c51a30654be30 0xd192e819d6ef5218 0xd69906245565a910 0xf40e35855771202a 0x106aa07032bbd1b8 0x19a4c116b8d2d0c8 0x1e376c085141ab53 0x2748774cdf8eeb99 0x34b0bcb5e19b48a8 0x391c0cb3c5c95a63 0x4ed8aa4ae3418acb 0x5b9cca4f7763e373 0x682e6ff3d6b2b8a3 0x748f82ee5defb2fc 0x78a5636f43172f60 0x84c87814a1f0ab72 0x8cc702081a6439ec 0x90befffa23631e28 0xa4506cebde82bde9 0xbef9a3f7b2c67915 0xc67178f2e372532b 0xca273eceea26619c 0xd186b8c721c0c207 0xeada7dd6cde0eb1e 0xf57d4f7fee6ed178 0x06f067aa72176fba 0x0a637dc5a2c898a6 0x113f9804bef90dae 0x1b710b35131c471b 0x28db77f523047d84 0x32caab7b40c72493 0x3c9ebe0a15c9bebc 0x431d67c49c100d4c 0x4cc5d4becb3e42b6 0x597f299cfc657e2a 0x5fcb6fab3ad6faec 0x6c44198c4a475817)
+
+	# Pad using MD-Compliant padding:
+	input_len=${#input}
+	input_len_bin=$(echo -e "\x"$(printf "%x" $(($input_len*8))))
+	final_len=$(($(($(($input_len+128))>>7))<<7))
+
+	pad_n=$(($final_len-$input_len))
+	input_hex=$input_hex'80'
+	for (( i=1; i < $(($pad_n-16)); i++ ))
+	do
+		input_hex=$input_hex'00'
+	done
+	input_hex=$input_hex$(printf "%032x" "$(($input_len<<3))")
+
+	# This is the 80 word message schedule array:
+	declare -a w
+
+	# Process the message in successive 512-bit chunks:
+	for (( i=0; i<$(($final_len<<1)); i+=256 ))
+	do
+		chunk=${input_hex:$i:256}
+
+		# Clear message schedule array:
+		for (( j=0; j<64; j++ ))
+		do
+			w[$j]=00000000
+		done
+
+		# Copy chunk into schedule array:
+		for (( j=0; j<16; j++ ))
+		do
+			w[$j]=$((0x${chunk:$(($j<<4)):16}))
+		done
+
+
+		# Extend the first 16 words into the remaining 64 words w[16..80] of the message schedule array:
+		for (( j=16; j<80; j++ ))
+		do
+			sz=$(($(($(rotate ${w[$(($j-15))]} 1)^$(rotate ${w[$(($j-15))]} 8)))^$(lshft ${w[$(($j-15))]} 7)))
+			so=$(($(($(rotate ${w[$(($j-2))]} 19)^$(rotate ${w[$(($j-2))]} 61)))^$(lshft ${w[$(($j-2))]} 6)))
+			w[$j]=$((${w[$(($j-16))]}+$sz+${w[$(($j-7))]}+$so))
+		done
+
+		# Initialize working variables to current hash value:
+		a=${h[0]}
+		b=${h[1]}
+		c=${h[2]}
+		d=${h[3]}
+		e=${h[4]}
+		f=${h[5]}
+		g=${h[6]}
+		hay=${h[7]}
+
+		# Compression function main loop:
+		for (( j=0; j<80; j++ ))
+		do
+			SO=$(($(rotate $e 14)^$(rotate $e 18)^$(rotate $e 41)))
+			ch=$(($(($e&$f))^$(($((~$e))&$g))))
+			temp1=$(($hay+$SO+$ch+${k[$j]}+${w[$j]}))
+			SZ=$(($(rotate $a 28)^$(rotate $a 34)^$(rotate $a 39)))
+			maj=$(($(($a&$b))^$(($a&$c))^$(($b&$c))))
+			temp2=$(($SZ+$maj))
+
+			hay=$g
+			g=$f
+			f=$e
+			e=$(($d+$temp1))
+			d=$c
+			c=$b
+			b=$a
+			a=$(($temp1+$temp2))
+		done
+
+		# Add the compressed chunk to the current hash value:
+		h[0]=$((${h[0]}+$a))
+		h[1]=$((${h[1]}+$b))
+		h[2]=$((${h[2]}+$c))
+		h[3]=$((${h[3]}+$d))
+		h[4]=$((${h[4]}+$e))
+		h[5]=$((${h[5]}+$f))
+		h[6]=$((${h[6]}+$g))
+		h[7]=$((${h[7]}+$hay))
+	done
+
+	# Produce the final hash value (big-endian):
+	for (( i=0; i<8; i++ ))
+	do
+		printf "%016x" ${h[$i]}
+	done
+}
+
+sha512 $1
+echo # newline
+;;
+sleep)
+#!/usr/bin/env bash
+if [ -z "$1" ]; then
+  echo "bashbox: sleep: amount of time to sleep not provided"
+  exit
+fi
+read -d "" -rt "$1"
+;;
+stat)
+#!/usr/bin/env bash
+testfile()
+{
+echo $1
+[ -b $1 ] && echo "block special"
+[ -c $1 ] && echo "char special"
+[ -e $1 ] && echo "exists"
+[ -d $1 ] && echo "dir"
+[ -f $1 ] && echo "regular"
+[ -g $1 ] && echo "set-group-ID"
+[ -G $1 ] && echo "owner by effective group-ID"
+[ -L $1 ] && echo "symlink"
+[ -k $1 ] && echo "sticky"
+[ -O $1 ] && echo "owned by effective user-id"
+[ -p $1 ] && echo "named pipe"
+[ -r $1 ] && echo "read permission"
+[ -s $1 ] && echo "size greater 0"
+[ -S $1 ] && echo "socket"
+[ -u $1 ] && echo "set-user-ID"
+[ -w $1 ] && echo "write permission granted"
+[ -x $1 ] && echo "execute/search granted"
+}
+
+for file in "$@"
+do
+	testfile $file
+done
+;;
+strip)
+#!/bin/bash
+# Strip characters from a string.
+# Usage: strip "string" "chars to remove"
+if [ "$1" = -e ]; then
+	[ -z "$3" ] && echo not enough arguments && exit
+	printf "%s\\n" "${2%%$3}"
+elif [ "$1" = -s ]; then
+	printf "%s\\n" "${2##$3}"
+elif [ "$1" = -h ]; then
+	printf "Usage: strip string chars-to-remove\n"
+	printf "    strip -s to remove from start of string\n"	
+	printf "    strip -e to remove from end of string\n"	
+else
+	[ -z "$2" ] && echo not enough arguments && exit
+	printf "%s\\n" "${1//$2}"
+fi
+;;
+tac)
+#!/usr/bin/env bash
+for file in "$@"
+do
+	i=0 
+	
+	while read line[$i] ; do
+	    i=$(($i+1))
+	done < $file
+	
+	
+	for (( i=${#line[@]}-1 ; i>=0 ; i-- )) ; do
+	    echo ${line[$i]}
+	done
+done
+;;
+tail)
+#!/usr/bin/env bash
+#
+# tail in pure bash.
+
+while getopts ":n:" opt; do
+    case $opt in
+        n) max_lines="$OPTARG" ;;
+
+        :)
+            printf '%s\n' "option -$OPTARG requires an argument." >&2
+            exit 1
+        ;;
+
+        ?)
+            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+            exit 1
+        ;;
+    esac
+
+    shift "$((OPTIND - 1))"
+done
+
+[[ ! -f $1 ]] && {
+    printf '%s\n' "tail: ${1:-null}: No such file or directory." >&2
+    exit 1
+}
+
+mapfile -tn 0 file_data < "$1"
+
+[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
+    max_lines="${#file_data[@]}"
+
+printf '%s\n' "${file_data[@]: -$max_lines}"
+;;
+tee)
+#!/bin/bash
+if [ -z "$1" ]; then
+	printf '%s\n' "$(<"/dev/stdin")"
+elif [ "$1" = "-a" ]; then
+	if [ -z "$2" ]; then
+		printf '%s\n' "$(<"/dev/stdin")"
+	else
+		printf '%s\n' "$(<"/dev/stdin")" >> "$2"
+	fi
+else
+	printf '%s\n' "$(<"/dev/stdin")" > "$1"
+fi
+;;
+time)
+$@
+echo "$SECONDS"
+;;
+timeout)
+#!/bin/bash
+#today i learned that kill is bash builtin
+
+#basically spawn process which waits the timeout
+#and then kills this script (which means also the command ) if it still runs 
+[ -z "$1" ] && echo timeout not provided && exit 125
+[ -z "$2" ] && echo no command provided && exit 125
+manage() {
+	sleep "$2"
+	[ -d "/proc/$1" ] && kill "$1"
+}
+manage $$ "$1" &
+shift
+"$@"
+;;
+top)
+#!/bin/bash
+timeup() {
+	: "$(</proc/uptime)"
+	seconds_up=${_%%.*}
+	minutes_up=$((seconds_up/60))
+	printf ' %(%H:%M:%S)T up '
+	if [[ $((minutes_up)) -ge 1440 ]]; then
+		printf '%d days, ' $((minutes_up/1440))
+	fi
+	if [[ $((minutes_up)) -ge 60 ]]; then
+		printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+	else
+		printf '%d min' $minutes_up
+	fi
+}
+parseuid() {
+	m=0
+	while IFS=':' read -ra addr; do
+		n=0
+		for i in "${addr[@]}"; do
+			if [ $n = 2 ]; then
+				e=0
+				for y in "${addr[@]}"; do
+					[ $e = 0 ] && uid[$i]="$y"
+					e=notzero
+					break
+				done
+			fi
+			n=$(( n + 1 ))
+		done
+		m=$(( m + 1 ))
+	done < /etc/passwd
+}
+linesget() {
+	n=0
+	while read -r line
+	do
+		n=$(( n + 1 ))
+		lines[$n]="$line"
+	done
+	for arg in "$@"
+	do
+		#echo the line requested from the array
+		echo "${lines[$arg]}"
+	done
+}
+mem() {
+	printf '%s\n' "$(</proc/meminfo)" | linesget 1 2 21 5 3
+}
+getproc() {
+	a=8
+	ignore=$(( $1 + 7 ))
+	for item in $proc; {
+		if [ -d "$item" ]; then
+			if [ "$a" -gt "$ignore" ]; then
+				[ "$a" = $(( LINES + $1 )) ] && break
+				if [[ ! "$item" =~ [^[:digit:]] ]]; then
+					echo -n "$item "
+					c=0
+					for word in $(linesget 9 < "$item"/status); {
+						[ $c = 1 ] && echo -n "${uid[$word]} "
+						c=$(( c + 1 ))
+					}
+					printf '%s\n' "$(<"$item/comm")"
+				fi
+			fi
+			a=$(( a + 1 ))
+		fi
+	}
+}
+draw() {
+	#escape
+	escape=$(printf "\u1b")
+	#clear the screen
+	printf "\033c"
+	#print lines
+	echo -n top; timeup; echo
+	mem
+	printf "\033[0;30;107mPID USER COMMAND\033[0;0m\n"
+	#this all is 7 lines
+	getproc "$1"
+	read -rsn1 -t 1 input
+	if [[ $input == "$escape" ]]; then
+		read -rsn2 input
+	fi
+	[ -z "$input" ] && draw "$1"
+	[ "$input" = "[B" ] && draw $(( $1 + 1 ))
+	[ "$input" = "[A" ] && draw $(( $1 - 1 ))
+	[ "$input" = "q" ] && exit
+}
+#prepare
+shopt -s checkwinsize; (:;:)
+cd /proc || exit 1
+proc=$(echo *)
+parseuid
+
+draw 0
+;;
+touch)
+#!/usr/bin/env bash
+#touch in pure bash
+if [ ! -f $1 ]; then
+ >$1
+fi
+;;
+tput)
+#!/usr/bin/env bash
+shopt -s checkwinsize; (:;:)
+printhelp() {
+ echo "Usage: tput [command]
+colors:
+ 16 colors:
+  set - set color and property
+  set 0 0 - reset terminal
+  tput mode:
+   setaf - set foreground color
+   setab - set background color
+   sgr0 - reset terminal
+  256 colors:
+  esetf - set foreground color 
+  esetb - set backgroud color
+ 24-bit colors:
+  rgb format:
+   rsetf - set foreground color
+   rsetb - set background color
+  hex format:
+   hsetf - set foreground color
+   hsetb - set background color
+cursor:
+ moving:
+  cup - moves cursor to given position
+  cbt - moves cursor backwards
+  cha - Move the active position to the n-th character of the active line.
+  cnl - Move cursor to next line.
+  cpl - Move cursor to previous line.
+  cub - moves to left
+  cud - moves down
+  cuf - moves right
+  cuu - moves up
+ hide:
+  hide - hides cursor
+  unhide - unhides cursor
+  pos - prints position of cursor
+ etc:
+  dch - delete characters on right
+  decrc - restore cursor
+  decsc - save cursor
+info:
+ cols - width of terminal
+ lines - height of terminal
+ decaln - fills screen
+ decawm-set - enables autowrap
+ decawm-reset - disables autowrap
+property:
+ deccara - sets attribute in area x y end-x end-y:
+  0
+  (default) 	Attributes off (no bold, no underline, no blink, positive image)
+  1 	Bold
+  4 	Underline
+  5 	Blink
+  7 	Negative image
+  22 	No bold
+  24 	No underline
+  25 	No blink
+  27 	Positive image
+ decdhl:
+  top - sets font to big top half
+  bottm - sets font to big bottom half
+ decdwl - Double-Width, Single-Height Line
+ save - saves screen
+ restore - restore screen
+ "
+}
+##colors
+get_cursor_pos() {
+    # Usage: get_cursor_pos
+    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
+    printf '%s\n' "$y $x"
+}
+modeput() {
+	printf "\033[$1;$2m"
+}
+rgbputf() {
+	printf "\033[38;2;$1;$2;$3m"
+}
+rgbputb() {
+	printf "\033[48;2;$1;$2;$3m"
+}
+#cursor
+hide() {
+	printf '\e[?25l\e[?7l'
+}
+unhide() {
+	printf "\e[?25h\e[?7h"
+}
+
+if [ -z $1 ]; then
+	printhelp
+elif [ $1 = rsetf ]; then
+	printf "\033[38;2;$2;$3;$4m"
+elif [ $1 = rsetb ]; then
+	printf "\033[48;2;$2;$3;$4m"
+elif [ $1 = esetf ]; then
+	printf "\033[38;5;$2m"
+elif [ $1 = esetb ]; then
+	printf "\033[48;5;$2m"
+elif [ $1 = set ]; then
+	modeput $2 $3
+elif [ $1 = setaf  ]; then
+	if   [ $2 = 0  ]; then modeput 0 30
+	elif [ $2 = 1  ]; then modeput 0 31
+	elif [ $2 = 2  ]; then modeput 0 32
+	elif [ $2 = 3  ]; then modeput 0 33
+	elif [ $2 = 4  ]; then modeput 0 34
+	elif [ $2 = 5  ]; then modeput 0 35
+	elif [ $2 = 6  ]; then modeput 0 36
+	elif [ $2 = 7  ]; then modeput 0 37
+	elif [ $2 = 8  ]; then modeput 0 90
+	elif [ $2 = 9  ]; then modeput 0 91
+	elif [ $2 = 10 ]; then modeput 0 92
+	elif [ $2 = 11 ]; then modeput 0 93
+	elif [ $2 = 12 ]; then modeput 0 94
+	elif [ $2 = 13 ]; then modeput 0 95
+	elif [ $2 = 14 ]; then modeput 0 96
+	elif [ $2 = 15 ]; then modeput 0 97
+	elif [ $2 = 16 ]; then modeput 0 98
+	else modeput 0 31;echo bashbox tput: tput-mode: unknown color; modeput 0 0; fi
+elif [ $1 = setab ]; then
+	if   [ $2 = 0  ]; then modeput 0 40
+	elif [ $2 = 1  ]; then modeput 0 41
+	elif [ $2 = 2  ]; then modeput 0 42
+	elif [ $2 = 3  ]; then modeput 0 43
+	elif [ $2 = 4  ]; then modeput 0 44
+	elif [ $2 = 5  ]; then modeput 0 45
+	elif [ $2 = 6  ]; then modeput 0 46
+	elif [ $2 = 7  ]; then modeput 0 47
+	elif [ $2 = 8  ]; then modeput 0 100
+	elif [ $2 = 9  ]; then modeput 0 101
+	elif [ $2 = 10 ]; then modeput 0 102
+	elif [ $2 = 11 ]; then modeput 0 103
+	elif [ $2 = 12 ]; then modeput 0 104
+	elif [ $2 = 13 ]; then modeput 0 105
+	elif [ $2 = 14 ]; then modeput 0 106
+	elif [ $2 = 15 ]; then modeput 0 107
+	elif [ $2 = 16 ]; then modeput 0 108
+	else modeput 0 41;echo cput: tput-mode: unknown color; modeput 0 0; fi
+elif [ $1 = sgr0  ]; then modeput 0 0
+elif [ $1 = cup   ]; then printf "\033[$2;$3H"
+elif [ $1 = hsetf ]; then
+	r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	rgbputf $r $g $b
+elif [ $1 = hsetb ]; then
+	r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
+	g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
+	b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
+	rgbputb $r $g $b
+elif [ $1 = clear              ]; then printf "\033c"
+elif [ "$1" = cols             ]; then echo $COLUMNS
+elif [ "$1" = lines            ]; then echo $LINES
+elif [ "$1" = pos              ]; then get_cursor_pos
+elif [ "$1" = hid              ]; then hide
+elif [ "$1" = unhid            ]; then unhide
+elif [ "$1" = cbt              ]; then printf "\e[$2Z"
+elif [ "$1" = cha              ]; then printf "\e[$2G"
+elif [ "$1" = cnl              ]; then printf "\e[$2E"
+elif [ "$1" = cpl              ]; then printf "\e[$2F"
+elif [ "$1" = cub              ]; then printf "\e[$2D"
+elif [ "$1" = cud              ]; then printf "\e[$2B"
+elif [ "$1" = cuf              ]; then printf "\e[$2C"
+elif [ "$1" = cuu              ]; then printf "\e[$2A"
+elif [ "$1" = dch              ]; then printf "\e[$2P"
+elif [ "$1" = decaln           ]; then printf "\e#8"
+elif [ "$1" = decawm-set       ]; then printf "\e[?7h"
+elif [ "$1" = decawm-reset     ]; then printf "\e[?lh"
+elif [ "$1" = deccara          ]; then printf "\e[$2;$3;$4;$5;$6\$r"
+elif [ "$1" = decdhl-top       ]; then printf "\e#3"
+elif [ "$1" = decdhl-bottom    ]; then printf "\e#4"
+elif [ "$1" = decdwl           ]; then printf "\e#6"
+elif [ "$1" = decrc            ]; then printf "\e8"
+elif [ "$1" = decsc            ]; then printf "\e7"
+elif [ "$1" = save             ]; then printf '\e[?1049h'
+elif [ "$1" = restore          ]; then printf '\e[?1049l'
+else
+ modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
+ printhelp
+fi
+;;
+true)
+#!/usr/bin/env bash
+#
+# true in pure bash.
+exit 0
+;;
+truecolors)
+#!/bin/bash
+#printf "\033[38;2;$1;$2;$3m"
+repeat() {
+	[[ -z $1 ]] && {
+	    printf '%s\n' "seq: error: missing arguments." >&2
+	    exit 1
 	}
 	
+	[[ $2 ]] &&
+	    first="$1"
 	
-	# Logical left shift: bash provides only an arithmetic left shift, which is not what we want for crypto
-	#this is an ugly hack, but it works and I couldn't think of another way to do this in pure bash
-	lshft()
-	{
-		lshtmp=$(($(($1>>1))&$((0x7fffffffffffffff))))
-		tmp=$(($lshtmp>>$(($2-1))))
+	[[ $3 ]] &&
+	    increment="$2"
 	
-		# "return" $tmp
-		echo $tmp
+	last="${*: -1}"
+	
+	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
+	    printf '%s\n' "$i"
 	}
 	
-	#Compute and output the sha512 value of the first argument (a string, not a file)
-	sha512()
-	{
-		input=$1
-	
-		input_hex=''
-		for (( i=0; i < ${#input}; i++ ))
-		do
-			input_hex="$input_hex$(printf "%02x" "'${input:$i:1}")"
+}
+genrgb(){
+	nummin=255
+	numadd=-1
+	for a in $(repeat 0 1540)
+	do
+		numadd=$(( numadd + 1 ))
+		nummin=$(( nummin - 1 ))
+		[ $a -lt 256 ] && echo -n "\033[48;2;255"
+		[ $a -lt 256 ] && echo -n ";$numadd"
+		[ $a -lt 256 ] && echo -n ";0m" && echo
+		[ $a = 256 ] && numadd=0 && nummin=255
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
+		[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
+		[ $a = 512 ] && numadd=0 && nummin=256
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
+		[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
+		[ $a = 768 ] && numadd=0 && nummin=255
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
+		[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
+		[ $a = 1024 ] && numadd=0 && nummin=255
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
+		[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
+		[ $a = 1280 ] && numadd=0 && nummin=255
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
+		[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
+	done
+	#grey
+	for b in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${b};${b};${b}m"
+	done
+	#red
+	for c in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${c};0;0m"
+	done
+	#green
+	for d in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;${d};0m"
+	done
+	#blue
+	for e in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;0;${e}m"
+	done
+	#yellow
+	for f in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${f};${f};0m"
+	done
+	#cyan
+	for g in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;0;${g};${g}m"
+	done
+	#magenta
+	for h in $(repeat 0 255 )
+	do
+		echo  "\033[48;2;${h};0;${h}m"
+	done
+}
+printe() {
+	echo '\033[48;2;<r>;<g>;<b>m" - background'
+	echo '\033[38;2;<r>;<g>;<b>m" - foreground'
+	while read wtf
+	do
+		printf "\\${wtf} "
+	done
+}
+genrgb | printe
+echo
+;;
+ttysize)
+#!/usr/bin/env bash
+shopt -s checkwinsize; (:;:)
+echo "$COLUMNS $LINES"
+;;
+type)
+#!/bin/bash
+type $@
+;;
+uidname)
+#!/bin/bash
+parseuid() {
+	m=0
+	while IFS=':' read -ra addr; do
+		n=0
+		for i in "${addr[@]}"; do
+			if [ $n = 2 ]; then
+				e=0
+				for y in "${addr[@]}"; do
+					[ $e = 0 ] && uid[$i]="$y"
+					e=notzero
+					break
+				done
+			fi
+			n=$(( n + 1 ))
 		done
-	
-		# Yay! sha512 in pure bash
-	
-		# pure bash = using only bash, no external applications. printf and echo are used, both of which are bash builtins
-	
-		# Initialize hash values
-		#(first 64 bits of the fractional parts of the square roots of the first 8 primes 2..19):
-		declare -a h
-		h[0]=$((0x6a09e667f3bcc908))
-		h[1]=$((0xbb67ae8584caa73b))
-		h[2]=$((0x3c6ef372fe94f82b))
-		h[3]=$((0xa54ff53a5f1d36f1))
-		h[4]=$((0x510e527fade682d1))
-		h[5]=$((0x9b05688c2b3e6c1f))
-		h[6]=$((0x1f83d9abfb41bd6b))
-		h[7]=$((0x5be0cd19137e2179))
-	
-		# Initialize array of round constants
-		#(first 64 bits of the fractional parts of the cube roots of the first 80 primes 2..409):
-		declare -a k
-		k=(0x428a2f98d728ae22 0x7137449123ef65cd 0xb5c0fbcfec4d3b2f 0xe9b5dba58189dbbc 0x3956c25bf348b538 0x59f111f1b605d019 0x923f82a4af194f9b 0xab1c5ed5da6d8118 0xd807aa98a3030242 0x12835b0145706fbe 0x243185be4ee4b28c 0x550c7dc3d5ffb4e2 0x72be5d74f27b896f 0x80deb1fe3b1696b1 0x9bdc06a725c71235 0xc19bf174cf692694 0xe49b69c19ef14ad2 0xefbe4786384f25e3 0x0fc19dc68b8cd5b5 0x240ca1cc77ac9c65 0x2de92c6f592b0275 0x4a7484aa6ea6e483 0x5cb0a9dcbd41fbd4 0x76f988da831153b5 0x983e5152ee66dfab 0xa831c66d2db43210 0xb00327c898fb213f 0xbf597fc7beef0ee4 0xc6e00bf33da88fc2 0xd5a79147930aa725 0x06ca6351e003826f 0x142929670a0e6e70 0x27b70a8546d22ffc 0x2e1b21385c26c926 0x4d2c6dfc5ac42aed 0x53380d139d95b3df 0x650a73548baf63de 0x766a0abb3c77b2a8 0x81c2c92e47edaee6 0x92722c851482353b 0xa2bfe8a14cf10364 0xa81a664bbc423001 0xc24b8b70d0f89791 0xc76c51a30654be30 0xd192e819d6ef5218 0xd69906245565a910 0xf40e35855771202a 0x106aa07032bbd1b8 0x19a4c116b8d2d0c8 0x1e376c085141ab53 0x2748774cdf8eeb99 0x34b0bcb5e19b48a8 0x391c0cb3c5c95a63 0x4ed8aa4ae3418acb 0x5b9cca4f7763e373 0x682e6ff3d6b2b8a3 0x748f82ee5defb2fc 0x78a5636f43172f60 0x84c87814a1f0ab72 0x8cc702081a6439ec 0x90befffa23631e28 0xa4506cebde82bde9 0xbef9a3f7b2c67915 0xc67178f2e372532b 0xca273eceea26619c 0xd186b8c721c0c207 0xeada7dd6cde0eb1e 0xf57d4f7fee6ed178 0x06f067aa72176fba 0x0a637dc5a2c898a6 0x113f9804bef90dae 0x1b710b35131c471b 0x28db77f523047d84 0x32caab7b40c72493 0x3c9ebe0a15c9bebc 0x431d67c49c100d4c 0x4cc5d4becb3e42b6 0x597f299cfc657e2a 0x5fcb6fab3ad6faec 0x6c44198c4a475817)
-	
-		# Pad using MD-Compliant padding:
-		input_len=${#input}
-		input_len_bin=$(echo -e "\x"$(printf "%x" $(($input_len*8))))
-		final_len=$(($(($(($input_len+128))>>7))<<7))
-	
-		pad_n=$(($final_len-$input_len))
-		input_hex=$input_hex'80'
-		for (( i=1; i < $(($pad_n-16)); i++ ))
+		m=$(( m + 1 ))
+	done < /etc/passwd
+}
+[ -z "$1" ] && echo no uid provided && exit
+parseuid
+for arg in "$@"; {
+	echo "${uid[$arg]}"
+}
+;;
+uname)
+#!/usr/bin/env bash
+if [ -z $1 ]; then
+	echo $OSTYPE
+elif [ $1 = -m ]; then
+	printf '%s\n' "$HOSTTYPE"
+elif [ $1 = --type ]; then
+	echo $MACHTYPE
+elif [ $1 = -a ]; then #linux only 
+	printf '%s\n' "$(<"/proc/version")" #linux only
+elif [ $1 = -n ]; then
+	: '\h'
+	printf '%s\n' "${_@P}"
+else 
+	echo "flags: -m --type -n"
+fi
+;;
+uniq)
+#!/bin/bash
+repeat=no
+if [ "$1" = -d ]; then
+	while read -r line; do
+		for check in "${hab[@]}"
 		do
-			input_hex=$input_hex'00'
+			if [ "$line" = "$check" ]; then
+				echo "$line"
+			fi
 		done
-		input_hex=$input_hex$(printf "%032x" "$(($input_len<<3))")
-	
-		# This is the 80 word message schedule array:
-		declare -a w
-	
-		# Process the message in successive 512-bit chunks:
-		for (( i=0; i<$(($final_len<<1)); i+=256 ))
+		hab+=("$line")
+	done
+else
+	while read -r line; do
+		for check in "${hab[@]}"
 		do
-			chunk=${input_hex:$i:256}
-	
-			# Clear message schedule array:
-			for (( j=0; j<64; j++ ))
-			do
-				w[$j]=00000000
-			done
-	
-			# Copy chunk into schedule array:
-			for (( j=0; j<16; j++ ))
-			do
-				w[$j]=$((0x${chunk:$(($j<<4)):16}))
-			done
-	
-	
-			# Extend the first 16 words into the remaining 64 words w[16..80] of the message schedule array:
-			for (( j=16; j<80; j++ ))
-			do
-				sz=$(($(($(rotate ${w[$(($j-15))]} 1)^$(rotate ${w[$(($j-15))]} 8)))^$(lshft ${w[$(($j-15))]} 7)))
-				so=$(($(($(rotate ${w[$(($j-2))]} 19)^$(rotate ${w[$(($j-2))]} 61)))^$(lshft ${w[$(($j-2))]} 6)))
-				w[$j]=$((${w[$(($j-16))]}+$sz+${w[$(($j-7))]}+$so))
-			done
-	
-			# Initialize working variables to current hash value:
-			a=${h[0]}
-			b=${h[1]}
-			c=${h[2]}
-			d=${h[3]}
-			e=${h[4]}
-			f=${h[5]}
-			g=${h[6]}
-			hay=${h[7]}
-	
-			# Compression function main loop:
-			for (( j=0; j<80; j++ ))
-			do
-				SO=$(($(rotate $e 14)^$(rotate $e 18)^$(rotate $e 41)))
-				ch=$(($(($e&$f))^$(($((~$e))&$g))))
-				temp1=$(($hay+$SO+$ch+${k[$j]}+${w[$j]}))
-				SZ=$(($(rotate $a 28)^$(rotate $a 34)^$(rotate $a 39)))
-				maj=$(($(($a&$b))^$(($a&$c))^$(($b&$c))))
-				temp2=$(($SZ+$maj))
-	
-				hay=$g
-				g=$f
-				f=$e
-				e=$(($d+$temp1))
-				d=$c
-				c=$b
-				b=$a
-				a=$(($temp1+$temp2))
-			done
-	
-			# Add the compressed chunk to the current hash value:
-			h[0]=$((${h[0]}+$a))
-			h[1]=$((${h[1]}+$b))
-			h[2]=$((${h[2]}+$c))
-			h[3]=$((${h[3]}+$d))
-			h[4]=$((${h[4]}+$e))
-			h[5]=$((${h[5]}+$f))
-			h[6]=$((${h[6]}+$g))
-			h[7]=$((${h[7]}+$hay))
+			if [ "$line" = "$check" ]; then
+				repeat=yes
+			fi
 		done
-	
-		# Produce the final hash value (big-endian):
-		for (( i=0; i<8; i++ ))
-		do
-			printf "%016x" ${h[$i]}
-		done
-	}
-	
-	sha512 $1
-	echo # newline
-elif [[ $cmdf = sleep ]]; then
-	#!/usr/bin/env bash
+		#echo $repeat : $line
+		[ "$repeat" = "no" ] && echo "$line"
+		repeat=no
+		hab+=("$line")
+	done
+fi
+;;
+upper)
+#!/bin/bash
+# Uppercase a string.
+# Usage: upper "string"
+[ -z "$1" ] && echo no string && exit
+printf "%s\\n" "${1^^}"
+;;
+uptime)
+#!/usr/bin/env bash
+#
+# uptime in pure bash.
+
+: "$(</proc/uptime)"
+seconds_up=${_%%.*}
+if [[ "$#" == 0 ]]; then
+    printf ' %(%H:%M:%S)T up '
+    if [[ $((minutes_up)) -ge 1440 ]]; then
+        printf '%d days, ' $((minutes_up/1440))
+    fi
+    if [[ $((minutes_up)) -ge 60 ]]; then
+        printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
+    else
+        printf '%d min' $minutes_up
+    fi 
+else
+   	getopts sp options
+    case $options in
+        s) current_timestamp=$(printf '%(%s)T')
+           printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
+        p) minutes_up=$((seconds_up/60))
+           printf 'up '
+           if [[ $((minutes_up)) -ge 60 ]]; then
+               printf '%d hours, ' $((minutes_up/60))
+           fi
+           printf '%d minutes\n' $((minutes_up%60));;
+        ?) echo "$0: invalid option -- '$options'
+Usage: $0 [-ps]">&2;;
+    esac
+fi
+;;
+vi)
+#!/usr/bin/env bash
+### SETTINGS ###
+# this is what TAB will insert.
+# default value is "  ". possible values are any string.
+tabchar="	"
+
+# auto tab with bim_insert, bim_backinsert, or when ENTER is pressed in insert mode.
+# default value is "0". possible values are 0 or 1.
+autotab="0"
+line=0
+base=1
+version="bashbox vi (bim)"
+message="welcome to vi"
+unsaved_changes=0
+
+declare -a buffer
+declare -i line base
+declare file version message
+bind 'set disable-completion on' 2>/dev/null
+shopt -s checkwinsize; (:)
+trap refresh WINCH ALRM
+trap cleanup EXIT INT HUP USR1
+
+split() {
+   # Usage: split "string" "delimiter"
+   # thanks dylan araps :)
+   IFS=$'\n' read -d "" -ra arr <<< "${1//$2/$'\n'}"
+}
+
+keybinds() {
+            case "${key}" in
+            
+                # motions
+                k) bim_up 1;;
+                j) bim_down 1;;
+                K) bim_up $((LINES - 4));;
+                J) bim_down $((LINES - 4));;
+                g) bim_bof;;
+                G) bim_eof;;
+                t) cursor show
+                   bim_goto "$(misc_prompt "goto: ")"
+                   cursor hide
+                   ;;
+                
+                # editing
+                a|i) bim_edit;;
+                I) bim_prepend;;
+                d) bim_delete;;
+                c) bim_clear;;
+                o) bim_insert;;
+                O) bim_backinsert;;
+                n) bim_blank 1; bim_down 1;;
+                N) bim_backblank 1;;
+                y) bim_yank;;
+                p) bim_paste; bim_down 1;;
+            
+                # misc
+                :) bim_prompt;;
+                z) bim_center;;
+            
+            esac
+}
+        
+startup() {
+    cursor hide
+    cursor spos
+    cursor nowrap
+    cursor block
+}
+
+cleanup() {
+    cursor show
+    cursor rpos
+    cursor goto $LINES 0
+    cursor wrap
+    cursor block
+    exit 0
+}
+
+cursor() {
+    case "$1" in
+    save) printf "\e[?47h";;
+    load) printf "\e[?47l";;
+    spos) printf "\e7";;
+    rpos) printf "\e8\e[B";;
+    hide) printf "\e[?25l";;
+    show) printf "\e[?25h";;
+    goto) printf "\e[%s;%sf" "$2" "$3";;
+    wrap) printf "\e[?7h";;
+    nowrap) printf "\e[?7l";;
+    #beam) printf "\e[5 q";;
+    #block) printf "\e[1 q";;
+    #underline) printf "\e[3 q";;
+    esac
+}
+clear() {
+	printf "\033c"
+}
+refresh() {
+    clear
+    #printf "\e[36m %s (%s Lines) %s %sx%s %s \e[m\n" \
+        #"$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
+    for ((i=base; i-base < LINES-2; i++)); do
+        ((i !=  line))        && printf "\e[93m"     || printf "\e[31;1m"
+        ((i > ${#buffer[@]})) && printf "   ~\e[m\n" || printf "%4s\e[m %s\n" "$i" "${buffer[i]}"
+    done
+    if [ "$message" ]; then
+        printf "\e[32;1m%s\e[m\n" "$message"
+    else
+        printf "\e[36;1m%s [%s] %s/%s {%sx%s}\e[m\n" \
+            "$version" "${file}" "$line" "${#buffer[@]}" "$LINES" "$COLUMNS"
+    fi
+}
+
+bim_read() {
+    if [ "$1" ]; then
+        file="$1"
+    else
+        message="expected argument [FILE]"
+        return 1
+    fi
+
+    if [ -e "$file" ];then
+        mapfile -t -O 1 buffer <"$file"
+        message="Read ${#buffer[@]} lines from '$file'"
+    else
+        message="new file '$file'"
+    fi
+
+    [ ${#buffer[@]} -ne 0 ] && line=1
+}
+
+bim_write() {
+    if [ "$1" ]; then
+        myfile="$1"
+    elif [ "$file" ]; then
+        myfile="$file"
+    else
+        message="no file to write."
+        return 1
+    fi
+    : >"$myfile"
+    for wline in "${buffer[@]}"; do echo "$wline" >> "$myfile"; done
+    message="Wrote ${#buffer[@]} lines to '$myfile'"   
+    unsaved_changes=0
+}
+
+bim_up() {
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
+        ((line > 1))    && ((line--))
+    done
+}
+
+bim_down() {
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
+        ((line < ${#buffer[@]})) && ((line++))
+    done
+}
+
+bim_delete() {
+    lineyank="${buffer[line]}"
+    buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+    ((line > ${#buffer[@]})) && ((line--))
+    message="line cut."
+    unsaved_changes=1
+}
+
+bim_insert() {
+    buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+    ((line++))
+    # check if autotab is on and if the tab block we're extending starts with spaces
+    if [ $autotab = 1 ] && [ "${buffer[line-1]::1}" = " " ]; then
+        # wacky code to get the tab size of the last line
+        local lasttab="${buffer[line-1]%${buffer[line-1]##* }}"
+        # put in that same tab length to what we're going to edit
+        buffer[line]="$lasttab"
+    fi
+    # I have no clue why this has to be "-4" here
+    ((line > base+LINES-4))  && ((base++))
+    bim_edit
+}
+
+bim_backinsert() {
+    buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
+    unset "buffer[0]"
+    # same code as 'bim_insert'
+    if [ $autotab = 1 ] && [ "${buffer[line+1]::1}" = " " ]; then
+        local lasttab="${buffer[line+1]%${buffer[line+1]##* }}"
+        buffer[line]="$lasttab"
+    fi
+    bim_edit
+}
+
+bim_blank() {
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
+        buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
+        unset "buffer[0]"
+    done
+}
+
+bim_backblank() {
+    [ "$1" ] && num="$1" || num=1
+    for ((i=0;i<$num;i++)); do
+        buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
+        unset "buffer[0]"
+    done
+}
+
+bim_yank() {
+    lineyank="${buffer[line]}"
+    message="line yanked."
+}
+
+bim_paste() {
+    buffer=([0]="" "${buffer[@]:1:line}" "$lineyank" "${buffer[@]:line+1}")
+    unset "buffer[0]"
+}
+
+bim_clear() {
+    ((line == 0)) && return
+    cursor goto $((line-base + 2)) 6
+    buffer[line]=""
+    unsaved_changes=1
+}
+
+# insert mode
+# my new robust replacement for 'read' that goes character by character
+bimput() { # <var> [starting string]
+    # starting text of line
+    local buf="$2"
+    local ch=""
+    cursor beam
+    cursor show
+    while true; do
+        IFS='' read -s -n1 ch
+        case "$ch" in
+            "")
+                bimputstatus="esc"
+                break
+                ;;
+            # read -n1 seems to interpret ENTER as nothing
+            "")
+                bimputstatus="enter"
+                break
+                ;;
+            # vscode is unable do display a backspace
+            # but there is one between these quotes
+            "")
+                if [ "$buf" ]; then
+                    buf="${buf%?}"
+                    printf "\b \b"
+                else
+                    bimputstatus="backline"
+                    break
+                fi
+                ;;
+            "	")
+                buf="${buf}${shiftwidth:="  "}"
+                echo -n "${shiftwidth}"
+                ;;
+            *)
+                buf="${buf}${ch}"
+                printf "$ch"
+                ;;
+        esac
+    done
+    eval "${1}=\${buf}"
+    cursor hide
+    cursor block
+}
+
+bim_edit() {
+    # refresh, as 'read' will freeze drawing
+    refresh
+    # make a line in an empty buffer
+    ((line == 0)) && buffer[1]="" && line=1 && refresh
+    # print '--INSERT--' at the bottom
+    cursor goto $LINES
+    printf "\e[32m%s\e[m" "--INSERT--"
+    # do the actual thing
+    cursor goto $((line-base + 1)) $((6 + ${#buffer[line]}))
+    bimput "buffer[line]" "${buffer[line]}"
+    case "$bimputstatus" in
+        "enter")
+            # nice and simple
+            bim_insert
+            ;;
+        "backline")
+            # delete line
+            buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
+            unset "buffer[0]"
+            # go back a line and edit
+            ((line--))
+            bim_edit
+            ;;
+    esac
+    unsaved_changes=1
+}
+
+bim_prepend() {
+    # refresh, as 'read' will freeze drawing
+    refresh
+    # make a line in an empty buffer
+    ((line == 0)) && buffer[1]="" && line=1 && refresh
+    # print '--INSERT--' at the bottom
+    cursor goto $LINES
+    printf "\e[32m%s\e[m" "--PREPEND--"
+    # do the actual thing
+    cursor goto $((line-base + 2)) 4
+    printf "^~"
+    cursor underline
+    cursor show
+    read -re
+    cursor hide
+    cursor block
+    # write $REPLY + what was already there
+    buffer[line]="${REPLY}${buffer[line]}"
+    unsaved_changes=1
+}
+
+bim_prompt() {
+    bind 'set disable-completion off' 2>/dev/null
+    cursor show
+    read -rep ":" choice
+    bind 'set disable-completion on' 2>/dev/null
+
+    # run command and wait
+    if [ "${choice::1}" = "!" ]; then
+        eval "${choice##!}"
+        cursor hide
+        printf "\e[31mpress any key to continue."
+        read -N1 -r
+    # read command output
+    elif [ "${choice::3}" = "r !" ]; then
+        eval "output=\"\$(${choice##r !})\""
+        split "$output" $'\n'
+        bim_blank ${#arr[@]}
+        i=0
+        while [ $i -lt ${#arr[@]} ]; do
+            buffer[line+i+1]="${arr[i]}"
+            unset "buffer[0]"
+            ((i++))
+        done
+        cursor hide
+        unsaved_changes=1
+    # simply run command
+    else
+        eval "$choice"
+        succ=$?
+        if [ ! "$(type -t ${choice%% *})" = "function" ]; then
+            message="finished with exit code $succ"
+        fi
+        cursor hide
+    fi
+    # cursor must be hidden in each case individually.
+}
+
+misc_prompt() {
+    # cursor must be shown externally
+    # as to not pass escape sequences into functions
+    [ "$1" ] || return 1
+    bind 'set disable-completion off' 2>/dev/null
+    read -rep "$1"
+    bind 'set disable-completion on' 2>/dev/null
+
+    printf '%s' "$REPLY"
+}
+
+quit() {
+    if [ "$unsaved_changes" = 0 ]; then
+        exit 0
+    else
+        message="unsaved changes. force quit with \":q!\""
+    fi
+}
+
+bim_bof() {
+	[ ${#buffer[@]} = 0 ] && return 1
+    line=1
+}
+
+bim_eof() {
+    line=${#buffer[@]}
+}
+
+bim_goto() {
+    [ "$1" ] || return 1
+    [ ${#buffer[@]} -ge $1 ] && line=$1
+}
+
+bim_center() {
+    (( base=line-((LINES-3)/2) ))
+    [ $base -lt 1 ] && base=1
+}
+
+# functions that are really just aliases
+# and shortcuts for the command line
+
+w() {
+    bim_write "$@"
+}
+
+q() {
+    quit
+}
+
+q!() {
+    exit 0
+}
+wq() {
+    w "$@" && q
+}
+
+e() {
+    bim_read "$@"
+}
+
+
+keyboard_loop () {
+    startup
+    [ "$1" ] && bim_read "$1"
+    refresh
+
+    while true; do
+        read -rsN1 key
+        message=""
+
+        # iteration (only 2 digit numbers)
+        # cancel with ESC
+        case $key in
+            1|2|3|4|5|6|7|8|9)
+                digit1="$key"
+                printf '%d' "$key"
+                read -rsN1 key
+                case $key in
+                    1|2|3|4|5|6|7|8|9|0)
+                        digit2="$key"
+                        printf '%d' "$key"
+                        read -rsN1 key
+                        ;;
+                    "")
+                        digit1="1"
+                        digit2=""
+                        ;;
+                    *)
+                        digit2=""
+                        ;;
+                esac
+                ;;
+            "")
+                digit1="1"
+                digit2=""
+                ;;
+            *)
+                digit1="1"
+                digit2=""
+                ;;
+        esac
+
+        # compute keys from rc or defaults
+        # reiterate if applicable
+        kbj="${digit1}${digit2}"
+        for ((kbinc=0; kbinc < kbj; kbinc++)); do
+            keybinds
+        done
+
+        # universal scrolling system
+        if [ $base -gt $line ]; then
+            [ $base = 1 ] || base=$line
+        elif (( base+LINES-3 < line )); then
+            ((base=line-LINES+3))
+        fi
+
+        # refresh the UI
+        refresh
+    done
+    clear
+}
+
+usage () {
+echo '
+bim: bash vim
+
+usage: ${0##*/} [ options | file ]
+
+options:
+    -h|--help : print this help message
+    -k|--keys : print a basic usage document'
+}
+
+keys () {
+echo '# navigation
+  j - move down  (:bim_down [LINES])
+  k - page up    (:bim_up [LINES])
+  J - page down
+  K - page up
+  g - first line (:bim_bof)
+  G - last line  (:bim_eof)
+  t - go to line (:bim_goto [LINE])
+
+# editing
+  a - append to line  (:bim_edit)
+  I - prepend to line (:bim_prepend)
+  d - delete line     (:bim_delete)
+  c - clear line      (:bim_clear)
+  y - yank line       (:bim_yank)
+  p - paste line      (:bim_paste)
+  n - create line below (:bim_blank [LINES])
+  N - create line above (:bim_backblank [LINES])
+  o - create line below and edit (:bim_insert)
+  O - create line above and edit (:bim_backinsert)
+
+# commands
+# NOTE: the command line is for both editor and shell commands.
+   : - open command line
+  :w [FILE] - write to current or given file
+  :q - quit
+ :q! - force quit
+ :wq - write and quit
+  :e [FILE] - open file
+  :![COMMAND] - pause to view the output of a command
+:r ![COMMAND] - read output of a command'
+}
+
+
+
+main() {
+    case $1 in
+        -h|--help) trap : EXIT; usage;;
+        -k|--keys) trap : EXIT; keys;;
+        *) keyboard_loop "$1";;
+    esac
+}
+
+main "$@"
+;;
+watch)
+#!/bin/bash
+waittime=2 #default
+waitsleep(){
 	if [ -z "$1" ]; then
-	  echo "bashbox: sleep: amount of time to sleep not provided"
+	  echo "watch: waitsleep: amount of time to sleep not provided"
 	  exit
 	fi
 	read -d "" -rt "$1"
-elif [[ $cmdf = stat ]]; then
-	#!/usr/bin/env bash
-	testfile()
-	{
-	echo $1
-	[ -b $1 ] && echo "block special"
-	[ -c $1 ] && echo "char special"
-	[ -e $1 ] && echo "exists"
-	[ -d $1 ] && echo "dir"
-	[ -f $1 ] && echo "regular"
-	[ -g $1 ] && echo "set-group-ID"
-	[ -G $1 ] && echo "owner by effective group-ID"
-	[ -L $1 ] && echo "symlink"
-	[ -k $1 ] && echo "sticky"
-	[ -O $1 ] && echo "owned by effective user-id"
-	[ -p $1 ] && echo "named pipe"
-	[ -r $1 ] && echo "read permission"
-	[ -s $1 ] && echo "size greater 0"
-	[ -S $1 ] && echo "socket"
-	[ -u $1 ] && echo "set-user-ID"
-	[ -w $1 ] && echo "write permission granted"
-	[ -x $1 ] && echo "execute/search granted"
-	}
-	
-	for file in "$@"
-	do
-		testfile $file
-	done
-elif [[ $cmdf = strip ]]; then
-	#!/bin/bash
-	# Strip characters from a string.
-	# Usage: strip "string" "chars to remove"
-	if [ "$1" = -e ]; then
-		[ -z "$3" ] && echo not enough arguments && exit
-		printf "%s\\n" "${2%%$3}"
-	elif [ "$1" = -s ]; then
-		printf "%s\\n" "${2##$3}"
-	elif [ "$1" = -h ]; then
-		printf "Usage: strip string chars-to-remove\n"
-		printf "    strip -s to remove from start of string\n"	
-		printf "    strip -e to remove from end of string\n"	
-	else
-		[ -z "$2" ] && echo not enough arguments && exit
-		printf "%s\\n" "${1//$2}"
-	fi
-elif [[ $cmdf = tac ]]; then
-	#!/usr/bin/env bash
-	for file in "$@"
-	do
-		i=0 
-		
-		while read line[$i] ; do
-		    i=$(($i+1))
-		done < $file
-		
-		
-		for (( i=${#line[@]}-1 ; i>=0 ; i-- )) ; do
-		    echo ${line[$i]}
-		done
-	done
-elif [[ $cmdf = tail ]]; then
-	#!/usr/bin/env bash
-	#
-	# tail in pure bash.
-	
-	while getopts ":n:" opt; do
-	    case $opt in
-	        n) max_lines="$OPTARG" ;;
-	
-	        :)
-	            printf '%s\n' "option -$OPTARG requires an argument." >&2
-	            exit 1
-	        ;;
-	
-	        ?)
-	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-	            exit 1
-	        ;;
-	    esac
-	
-	    shift "$((OPTIND - 1))"
-	done
-	
-	[[ ! -f $1 ]] && {
-	    printf '%s\n' "tail: ${1:-null}: No such file or directory." >&2
-	    exit 1
-	}
-	
-	mapfile -tn 0 file_data < "$1"
-	
-	[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
-	    max_lines="${#file_data[@]}"
-	
-	printf '%s\n' "${file_data[@]: -$max_lines}"
-elif [[ $cmdf = tee ]]; then
-	#!/bin/bash
-	if [ -z "$1" ]; then
-		printf '%s\n' "$(<"/dev/stdin")"
-	elif [ "$1" = "-a" ]; then
-		if [ -z "$2" ]; then
-			printf '%s\n' "$(<"/dev/stdin")"
-		else
-			printf '%s\n' "$(<"/dev/stdin")" >> "$2"
-		fi
-	else
-		printf '%s\n' "$(<"/dev/stdin")" > "$1"
-	fi
-elif [[ $cmdf = time ]]; then
+}
+printhelp(){
+	echo "usage: waittime [ -n | -h -v ] [time] cmd"
+}
+[ -n "$WATCH_INTERVAL" ] && waittime="$WATCH_INTERVAL"
+case "$1" in
+	-n|--interval)waittime="$2"; shift 2;;
+	-h|--help)printhelp; exit;;
+esac
+while true
+do
+	printf "\033c"
 	$@
-	echo "$SECONDS"
-elif [[ $cmdf = timeout ]]; then
-	#!/bin/bash
-	#today i learned that kill is bash builtin
-	
-	#basically spawn process which waits the timeout
-	#and then kills this script (which means also the command ) if it still runs 
-	[ -z "$1" ] && echo timeout not provided && exit 125
-	[ -z "$2" ] && echo no command provided && exit 125
-	manage() {
-		sleep "$2"
-		[ -d "/proc/$1" ] && kill "$1"
-	}
-	manage $$ "$1" &
-	shift
-	"$@"
-elif [[ $cmdf = top ]]; then
-	#!/bin/bash
-	timeup() {
-		: "$(</proc/uptime)"
-		seconds_up=${_%%.*}
-		minutes_up=$((seconds_up/60))
-		printf ' %(%H:%M:%S)T up '
-		if [[ $((minutes_up)) -ge 1440 ]]; then
-			printf '%d days, ' $((minutes_up/1440))
-		fi
-		if [[ $((minutes_up)) -ge 60 ]]; then
-			printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
-		else
-			printf '%d min' $minutes_up
-		fi
-	}
-	parseuid() {
-		m=0
-		while IFS=':' read -ra addr; do
-			n=0
-			for i in "${addr[@]}"; do
-				if [ $n = 2 ]; then
-					e=0
-					for y in "${addr[@]}"; do
-						[ $e = 0 ] && uid[$i]="$y"
-						e=notzero
-						break
-					done
-				fi
-				n=$(( n + 1 ))
-			done
-			m=$(( m + 1 ))
-		done < /etc/passwd
-	}
-	linesget() {
-		n=0
-		while read -r line
-		do
-			n=$(( n + 1 ))
-			lines[$n]="$line"
-		done
-		for arg in "$@"
-		do
-			#echo the line requested from the array
-			echo "${lines[$arg]}"
-		done
-	}
-	mem() {
-		printf '%s\n' "$(</proc/meminfo)" | linesget 1 2 21 5 3
-	}
-	getproc() {
-		a=8
-		ignore=$(( $1 + 7 ))
-		for item in $proc; {
-			if [ -d "$item" ]; then
-				if [ "$a" -gt "$ignore" ]; then
-					[ "$a" = $(( LINES + $1 )) ] && break
-					if [[ ! "$item" =~ [^[:digit:]] ]]; then
-						echo -n "$item "
-						c=0
-						for word in $(linesget 9 < "$item"/status); {
-							[ $c = 1 ] && echo -n "${uid[$word]} "
-							c=$(( c + 1 ))
-						}
-						printf '%s\n' "$(<"$item/comm")"
-					fi
-				fi
-				a=$(( a + 1 ))
-			fi
-		}
-	}
-	draw() {
-		#escape
-		escape=$(printf "\u1b")
-		#clear the screen
-		printf "\033c"
-		#print lines
-		echo -n top; timeup; echo
-		mem
-		printf "\033[0;30;107mPID USER COMMAND\033[0;0m\n"
-		#this all is 7 lines
-		getproc "$1"
-		read -rsn1 -t 1 input
-		if [[ $input == "$escape" ]]; then
-			read -rsn2 input
-		fi
-		[ -z "$input" ] && draw "$1"
-		[ "$input" = "[B" ] && draw $(( $1 + 1 ))
-		[ "$input" = "[A" ] && draw $(( $1 - 1 ))
-		[ "$input" = "q" ] && exit
-	}
-	#prepare
-	shopt -s checkwinsize; (:;:)
-	cd /proc || exit 1
-	proc=$(echo *)
-	parseuid
-	
-	draw 0
-elif [[ $cmdf = touch ]]; then
-	#!/usr/bin/env bash
-	#touch in pure bash
-	if [ ! -f $1 ]; then
-	 >$1
-	fi
-elif [[ $cmdf = tput ]]; then
-	#!/usr/bin/env bash
-	shopt -s checkwinsize; (:;:)
-	printhelp() {
-	 echo "Usage: tput [command]
-	colors:
-	 16 colors:
-	  set - set color and property
-	  set 0 0 - reset terminal
-	  tput mode:
-	   setaf - set foreground color
-	   setab - set background color
-	   sgr0 - reset terminal
-	  256 colors:
-	  esetf - set foreground color 
-	  esetb - set backgroud color
-	 24-bit colors:
-	  rgb format:
-	   rsetf - set foreground color
-	   rsetb - set background color
-	  hex format:
-	   hsetf - set foreground color
-	   hsetb - set background color
-	cursor:
-	 moving:
-	  cup - moves cursor to given position
-	  cbt - moves cursor backwards
-	  cha - Move the active position to the n-th character of the active line.
-	  cnl - Move cursor to next line.
-	  cpl - Move cursor to previous line.
-	  cub - moves to left
-	  cud - moves down
-	  cuf - moves right
-	  cuu - moves up
-	 hide:
-	  hide - hides cursor
-	  unhide - unhides cursor
-	  pos - prints position of cursor
-	 etc:
-	  dch - delete characters on right
-	  decrc - restore cursor
-	  decsc - save cursor
-	info:
-	 cols - width of terminal
-	 lines - height of terminal
-	 decaln - fills screen
-	 decawm-set - enables autowrap
-	 decawm-reset - disables autowrap
-	property:
-	 deccara - sets attribute in area x y end-x end-y:
-	  0
-	  (default) 	Attributes off (no bold, no underline, no blink, positive image)
-	  1 	Bold
-	  4 	Underline
-	  5 	Blink
-	  7 	Negative image
-	  22 	No bold
-	  24 	No underline
-	  25 	No blink
-	  27 	Positive image
-	 decdhl:
-	  top - sets font to big top half
-	  bottm - sets font to big bottom half
-	 decdwl - Double-Width, Single-Height Line
-	 save - saves screen
-	 restore - restore screen
-	 "
-	}
-	##colors
-	get_cursor_pos() {
-	    # Usage: get_cursor_pos
-	    IFS='[;' read -p $'\e[6n' -d R -rs _ y x _
-	    printf '%s\n' "$y $x"
-	}
-	modeput() {
-		printf "\033[$1;$2m"
-	}
-	rgbputf() {
-		printf "\033[38;2;$1;$2;$3m"
-	}
-	rgbputb() {
-		printf "\033[48;2;$1;$2;$3m"
-	}
-	#cursor
-	hide() {
-		printf '\e[?25l\e[?7l'
-	}
-	unhide() {
-		printf "\e[?25h\e[?7h"
-	}
-	
-	if [ -z $1 ]; then
-		printhelp
-	elif [ $1 = rsetf ]; then
-		printf "\033[38;2;$2;$3;$4m"
-	elif [ $1 = rsetb ]; then
-		printf "\033[48;2;$2;$3;$4m"
-	elif [ $1 = esetf ]; then
-		printf "\033[38;5;$2m"
-	elif [ $1 = esetb ]; then
-		printf "\033[48;5;$2m"
-	elif [ $1 = set ]; then
-		modeput $2 $3
-	elif [ $1 = setaf  ]; then
-		if   [ $2 = 0  ]; then modeput 0 30
-		elif [ $2 = 1  ]; then modeput 0 31
-		elif [ $2 = 2  ]; then modeput 0 32
-		elif [ $2 = 3  ]; then modeput 0 33
-		elif [ $2 = 4  ]; then modeput 0 34
-		elif [ $2 = 5  ]; then modeput 0 35
-		elif [ $2 = 6  ]; then modeput 0 36
-		elif [ $2 = 7  ]; then modeput 0 37
-		elif [ $2 = 8  ]; then modeput 0 90
-		elif [ $2 = 9  ]; then modeput 0 91
-		elif [ $2 = 10 ]; then modeput 0 92
-		elif [ $2 = 11 ]; then modeput 0 93
-		elif [ $2 = 12 ]; then modeput 0 94
-		elif [ $2 = 13 ]; then modeput 0 95
-		elif [ $2 = 14 ]; then modeput 0 96
-		elif [ $2 = 15 ]; then modeput 0 97
-		elif [ $2 = 16 ]; then modeput 0 98
-		else modeput 0 31;echo bashbox tput: tput-mode: unknown color; modeput 0 0; fi
-	elif [ $1 = setab ]; then
-		if   [ $2 = 0  ]; then modeput 0 40
-		elif [ $2 = 1  ]; then modeput 0 41
-		elif [ $2 = 2  ]; then modeput 0 42
-		elif [ $2 = 3  ]; then modeput 0 43
-		elif [ $2 = 4  ]; then modeput 0 44
-		elif [ $2 = 5  ]; then modeput 0 45
-		elif [ $2 = 6  ]; then modeput 0 46
-		elif [ $2 = 7  ]; then modeput 0 47
-		elif [ $2 = 8  ]; then modeput 0 100
-		elif [ $2 = 9  ]; then modeput 0 101
-		elif [ $2 = 10 ]; then modeput 0 102
-		elif [ $2 = 11 ]; then modeput 0 103
-		elif [ $2 = 12 ]; then modeput 0 104
-		elif [ $2 = 13 ]; then modeput 0 105
-		elif [ $2 = 14 ]; then modeput 0 106
-		elif [ $2 = 15 ]; then modeput 0 107
-		elif [ $2 = 16 ]; then modeput 0 108
-		else modeput 0 41;echo cput: tput-mode: unknown color; modeput 0 0; fi
-	elif [ $1 = sgr0  ]; then modeput 0 0
-	elif [ $1 = cup   ]; then printf "\033[$2;$3H"
-	elif [ $1 = hsetf ]; then
-		r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
-		g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
-		b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
-		rgbputf $r $g $b
-	elif [ $1 = hsetb ]; then
-		r=$(printf "%d" "0x$(echo $2 | cut -c 1-2)")
-		g=$(printf "%d" "0x$(echo $2 | cut -c 3-4)")
-		b=$(printf "%d" "0x$(echo $2 | cut -c 5-6)")
-		rgbputb $r $g $b
-	elif [ $1 = clear              ]; then printf "\033c"
-	elif [ "$1" = cols             ]; then echo $COLUMNS
-	elif [ "$1" = lines            ]; then echo $LINES
-	elif [ "$1" = pos              ]; then get_cursor_pos
-	elif [ "$1" = hid              ]; then hide
-	elif [ "$1" = unhid            ]; then unhide
-	elif [ "$1" = cbt              ]; then printf "\e[$2Z"
-	elif [ "$1" = cha              ]; then printf "\e[$2G"
-	elif [ "$1" = cnl              ]; then printf "\e[$2E"
-	elif [ "$1" = cpl              ]; then printf "\e[$2F"
-	elif [ "$1" = cub              ]; then printf "\e[$2D"
-	elif [ "$1" = cud              ]; then printf "\e[$2B"
-	elif [ "$1" = cuf              ]; then printf "\e[$2C"
-	elif [ "$1" = cuu              ]; then printf "\e[$2A"
-	elif [ "$1" = dch              ]; then printf "\e[$2P"
-	elif [ "$1" = decaln           ]; then printf "\e#8"
-	elif [ "$1" = decawm-set       ]; then printf "\e[?7h"
-	elif [ "$1" = decawm-reset     ]; then printf "\e[?lh"
-	elif [ "$1" = deccara          ]; then printf "\e[$2;$3;$4;$5;$6\$r"
-	elif [ "$1" = decdhl-top       ]; then printf "\e#3"
-	elif [ "$1" = decdhl-bottom    ]; then printf "\e#4"
-	elif [ "$1" = decdwl           ]; then printf "\e#6"
-	elif [ "$1" = decrc            ]; then printf "\e8"
-	elif [ "$1" = decsc            ]; then printf "\e7"
-	elif [ "$1" = save             ]; then printf '\e[?1049h'
-	elif [ "$1" = restore          ]; then printf '\e[?1049l'
-	else
-	 modeput 0 31; echo Error: unknow subcommand, printing help...; modeput 0 0
-	 printhelp
-	fi
-elif [[ $cmdf = true ]]; then
-	#!/usr/bin/env bash
-	#
-	# true in pure bash.
-	exit 0
-elif [[ $cmdf = truecolors ]]; then
-	#!/bin/bash
-	#printf "\033[38;2;$1;$2;$3m"
-	repeat() {
-		[[ -z $1 ]] && {
-		    printf '%s\n' "seq: error: missing arguments." >&2
-		    exit 1
-		}
-		
-		[[ $2 ]] &&
-		    first="$1"
-		
-		[[ $3 ]] &&
-		    increment="$2"
-		
-		last="${*: -1}"
-		
-		for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-		    printf '%s\n' "$i"
-		}
-		
-	}
-	genrgb(){
-		nummin=255
-		numadd=-1
-		for a in $(repeat 0 1540)
-		do
-			numadd=$(( numadd + 1 ))
-			nummin=$(( nummin - 1 ))
-			[ $a -lt 256 ] && echo -n "\033[48;2;255"
-			[ $a -lt 256 ] && echo -n ";$numadd"
-			[ $a -lt 256 ] && echo -n ";0m" && echo
-			[ $a = 256 ] && numadd=0 && nummin=255
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n "\033[48;2;$nummin"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";255"
-			[ $a -gt 256 ] && [ $a -lt 512 ] && echo -n ";0m" && echo
-			[ $a = 512 ] && numadd=0 && nummin=256
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n "\033[48;2;0"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";255"
-			[ $a -gt 512 ] && [ $a -lt 768 ] && echo -n ";${numadd}m" && echo
-			[ $a = 768 ] && numadd=0 && nummin=255
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n "\033[48;2;0"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";$nummin"
-			[ $a -gt 768 ] && [ $a -lt 1024 ] && echo -n ";255m" && echo
-			[ $a = 1024 ] && numadd=0 && nummin=255
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n "\033[48;2;$numadd"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";0"
-			[ $a -gt 1024 ] && [ $a -lt 1280 ] && echo -n ";255m" && echo
-			[ $a = 1280 ] && numadd=0 && nummin=255
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n "\033[48;2;255"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";0"
-			[ $a -gt 1280 ] && [ $a -lt 1536 ] && echo -n ";${nummin}m" && echo
-		done
-		#grey
-		for b in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;${b};${b};${b}m"
-		done
-		#red
-		for c in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;${c};0;0m"
-		done
-		#green
-		for d in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;0;${d};0m"
-		done
-		#blue
-		for e in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;0;0;${e}m"
-		done
-		#yellow
-		for f in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;${f};${f};0m"
-		done
-		#cyan
-		for g in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;0;${g};${g}m"
-		done
-		#magenta
-		for h in $(repeat 0 255 )
-		do
-			echo  "\033[48;2;${h};0;${h}m"
-		done
-	}
-	printe() {
-		echo '\033[48;2;<r>;<g>;<b>m" - background'
-		echo '\033[38;2;<r>;<g>;<b>m" - foreground'
-		while read wtf
-		do
-			printf "\\${wtf} "
-		done
-	}
-	genrgb | printe
-	echo
-elif [[ $cmdf = ttysize ]]; then
-	#!/usr/bin/env bash
-	shopt -s checkwinsize; (:;:)
-	echo "$COLUMNS $LINES"
-elif [[ $cmdf = type ]]; then
-	#!/bin/bash
-	type $@
-elif [[ $cmdf = uidname ]]; then
-	#!/bin/bash
-	parseuid() {
-		m=0
-		while IFS=':' read -ra addr; do
-			n=0
-			for i in "${addr[@]}"; do
-				if [ $n = 2 ]; then
-					e=0
-					for y in "${addr[@]}"; do
-						[ $e = 0 ] && uid[$i]="$y"
-						e=notzero
-						break
-					done
-				fi
-				n=$(( n + 1 ))
-			done
-			m=$(( m + 1 ))
-		done < /etc/passwd
-	}
-	[ -z "$1" ] && echo no uid provided && exit
-	parseuid
-	for arg in "$@"; {
-		echo "${uid[$arg]}"
-	}
-elif [[ $cmdf = uname ]]; then
-	#!/usr/bin/env bash
-	if [ -z $1 ]; then
-		echo $OSTYPE
-	elif [ $1 = -m ]; then
-		printf '%s\n' "$HOSTTYPE"
-	elif [ $1 = --type ]; then
-		echo $MACHTYPE
-	elif [ $1 = -a ]; then #linux only 
-		printf '%s\n' "$(<"/proc/version")" #linux only
-	elif [ $1 = -n ]; then
-		: '\h'
-		printf '%s\n' "${_@P}"
-	else 
-		echo "flags: -m --type -n"
-	fi
-elif [[ $cmdf = uniq ]]; then
-	#!/bin/bash
-	repeat=no
-	if [ "$1" = -d ]; then
-		while read -r line; do
-			for check in "${hab[@]}"
-			do
-				if [ "$line" = "$check" ]; then
-					echo "$line"
-				fi
-			done
-			hab+=("$line")
-		done
-	else
-		while read -r line; do
-			for check in "${hab[@]}"
-			do
-				if [ "$line" = "$check" ]; then
-					repeat=yes
-				fi
-			done
-			#echo $repeat : $line
-			[ "$repeat" = "no" ] && echo "$line"
-			repeat=no
-			hab+=("$line")
-		done
-	fi
-elif [[ $cmdf = upper ]]; then
-	#!/bin/bash
-	# Uppercase a string.
-	# Usage: upper "string"
-	[ -z "$1" ] && echo no string && exit
-	printf "%s\\n" "${1^^}"
-elif [[ $cmdf = uptime ]]; then
-	#!/usr/bin/env bash
-	#
-	# uptime in pure bash.
-	
-	: "$(</proc/uptime)"
-	seconds_up=${_%%.*}
-	if [[ "$#" == 0 ]]; then
-	    printf ' %(%H:%M:%S)T up '
-	    if [[ $((minutes_up)) -ge 1440 ]]; then
-	        printf '%d days, ' $((minutes_up/1440))
-	    fi
-	    if [[ $((minutes_up)) -ge 60 ]]; then
-	        printf '%2d:%02d' $((minutes_up%1440/60)) $((minutes_up%60))
-	    else
-	        printf '%d min' $minutes_up
-	    fi 
-	else
-	   	getopts sp options
-	    case $options in
-	        s) current_timestamp=$(printf '%(%s)T')
-	           printf '%(%Y-%m-%d %H:%M:%S)T\n' $((current_timestamp-seconds_up));;
-	        p) minutes_up=$((seconds_up/60))
-	           printf 'up '
-	           if [[ $((minutes_up)) -ge 60 ]]; then
-	               printf '%d hours, ' $((minutes_up/60))
-	           fi
-	           printf '%d minutes\n' $((minutes_up%60));;
-	        ?) echo "$0: invalid option -- '$options'
-	Usage: $0 [-ps]">&2;;
-	    esac
-	fi
-elif [[ $cmdf = vi ]]; then
-	#!/usr/bin/env bash
-	### SETTINGS ###
-	# this is what TAB will insert.
-	# default value is "  ". possible values are any string.
-	tabchar="	"
-	
-	# auto tab with bim_insert, bim_backinsert, or when ENTER is pressed in insert mode.
-	# default value is "0". possible values are 0 or 1.
-	autotab="0"
-	line=0
-	base=1
-	version="bashbox vi (bim)"
-	message="welcome to vi"
-	unsaved_changes=0
-	
-	declare -a buffer
-	declare -i line base
-	declare file version message
-	bind 'set disable-completion on' 2>/dev/null
-	shopt -s checkwinsize; (:)
-	trap refresh WINCH ALRM
-	trap cleanup EXIT INT HUP USR1
-	
-	split() {
-	   # Usage: split "string" "delimiter"
-	   # thanks dylan araps :)
-	   IFS=$'\n' read -d "" -ra arr <<< "${1//$2/$'\n'}"
-	}
-	
-	keybinds() {
-	            case "${key}" in
-	            
-	                # motions
-	                k) bim_up 1;;
-	                j) bim_down 1;;
-	                K) bim_up $((LINES - 4));;
-	                J) bim_down $((LINES - 4));;
-	                g) bim_bof;;
-	                G) bim_eof;;
-	                t) cursor show
-	                   bim_goto "$(misc_prompt "goto: ")"
-	                   cursor hide
-	                   ;;
-	                
-	                # editing
-	                a|i) bim_edit;;
-	                I) bim_prepend;;
-	                d) bim_delete;;
-	                c) bim_clear;;
-	                o) bim_insert;;
-	                O) bim_backinsert;;
-	                n) bim_blank 1; bim_down 1;;
-	                N) bim_backblank 1;;
-	                y) bim_yank;;
-	                p) bim_paste; bim_down 1;;
-	            
-	                # misc
-	                :) bim_prompt;;
-	                z) bim_center;;
-	            
-	            esac
-	}
-	        
-	startup() {
-	    cursor hide
-	    cursor spos
-	    cursor nowrap
-	    cursor block
-	}
-	
-	cleanup() {
-	    cursor show
-	    cursor rpos
-	    cursor goto $LINES 0
-	    cursor wrap
-	    cursor block
-	    exit 0
-	}
-	
-	cursor() {
-	    case "$1" in
-	    save) printf "\e[?47h";;
-	    load) printf "\e[?47l";;
-	    spos) printf "\e7";;
-	    rpos) printf "\e8\e[B";;
-	    hide) printf "\e[?25l";;
-	    show) printf "\e[?25h";;
-	    goto) printf "\e[%s;%sf" "$2" "$3";;
-	    wrap) printf "\e[?7h";;
-	    nowrap) printf "\e[?7l";;
-	    #beam) printf "\e[5 q";;
-	    #block) printf "\e[1 q";;
-	    #underline) printf "\e[3 q";;
-	    esac
-	}
-	clear() {
-		printf "\033c"
-	}
-	refresh() {
-	    clear
-	    #printf "\e[36m %s (%s Lines) %s %sx%s %s \e[m\n" \
-	        #"$file" "${#buffer[@]}" "$version" "$LINES" "$COLUMNS" "$base"
-	    for ((i=base; i-base < LINES-2; i++)); do
-	        ((i !=  line))        && printf "\e[93m"     || printf "\e[31;1m"
-	        ((i > ${#buffer[@]})) && printf "   ~\e[m\n" || printf "%4s\e[m %s\n" "$i" "${buffer[i]}"
-	    done
-	    if [ "$message" ]; then
-	        printf "\e[32;1m%s\e[m\n" "$message"
-	    else
-	        printf "\e[36;1m%s [%s] %s/%s {%sx%s}\e[m\n" \
-	            "$version" "${file}" "$line" "${#buffer[@]}" "$LINES" "$COLUMNS"
-	    fi
-	}
-	
-	bim_read() {
-	    if [ "$1" ]; then
-	        file="$1"
-	    else
-	        message="expected argument [FILE]"
-	        return 1
-	    fi
-	
-	    if [ -e "$file" ];then
-	        mapfile -t -O 1 buffer <"$file"
-	        message="Read ${#buffer[@]} lines from '$file'"
-	    else
-	        message="new file '$file'"
-	    fi
-	
-	    [ ${#buffer[@]} -ne 0 ] && line=1
-	}
-	
-	bim_write() {
-	    if [ "$1" ]; then
-	        myfile="$1"
-	    elif [ "$file" ]; then
-	        myfile="$file"
-	    else
-	        message="no file to write."
-	        return 1
-	    fi
-	    : >"$myfile"
-	    for wline in "${buffer[@]}"; do echo "$wline" >> "$myfile"; done
-	    message="Wrote ${#buffer[@]} lines to '$myfile'"   
-	    unsaved_changes=0
-	}
-	
-	bim_up() {
-	    [ "$1" ] && num="$1" || num=1
-	    for ((i=0;i<$num;i++)); do
-	        ((line > 1))    && ((line--))
-	    done
-	}
-	
-	bim_down() {
-	    [ "$1" ] && num="$1" || num=1
-	    for ((i=0;i<$num;i++)); do
-	        ((line < ${#buffer[@]})) && ((line++))
-	    done
-	}
-	
-	bim_delete() {
-	    lineyank="${buffer[line]}"
-	    buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
-	    unset "buffer[0]"
-	    ((line > ${#buffer[@]})) && ((line--))
-	    message="line cut."
-	    unsaved_changes=1
-	}
-	
-	bim_insert() {
-	    buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
-	    unset "buffer[0]"
-	    ((line++))
-	    # check if autotab is on and if the tab block we're extending starts with spaces
-	    if [ $autotab = 1 ] && [ "${buffer[line-1]::1}" = " " ]; then
-	        # wacky code to get the tab size of the last line
-	        local lasttab="${buffer[line-1]%${buffer[line-1]##* }}"
-	        # put in that same tab length to what we're going to edit
-	        buffer[line]="$lasttab"
-	    fi
-	    # I have no clue why this has to be "-4" here
-	    ((line > base+LINES-4))  && ((base++))
-	    bim_edit
-	}
-	
-	bim_backinsert() {
-	    buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
-	    unset "buffer[0]"
-	    # same code as 'bim_insert'
-	    if [ $autotab = 1 ] && [ "${buffer[line+1]::1}" = " " ]; then
-	        local lasttab="${buffer[line+1]%${buffer[line+1]##* }}"
-	        buffer[line]="$lasttab"
-	    fi
-	    bim_edit
-	}
-	
-	bim_blank() {
-	    [ "$1" ] && num="$1" || num=1
-	    for ((i=0;i<$num;i++)); do
-	        buffer=([0]="" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
-	        unset "buffer[0]"
-	    done
-	}
-	
-	bim_backblank() {
-	    [ "$1" ] && num="$1" || num=1
-	    for ((i=0;i<$num;i++)); do
-	        buffer=([0]="" "${buffer[@]:1:line-1}" "" "${buffer[@]:line}")
-	        unset "buffer[0]"
-	    done
-	}
-	
-	bim_yank() {
-	    lineyank="${buffer[line]}"
-	    message="line yanked."
-	}
-	
-	bim_paste() {
-	    buffer=([0]="" "${buffer[@]:1:line}" "$lineyank" "${buffer[@]:line+1}")
-	    unset "buffer[0]"
-	}
-	
-	bim_clear() {
-	    ((line == 0)) && return
-	    cursor goto $((line-base + 2)) 6
-	    buffer[line]=""
-	    unsaved_changes=1
-	}
-	
-	# insert mode
-	# my new robust replacement for 'read' that goes character by character
-	bimput() { # <var> [starting string]
-	    # starting text of line
-	    local buf="$2"
-	    local ch=""
-	    cursor beam
-	    cursor show
-	    while true; do
-	        IFS='' read -s -n1 ch
-	        case "$ch" in
-	            "")
-	                bimputstatus="esc"
-	                break
-	                ;;
-	            # read -n1 seems to interpret ENTER as nothing
-	            "")
-	                bimputstatus="enter"
-	                break
-	                ;;
-	            # vscode is unable do display a backspace
-	            # but there is one between these quotes
-	            "")
-	                if [ "$buf" ]; then
-	                    buf="${buf%?}"
-	                    printf "\b \b"
-	                else
-	                    bimputstatus="backline"
-	                    break
-	                fi
-	                ;;
-	            "	")
-	                buf="${buf}${shiftwidth:="  "}"
-	                echo -n "${shiftwidth}"
-	                ;;
-	            *)
-	                buf="${buf}${ch}"
-	                printf "$ch"
-	                ;;
-	        esac
-	    done
-	    eval "${1}=\${buf}"
-	    cursor hide
-	    cursor block
-	}
-	
-	bim_edit() {
-	    # refresh, as 'read' will freeze drawing
-	    refresh
-	    # make a line in an empty buffer
-	    ((line == 0)) && buffer[1]="" && line=1 && refresh
-	    # print '--INSERT--' at the bottom
-	    cursor goto $LINES
-	    printf "\e[32m%s\e[m" "--INSERT--"
-	    # do the actual thing
-	    cursor goto $((line-base + 1)) $((6 + ${#buffer[line]}))
-	    bimput "buffer[line]" "${buffer[line]}"
-	    case "$bimputstatus" in
-	        "enter")
-	            # nice and simple
-	            bim_insert
-	            ;;
-	        "backline")
-	            # delete line
-	            buffer=([0]="" "${buffer[@]:1:line-1}" "${buffer[@]:line+1}")
-	            unset "buffer[0]"
-	            # go back a line and edit
-	            ((line--))
-	            bim_edit
-	            ;;
-	    esac
-	    unsaved_changes=1
-	}
-	
-	bim_prepend() {
-	    # refresh, as 'read' will freeze drawing
-	    refresh
-	    # make a line in an empty buffer
-	    ((line == 0)) && buffer[1]="" && line=1 && refresh
-	    # print '--INSERT--' at the bottom
-	    cursor goto $LINES
-	    printf "\e[32m%s\e[m" "--PREPEND--"
-	    # do the actual thing
-	    cursor goto $((line-base + 2)) 4
-	    printf "^~"
-	    cursor underline
-	    cursor show
-	    read -re
-	    cursor hide
-	    cursor block
-	    # write $REPLY + what was already there
-	    buffer[line]="${REPLY}${buffer[line]}"
-	    unsaved_changes=1
-	}
-	
-	bim_prompt() {
-	    bind 'set disable-completion off' 2>/dev/null
-	    cursor show
-	    read -rep ":" choice
-	    bind 'set disable-completion on' 2>/dev/null
-	
-	    # run command and wait
-	    if [ "${choice::1}" = "!" ]; then
-	        eval "${choice##!}"
-	        cursor hide
-	        printf "\e[31mpress any key to continue."
-	        read -N1 -r
-	    # read command output
-	    elif [ "${choice::3}" = "r !" ]; then
-	        eval "output=\"\$(${choice##r !})\""
-	        split "$output" $'\n'
-	        bim_blank ${#arr[@]}
-	        i=0
-	        while [ $i -lt ${#arr[@]} ]; do
-	            buffer[line+i+1]="${arr[i]}"
-	            unset "buffer[0]"
-	            ((i++))
-	        done
-	        cursor hide
-	        unsaved_changes=1
-	    # simply run command
-	    else
-	        eval "$choice"
-	        succ=$?
-	        if [ ! "$(type -t ${choice%% *})" = "function" ]; then
-	            message="finished with exit code $succ"
-	        fi
-	        cursor hide
-	    fi
-	    # cursor must be hidden in each case individually.
-	}
-	
-	misc_prompt() {
-	    # cursor must be shown externally
-	    # as to not pass escape sequences into functions
-	    [ "$1" ] || return 1
-	    bind 'set disable-completion off' 2>/dev/null
-	    read -rep "$1"
-	    bind 'set disable-completion on' 2>/dev/null
-	
-	    printf '%s' "$REPLY"
-	}
-	
-	quit() {
-	    if [ "$unsaved_changes" = 0 ]; then
-	        exit 0
-	    else
-	        message="unsaved changes. force quit with \":q!\""
-	    fi
-	}
-	
-	bim_bof() {
-		[ ${#buffer[@]} = 0 ] && return 1
-	    line=1
-	}
-	
-	bim_eof() {
-	    line=${#buffer[@]}
-	}
-	
-	bim_goto() {
-	    [ "$1" ] || return 1
-	    [ ${#buffer[@]} -ge $1 ] && line=$1
-	}
-	
-	bim_center() {
-	    (( base=line-((LINES-3)/2) ))
-	    [ $base -lt 1 ] && base=1
-	}
-	
-	# functions that are really just aliases
-	# and shortcuts for the command line
-	
-	w() {
-	    bim_write "$@"
-	}
-	
-	q() {
-	    quit
-	}
-	
-	q!() {
-	    exit 0
-	}
-	wq() {
-	    w "$@" && q
-	}
-	
-	e() {
-	    bim_read "$@"
-	}
-	
-	
-	keyboard_loop () {
-	    startup
-	    [ "$1" ] && bim_read "$1"
-	    refresh
-	
-	    while true; do
-	        read -rsN1 key
-	        message=""
-	
-	        # iteration (only 2 digit numbers)
-	        # cancel with ESC
-	        case $key in
-	            1|2|3|4|5|6|7|8|9)
-	                digit1="$key"
-	                printf '%d' "$key"
-	                read -rsN1 key
-	                case $key in
-	                    1|2|3|4|5|6|7|8|9|0)
-	                        digit2="$key"
-	                        printf '%d' "$key"
-	                        read -rsN1 key
-	                        ;;
-	                    "")
-	                        digit1="1"
-	                        digit2=""
-	                        ;;
-	                    *)
-	                        digit2=""
-	                        ;;
-	                esac
-	                ;;
-	            "")
-	                digit1="1"
-	                digit2=""
-	                ;;
-	            *)
-	                digit1="1"
-	                digit2=""
-	                ;;
-	        esac
-	
-	        # compute keys from rc or defaults
-	        # reiterate if applicable
-	        kbj="${digit1}${digit2}"
-	        for ((kbinc=0; kbinc < kbj; kbinc++)); do
-	            keybinds
-	        done
-	
-	        # universal scrolling system
-	        if [ $base -gt $line ]; then
-	            [ $base = 1 ] || base=$line
-	        elif (( base+LINES-3 < line )); then
-	            ((base=line-LINES+3))
-	        fi
-	
-	        # refresh the UI
-	        refresh
-	    done
-	    clear
-	}
-	
-	usage () {
-	echo '
-	bim: bash vim
-	
-	usage: ${0##*/} [ options | file ]
-	
-	options:
-	    -h|--help : print this help message
-	    -k|--keys : print a basic usage document'
-	}
-	
-	keys () {
-	echo '# navigation
-	  j - move down  (:bim_down [LINES])
-	  k - page up    (:bim_up [LINES])
-	  J - page down
-	  K - page up
-	  g - first line (:bim_bof)
-	  G - last line  (:bim_eof)
-	  t - go to line (:bim_goto [LINE])
-	
-	# editing
-	  a - append to line  (:bim_edit)
-	  I - prepend to line (:bim_prepend)
-	  d - delete line     (:bim_delete)
-	  c - clear line      (:bim_clear)
-	  y - yank line       (:bim_yank)
-	  p - paste line      (:bim_paste)
-	  n - create line below (:bim_blank [LINES])
-	  N - create line above (:bim_backblank [LINES])
-	  o - create line below and edit (:bim_insert)
-	  O - create line above and edit (:bim_backinsert)
-	
-	# commands
-	# NOTE: the command line is for both editor and shell commands.
-	   : - open command line
-	  :w [FILE] - write to current or given file
-	  :q - quit
-	 :q! - force quit
-	 :wq - write and quit
-	  :e [FILE] - open file
-	  :![COMMAND] - pause to view the output of a command
-	:r ![COMMAND] - read output of a command'
-	}
-	
-	
-	
-	main() {
-	    case $1 in
-	        -h|--help) trap : EXIT; usage;;
-	        -k|--keys) trap : EXIT; keys;;
-	        *) keyboard_loop "$1";;
-	    esac
-	}
-	
-	main "$@"
-elif [[ $cmdf = watch ]]; then
-	#!/bin/bash
-	waittime=2 #default
-	waitsleep(){
-		if [ -z "$1" ]; then
-		  echo "watch: waitsleep: amount of time to sleep not provided"
-		  exit
-		fi
-		read -d "" -rt "$1"
-	}
-	printhelp(){
-		echo "usage: waittime [ -n | -h -v ] [time] cmd"
-	}
-	[ -n "$WATCH_INTERVAL" ] && waittime="$WATCH_INTERVAL"
-	case "$1" in
-		-n|--interval)waittime="$2"; shift 2;;
-		-h|--help)printhelp; exit;;
-	esac
-	while true
-	do
-		printf "\033c"
-		$@
-		sleep "$waittime"
-	done
-elif [[ $cmdf = wc ]]; then
-	#!/usr/bin/env bash
-	#
-	# wc in pure bash.
-	
-	while getopts "lcw" opt; do
-	    case $opt in
-	        l) lines=1 ;;
-	        c) bytes=1 ;;
-	        w) words=1 ;;
-	
-	        ?)
-	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-	            exit 1
-	        ;;
-	    esac
-	done
-	
-	[[ -t 0 && -f ${*: -1} ]] &&
-	    file=${*: -1}
-	
-	[[ -t 0 && ! -f $file ]] && {
-	    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
-	    exit 1
-	}
-	
-	mapfile file_data < "${file:-/dev/stdin}"
-	
-	for line in "${file_data[@]}"; do
-	    read -ra line_split <<< "$line"
-	    ((splits+=${#line_split[@]}, chars+=${#line}))
-	done
-	
-	[[ -z $lines && -z $bytes && -z $words ]] &&
-	    ((lines=1, bytes=1, words=1))
-	
-	[[ $lines ]] && printf '%s ' "${#file_data[@]}"
-	[[ $words ]] && printf '%s ' "$splits"
-	[[ $bytes ]] && printf '%s ' "$chars"
-	
-	printf '%s\n' "$file"
-elif [[ $cmdf = which ]]; then
-	#!/bin/bash
-	which $@
-elif [[ $cmdf = whoami ]]; then
-	#!/usr/bin/env bash
-	#
-	# logname in pure bash.
-	
-	: '\u'
-	printf '%s\n' "${_@P}"
-elif [[ $cmdf = yes ]]; then
-	#!/usr/bin/env bash
-	#
-	# yes in pure bash.
-	
-	if [[ "$1" ]]; then
-	    for ((;;)); {
-	        printf '%s\n' "$1"
-	    }
-	else
-	    for ((;;)); {
-	        printf y\\n
-	    }
-	fi
+	sleep "$waittime"
+done
+;;
+wc)
+#!/usr/bin/env bash
+#
+# wc in pure bash.
+
+while getopts "lcw" opt; do
+    case $opt in
+        l) lines=1 ;;
+        c) bytes=1 ;;
+        w) words=1 ;;
+
+        ?)
+            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+            exit 1
+        ;;
+    esac
+done
+
+[[ -t 0 && -f ${*: -1} ]] &&
+    file=${*: -1}
+
+[[ -t 0 && ! -f $file ]] && {
+    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
+    exit 1
+}
+
+mapfile file_data < "${file:-/dev/stdin}"
+
+for line in "${file_data[@]}"; do
+    read -ra line_split <<< "$line"
+    ((splits+=${#line_split[@]}, chars+=${#line}))
+done
+
+[[ -z $lines && -z $bytes && -z $words ]] &&
+    ((lines=1, bytes=1, words=1))
+
+[[ $lines ]] && printf '%s ' "${#file_data[@]}"
+[[ $words ]] && printf '%s ' "$splits"
+[[ $bytes ]] && printf '%s ' "$chars"
+
+printf '%s\n' "$file"
+;;
+which)
+#!/bin/bash
+which $@
+;;
+whoami)
+#!/usr/bin/env bash
+#
+# logname in pure bash.
+
+: '\u'
+printf '%s\n' "${_@P}"
+;;
+yes)
+#!/usr/bin/env bash
+#
+# yes in pure bash.
+
+if [[ "$1" ]]; then
+    for ((;;)); {
+        printf '%s\n' "$1"
+    }
 else
- echo arch base16 base64 basename bashbox-create cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
+    for ((;;)); {
+        printf y\\n
+    }
 fi
+;;
+*)
+echo arch base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
+;;
+esac

@@ -8,18 +8,8 @@ This isnt intended to be really posix, it is missing lot of things from posix an
 (can be called both as ./bashbox bashbox create, ./bashbox-create or , ./bin/bashbox-create)
 merge things in bin/ to one script
 
-options (can be combined):
-
-	bin - make unformated compilation of all stuff in bin/ (pretty fast)
-
-	formatbin - make compilation of all stuff in bin/ (pretty slow)
-
-	info - print info on what will be merged and how will help message look
-
-	you can call other functions defined in bashbox-create, but they are mostly just copies of stuff in bin/ needed for merging (wc, head, tail, seq, cat)
-	
 # contributing
-if you want contribute, **do not edit "bashbox/bxlib" file, its just automerged file, edit things in bin/.**
+if you want contribute, **do not edit "bashbox" file, its just automerged file, edit things in bin/.**
 
 # thanks
 in bashbox is used:
@@ -43,6 +33,8 @@ https://github.com/comfies/bed (unlicense)
 https://github.com/faragon/lzb (bsd 3)
 
 https://github.com/dylanaraps/bush (mit)
+
+https://github.com/Crestwave/bf (mit) 
 
 and other random scripts i found on iternet and were without license:
 

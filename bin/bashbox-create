@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-bashbox_build=$(printf "%(%s)T\\n")
+bashbox_build=$( if [ -z $EPOCHREALTIME ]; then printf "%(%s)T\\n"; else echo $EPOCHREALTIME; fi)
 bin() {
 	echo '#!/usr/bin/env bash' > bashbox
 	echo 'cmdf=$1' >> bashbox
@@ -25,14 +25,6 @@ bin() {
 	echo ';;' >> bashbox
 	echo 'esac' >> bashbox
 }
-info() {
-	cd bin
-	items=$(printf '%s\n' *)
-	help=$(echo *)
-	cd ..
-	echo items: $items
-	echo help: $help
-}
 getcont() {
 	if [[ "$#" == 0 ]]; then
 	    while read -rn1; do echo "$REPLY"; done
@@ -46,131 +38,4 @@ getcont() {
 	    done
 	fi
 }
-formatbin() {
-	echo "#""!"/usr/bin/env bash > bashbox
-	echo cmdf="$"1 >> bashbox
-	echo shift >> bashbox
-	cd bin
-	items=$(printf '%s\n' *)
-	help=$(echo *)
-	cd ..
-	echo if "[[" "$"cmdf = "--build" "]]"";"" then" >> bashbox
-	echo "	"echo $bashbox_build >> bashbox
-	for i in $items
-	do
-		echo elif "[[" "$"cmdf = $i "]]"";"" then" >> bashbox
-		#start of text edit
-		filern=bin/$i
-		lines=$(getcont $filern | lenght -l)	
-		for u in $(numberline $lines)
-		do
-			rn="	$( first -n $u $filern | last )"
-			echo "$rn" >> bashbox
-			echo merging line $u in $i
-		done
-	done
-	echo else >> bashbox
-	echo " "echo $help  >> bashbox
-	echo fi >> bashbox
-}
-lenght() {
-	#basically same as wc in bin/wc just renamed to prevent any possible conflicts
-	while getopts "lcw" opt; do
-	    case $opt in
-	        l) lines=1 ;;
-	        c) bytes=1 ;;
-	        w) words=1 ;;
-	
-	        ?)
-	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-	            exit 1
-	        ;;
-	    esac
-	done
-	
-	[[ -t 0 && -f ${*: -1} ]] &&
-	    file=${*: -1}
-	
-	[[ -t 0 && ! -f $file ]] && {
-	    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
-	    exit 1
-	}
-	
-	mapfile file_data < "${file:-/dev/stdin}"
-	
-	for line in "${file_data[@]}"; do
-	    read -ra line_split <<< "$line"
-	    ((splits+=${#line_split[@]}, chars+=${#line}))
-	done
-	
-	[[ -z $lines && -z $bytes && -z $words ]] &&
-	    ((lines=1, bytes=1, words=1))
-	
-	[[ $lines ]] && printf '%s ' "${#file_data[@]}"
-	[[ $words ]] && printf '%s ' "$splits"
-	[[ $bytes ]] && printf '%s ' "$chars"
-	
-	printf '%s\n' "$file"
-	
-}
-first() {
-	#basically same as head in bin/head just renamed to prevent any possible conflicts
-	while getopts ":n:" opt; do
-	    case $opt in
-	        n) max_lines="$OPTARG" ;;
-	
-	        :)
-	            printf '%s\n' "option -$OPTARG requires an argument." >&2
-	            exit 1
-	        ;;
-	
-	        ?)
-	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
-	            exit 1
-	        ;;
-	    esac
-	
-	    shift "$((OPTIND - 1))"
-	done
-	
-	[[ ! -f $1 ]] && {
-	    printf '%s\n' "head: ${1:-null}: No such file or directory." >&2
-	    exit 1
-	}
-	
-	mapfile -n "${max_lines:-10}" file_data < "$1"
-	printf '%s' "${file_data[@]}"
-	
-}
-last() {
-	mapfile -tn 0 file_data
-	
-	[[ ${max_lines:=0} -gt "${#file_data[@]}" ]] &&
-	    max_lines="${#file_data[@]}"
-	
-	printf '%s\n' "${file_data[@]: -1}"
-}
-numberline() {
-	#basically same as seq in bin/seq just renamed to prevent any possible conflicts
-	[[ -z $1 ]] && {
-	    printf '%s\n' "seq: error: missing arguments." >&2
-	    exit 1
-	}
-	
-	[[ $2 ]] &&
-	    first="$1"
-	
-	[[ $3 ]] &&
-	    increment="$2"
-	
-	last="${*: -1}"
-	
-	for ((i=${first:=1};i<=last;i+=${increment:=1})); {
-	    printf '%s\n' "$i"
-	}
-	
-}
-for action in "$@"
-do
-	$action
-done
+bin

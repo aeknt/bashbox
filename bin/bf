@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+#https://esolangs.org/wiki/Extended_Brainfuck
+extension=0 #set which extended type to use
+file=0
+if [ "$1" = -x ]; then
+	extension=1
+	shift
+elif [ "$1" = -x2 ]; then
+	extension=2
+	shift
+elif [ "$1" = -xf2 ]; then
+	extension=2
+	file=1
+	shift
+fi
+if (( $# )); then
+	for arg; do
+		programf+=$(< "$arg") || exit
+	done
+else
+	mapfile -t
+	programf=${MAPFILE[*]}
+fi
+
+#printf "%d\n" \'a #convert ascii to decimal
+
+[ $extension = 0 ] && program=${programf//[^'><+-.,[]']} #basic
+[ $extension = 1 ] && program=${programf//[^'><+-.,[]@$!}{~^&|']} #extended 1
+[ $extension = 2 ] && program=${programf//[^'><+-.,[]@$!}{~^&|'?)(*/=_%]} #extended 2
+IFS= read -d "" -r translation <<'EOF'
+declare -a a
+LC_ALL=C
+IFS=
+p=0
+
+if [ $file = 1 ]; then
+	for (( i=0; i<${#programf}; i++ )); do
+		a[$i]=$(printf "%d\n" \'"${programf:$i:1}")
+		p=$(( $(printf "%d\n" \'"${programf:$i:1}" | wc -c) + 1 ))
+	done
+fi
+
+i(){
+	[[ -z $REPLY ]] && read -r && REPLY+=$'\n'
+
+	[[ $REPLY ]] && {
+		printf -v 'a[$p]' %d "'${REPLY::1}"
+		REPLY=${REPLY:1}
+	}
+}
+o(){
+	local hex
+	printf -v hex %x "${a[$p]}"
+	printf %b "\x$hex"
+}
+save(){
+	storage="${a[$p]}"
+}
+insert(){
+	tmpn=0
+	for byt in "${a[@]}";{
+		[ $tmpn -lt $p ] && a[$tmpn]="$byt"
+		[ $tmpn = $p ] && a[$tmpn]="0" && tmpn=$(( tmpn + 1 ))
+		[ $tmpn -gt $p ] && a[$tmpn]="$byt"
+		tmpn=$(( tmpn + 1 ))
+	}
+}
+uninsert(){
+	a=( "${a[@]:0:$p}" "${a[@]:$(( p + 1 ))}" )
+}
+execat(){
+	a=( "${a[@]:0:$p}" "${a[@]:$(( p + 1 ))}" )
+}
+
+EOF
+
+for (( i = 0; i < ${#program}; ++i )); do
+	case ${program:i:1} in
+		'>'): '(( ++p ))' ;;
+		'<'): '(( --p ))' ;;
+		'+'): '(( a[$p] = a[$p]+1 & 255 ))' ;;
+		'-'): '(( a[$p] = a[$p]-1 & 255 ))' ;;
+		'.'): 'o' ;;
+		','): 'i' ;;
+		'['): 'while (( a[$p] )); do :' ;;
+		']'): 'done' ;;
+		'@'): 'exit' ;;
+		'$'): 'save' ;;
+		'!'): 'a[$p]=$storage' ;;
+		'}'): 'a[$p]=$(( a[$p] >> 1 ))' ;;
+		'{'): 'a[$p]=$(( a[$p] << 1 ))' ;;
+		'o'): 'echo ${a[$p]}' ;; #for debugging
+		'p'): 'echo ${a[@]}' ;; #for debugging
+		'~'): 'a[$p]=$(( ~ a[$p] ))' ;;
+		'^'): 'a[$p]=$(( a[$p] ^ $storage ))' ;;
+		'&'): 'a[$p]=$(( a[$p] & $storage ))' ;;
+		'|'): 'a[$p]=$(( a[$p] | $storage ))' ;;
+		'?'): 'execat' ;;
+		')'): 'insert' ;;
+		'('): 'uninsert' ;;
+		'*'): 'a[$p]=$(( $storage * a[$p] ))' ;;
+		'/'): 'a[$p]=$(( a[$p] / $storage ))' ;;
+		'='): 'a[$p]=$(( a[$p] + $storage ))' ;;
+		'_'): 'a[$p]=$(( a[$p] - $storage ))' ;;
+		'%'): 'a[$p]=$(( a[$p] % $storage ))' ;;
+	esac
+	translation+=$_$'\n'
+done
+eval "$translation"$'\n:' || exit

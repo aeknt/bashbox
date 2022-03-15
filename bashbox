@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1646928989,393646
+	echo 1647384938,946418
 ;;
 arch)
 #!/usr/bin/env bash
@@ -1890,8 +1890,69 @@ printf "%s\\n" "${1,,}"
 ;;
 ls)
 #!/usr/bin/bash
-#found this randomly and it kinda works
-printf '%s\n' *
+#!/usr/bin/env bash
+infofile() {
+	if [ -L $1 ]; then
+		echo -n l
+	elif [ -d $1 ]; then
+		echo -n d
+	else
+		echo -n '-'
+	fi
+	[ -r $1 ] && echo -n r || echo -n '-'
+	[ -w $1 ] && echo -n w || echo -n '-'
+	[ -x $1 ] && echo -n x || echo -n '-'
+	[ -L $1 ] && [ -d $1 ] && cd -P "$1" && echo " $1 -> $PWD" && cd .. || echo " $1"
+}
+infofiles() {
+	for f in $(printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+infofilesall() {
+	for f in $(printf '%s\n' .* && printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+[ -z "$1" ] && printf '%s\n' *
+[ "$1" = "-a" ] && printf '%s\n' .* && printf '%s\n' *
+[ "$1" = "-l" ] && infofiles
+[ "$1" = "-la" ] && infofilesall
+[ "$1" = "-al" ] && infofilesall
+;;
+man)
+#!/bin/bash
+[ -z "$1" ] && echo specify arguments && exit
+[ -z "$2" ] && page="$1" && section="1"
+[ -n "$2" ] && page="$2" && section="$1"
+
+getpage() {
+	IFS=':' read -ra dirs <<< "$MANPATH"
+	for i in "${dirs[@]}"; {
+		[ -f "${i}/man${section}/${page}.${section}" ] && file="${i}/man${section}/${page}.${section}" && break
+	}
+}
+print() {
+	#really shitty solution
+	content=$(printf '%s\n' "$(<"$file")")
+	content="${content//.RE/ }"	
+	for n in {0..100}; {
+		content="${content//.RS ${n}/ }"		
+	}
+	content="${content//\\fR/ }"	
+	content="${content//\\fI/ }"	
+	content="${content//\\f?/ }"	
+	content="${content//\\&/ }"	
+	content="${content//\\/ }"
+	#echo "$content"
+	IFS=$'\n'
+	for w in $content; {
+		[ ! "${w:0:1}" = '.' ] && echo "$w"
+		#echo "$w"
+	}
+}
+getpage
+print
 ;;
 more)
 #!/usr/bin/env bash
@@ -3791,6 +3852,6 @@ else
 fi
 ;;
 *)
-echo arch base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
+echo arch base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls man more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
 ;;
 esac

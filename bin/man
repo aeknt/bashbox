@@ -1,0 +1,32 @@
+#!/bin/bash
+[ -z "$1" ] && echo specify arguments && exit
+[ -z "$2" ] && page="$1" && section="1"
+[ -n "$2" ] && page="$2" && section="$1"
+
+getpage() {
+	IFS=':' read -ra dirs <<< "$MANPATH"
+	for i in "${dirs[@]}"; {
+		[ -f "${i}/man${section}/${page}.${section}" ] && file="${i}/man${section}/${page}.${section}" && break
+	}
+}
+print() {
+	#really shitty solution
+	content=$(printf '%s\n' "$(<"$file")")
+	content="${content//.RE/ }"	
+	for n in {0..100}; {
+		content="${content//.RS ${n}/ }"		
+	}
+	content="${content//\\fR/ }"	
+	content="${content//\\fI/ }"	
+	content="${content//\\f?/ }"	
+	content="${content//\\&/ }"	
+	content="${content//\\/ }"
+	#echo "$content"
+	IFS=$'\n'
+	for w in $content; {
+		[ ! "${w:0:1}" = '.' ] && echo "$w"
+		#echo "$w"
+	}
+}
+getpage
+print

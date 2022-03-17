@@ -6,6 +6,20 @@
     printf '%s\n' "seq: error: missing arguments." >&2
     exit 1
 }
+[[ $1 = --help ]] && {
+printf '%s\n' "Usage: seq [OPTION]... LAST
+  or:  seq [OPTION]... FIRST LAST
+  or:  seq [OPTION]... FIRST INCREMENT LAST
+Print numbers from FIRST to LAST, in steps of INCREMENT.
+
+      --help     display this help and exit
+
+If FIRST or INCREMENT is omitted, it defaults to 1.  That is, an
+omitted INCREMENT defaults to 1 even when LAST is smaller than FIRST.
+The sequence of numbers ends when the sum of the current number and
+INCREMENT would become greater than LAST."
+	exit 0
+}
 
 [[ $2 ]] &&
     first="$1"

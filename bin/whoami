@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #
-# logname in pure bash.
+# whoami in pure bash.
 
-: '\u'
-printf '%s\n' "${_@P}"
+echo "$USER"

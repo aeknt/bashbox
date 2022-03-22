@@ -1,0 +1,18 @@
+#!/bin/bash
+[ -z "$1" ] && echo "usage: at <unix time>, while command is stdin" && exit
+gettime() {
+	printf "%(%s)T\\n"
+}
+waituntil() {
+	while true
+	do
+		[ "$1" = "$(gettime)" ] && ("$input") && exit
+	done
+}
+input=$(while read -r command
+	do
+		echo "$command"
+	done
+)
+[ "$1" -lt "$(gettime)" ] && echo "can't be in past" && exit
+waituntil "$1" &

@@ -3,7 +3,7 @@
 # cat in pure bash.
 
 if [[ "$#" == 0 ]]; then
-    while read -rn1; do echo "$REPLY"; done
+    while read -r; do echo "$REPLY"; done
 else
     for file in "$@"; do
         if [[ -f $file ]]; then

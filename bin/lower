@@ -1,5 +1,0 @@
-#!/bin/bash
-# Lowercase a string.
-# Usage: lower "string"
-[ -z "$1" ] && echo no string && exit
-printf "%s\\n" "${1,,}"

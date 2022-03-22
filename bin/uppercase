@@ -1,0 +1,7 @@
+#!/bin/bash
+# Uppercase a string.
+# Usage: upper "string"
+while read -r line
+do
+	printf "%s\\n" "${line^^}"
+done

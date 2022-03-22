@@ -1,0 +1,30 @@
+#!/usr/bin/bash
+#!/usr/bin/env bash
+infofile() {
+	if [ -L $1 ]; then
+		echo -n l
+	elif [ -d $1 ]; then
+		echo -n d
+	else
+		echo -n '-'
+	fi
+	[ -r $1 ] && echo -n r || echo -n '-'
+	[ -w $1 ] && echo -n w || echo -n '-'
+	[ -x $1 ] && echo -n x || echo -n '-'
+	[ -L $1 ] && [ -d $1 ] && cd -P "$1" && echo " $1 -> $PWD" && cd .. || echo " $1"
+}
+infofiles() {
+	for f in $(printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+infofilesall() {
+	for f in $(printf '%s\n' .* && printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+[ -z "$1" ] && infofiles
+[ "$1" = "-a" ] && infofilesall
+[ "$1" = "-l" ] && infofiles
+[ "$1" = "-la" ] && infofilesall
+[ "$1" = "-al" ] && infofilesall

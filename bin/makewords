@@ -1,0 +1,14 @@
+#!/bin/bash
+[ -z "$1" ] && {
+while read -rd ' ' word
+do
+	echo "$word"
+done }
+[ -n "$1" ] && {
+	for arg in "$@"; {
+		while read -rd ' ' word
+		do
+			echo "$word"
+		done < "$arg"
+	}
+}

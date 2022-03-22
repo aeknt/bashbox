@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1647532947,026375
+	echo 1647984275,866181
 ;;
 arch)
 #!/usr/bin/env bash
@@ -11,6 +11,26 @@ arch)
 # arch in pure bash.
 
 echo "$HOSTTYPE"
+;;
+at)
+#!/bin/bash
+[ -z "$1" ] && echo "usage: at <unix time>, while command is stdin" && exit
+gettime() {
+	printf "%(%s)T\\n"
+}
+waituntil() {
+	while true
+	do
+		[ "$1" = "$(gettime)" ] && ("$input") && exit
+	done
+}
+input=$(while read -r command
+	do
+		echo "$command"
+	done
+)
+[ "$1" -lt "$(gettime)" ] && echo "can't be in past" && exit
+waituntil "$1" &
 ;;
 base16)
 #!/usr/bin/env bash
@@ -291,7 +311,7 @@ cat)
 # cat in pure bash.
 
 if [[ "$#" == 0 ]]; then
-    while read -rn1; do echo "$REPLY"; done
+    while read -r; do echo "$REPLY"; done
 else
     for file in "$@"; do
         if [[ -f $file ]]; then
@@ -848,6 +868,38 @@ else
 	unhide
 fi
 unhide
+;;
+dir)
+#!/usr/bin/bash
+#!/usr/bin/env bash
+infofile() {
+	if [ -L $1 ]; then
+		echo -n l
+	elif [ -d $1 ]; then
+		echo -n d
+	else
+		echo -n '-'
+	fi
+	[ -r $1 ] && echo -n r || echo -n '-'
+	[ -w $1 ] && echo -n w || echo -n '-'
+	[ -x $1 ] && echo -n x || echo -n '-'
+	[ -L $1 ] && [ -d $1 ] && cd -P "$1" && echo " $1 -> $PWD" && cd .. || echo " $1"
+}
+infofiles() {
+	for f in $(printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+infofilesall() {
+	for f in $(printf '%s\n' .* && printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+[ -z "$1" ] && printf '%s\n' *
+[ "$1" = "-a" ] && printf '%s\n' .* && printf '%s\n' *
+[ "$1" = "-l" ] && infofiles
+[ "$1" = "-la" ] && infofilesall
+[ "$1" = "-al" ] && infofilesall
 ;;
 dirname)
 #!/usr/bin/env bash
@@ -1907,12 +1959,14 @@ do
     lolcate $string
 done
 ;;
-lower)
+lowercase)
 #!/bin/bash
 # Lowercase a string.
 # Usage: lower "string"
-[ -z "$1" ] && echo no string && exit
-printf "%s\\n" "${1,,}"
+while read -r line
+do
+	printf "%s\\n" "${line,,}"
+done
 ;;
 ls)
 #!/usr/bin/bash
@@ -1945,6 +1999,22 @@ infofilesall() {
 [ "$1" = "-l" ] && infofiles
 [ "$1" = "-la" ] && infofilesall
 [ "$1" = "-al" ] && infofilesall
+;;
+makewords)
+#!/bin/bash
+[ -z "$1" ] && {
+while read -rd ' ' word
+do
+	echo "$word"
+done }
+[ -n "$1" ] && {
+	for arg in "$@"; {
+		while read -rd ' ' word
+		do
+			echo "$word"
+		done < "$arg"
+	}
+}
 ;;
 man)
 #!/bin/bash
@@ -2262,6 +2332,26 @@ main() {
 
 main "$@"
 ;;
+nl)
+#!/bin/bash
+n=1
+[ "$1" = '-v' ] && n="$2" && shift 2
+[ -z "$1" ] && {
+while read -r line
+do
+	echo "$n $line"
+	((n++))
+done }
+[ -n "$1" ] && {
+	for arg in "$@"; {
+		while read -r line
+		do
+			echo "$n $line"
+			((n++))
+		done < "$arg"
+	}
+}
+;;
 od)
 #!/bin/bash
  
@@ -2278,6 +2368,63 @@ ord() {
   LC_CTYPE=C printf '%d' "'$1"
 }
 ord "$@"
+;;
+pr)
+#!/bin/bash
+#
+# pr sort of
+shopt -s checkwinsize; (:;:)
+get() {
+	while getopts "lcw" opt; do
+	    case $opt in
+	        l) lines=1 ;;
+	        c) bytes=1 ;;
+	        w) words=1 ;;
+	
+	        ?)
+	            printf '%s\n' "error: -$OPTARG not a valid option." >&2
+	            exit 1
+	        ;;
+	    esac
+	done
+	
+	[[ -t 0 && -f ${*: -1} ]] &&
+	    file=${*: -1}
+	
+	[[ -t 0 && ! -f $file ]] && {
+	    printf '%s\n' "wc: ${file:-null}: No such file or directory." >&2
+	    exit 1
+	}
+	
+	mapfile file_data < "${file:-/dev/stdin}"
+	
+	for line in "${file_data[@]}"; do
+	    read -ra line_split <<< "$line"
+	    ((splits+=${#line_split[@]}, chars+=${#line}))
+	done
+	
+	[[ -z $lines && -z $bytes && -z $words ]] &&
+	    ((lines=1, bytes=1, words=1))
+	
+	[[ $lines ]] && printf '%s ' "${#file_data[@]}"
+	[[ $words ]] && printf '%s ' "$splits"
+	[[ $bytes ]] && printf '%s ' "$chars"
+}
+if [[ "$#" == 0 ]]; then
+    while read -rn1; do echo "$REPLY"; done
+else
+    for file in "$@"; do
+        if [[ -f $file ]]; then
+            lines=$(( LINES - $(get -l "$file") - 1 ))
+            printf '%s\n' "$(<"$file")"
+            for ((i=1;i<=lines;i+=1)); {
+                printf '\n'
+            }
+        else
+            printf '%s\n' "pr: $file: No such file or directory" >&2
+        fi
+    done
+fi
 ;;
 print)
 #!/usr/bin/env bash
@@ -3215,12 +3362,14 @@ else
 	done
 fi
 ;;
-upper)
+uppercase)
 #!/bin/bash
 # Uppercase a string.
 # Usage: upper "string"
-[ -z "$1" ] && echo no string && exit
-printf "%s\\n" "${1^^}"
+while read -r line
+do
+	printf "%s\\n" "${line^^}"
+done
 ;;
 uptime)
 #!/usr/bin/env bash
@@ -3254,6 +3403,38 @@ else
 Usage: $0 [-ps]">&2;;
     esac
 fi
+;;
+vdir)
+#!/usr/bin/bash
+#!/usr/bin/env bash
+infofile() {
+	if [ -L $1 ]; then
+		echo -n l
+	elif [ -d $1 ]; then
+		echo -n d
+	else
+		echo -n '-'
+	fi
+	[ -r $1 ] && echo -n r || echo -n '-'
+	[ -w $1 ] && echo -n w || echo -n '-'
+	[ -x $1 ] && echo -n x || echo -n '-'
+	[ -L $1 ] && [ -d $1 ] && cd -P "$1" && echo " $1 -> $PWD" && cd .. || echo " $1"
+}
+infofiles() {
+	for f in $(printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+infofilesall() {
+	for f in $(printf '%s\n' .* && printf '%s\n' *); {
+		infofile "$f"
+	}
+}
+[ -z "$1" ] && infofiles
+[ "$1" = "-a" ] && infofilesall
+[ "$1" = "-l" ] && infofiles
+[ "$1" = "-la" ] && infofilesall
+[ "$1" = "-al" ] && infofilesall
 ;;
 vi)
 #!/usr/bin/env bash
@@ -3871,10 +4052,9 @@ which $@
 whoami)
 #!/usr/bin/env bash
 #
-# logname in pure bash.
+# whoami in pure bash.
 
-: '\u'
-printf '%s\n' "${_@P}"
+echo "$USER"
 ;;
 yes)
 #!/usr/bin/env bash
@@ -3892,6 +4072,6 @@ else
 fi
 ;;
 *)
-echo arch base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lower ls man more nano od ord print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq upper uptime vi watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi watch wc which whoami yes
 ;;
 esac

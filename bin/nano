@@ -132,8 +132,8 @@ die() {
 }
 
 redraw() {
-    (printf '\e[H\e[?25l\e[100m%*s\r %s \e[46;30m %s \e[0;100m L%s W%s\e[m' \
-        "$COLUMNS" "$message" "${BED_ICON:=🛏 } bashbox nano" \
+    (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
+        "$COLUMNS" "$message" "bashbox nano (bed)" \
         "$(basenam "$file")" "$line" "${#buffer[line]}") # Status line, among others
     for ((i = base; i - base < LINES - 2; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
@@ -141,6 +141,8 @@ redraw() {
             printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
     done
     printf '\n' # Add final newline to seperate commandline
+    printf "$(printf '\e[0;107;30mq\e[0;m Quit \e[0;107;30m⏎ \e[0;m Insert \e[0;107;30mf\e[0;m Read File \e[0;107;30mr\e[0;m Read Buffer \e[0;107;30mw\e[0;m Write \e[0;107;30me\e[0;m Edit \e[0;107;30ma\e[0;m Append \e[0;107;30md\e[0;m Delete Line \e[0;107;30mn\e[0;m New Line ')"
+
 }
 
 key() {

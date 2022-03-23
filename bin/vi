@@ -533,6 +533,7 @@ main() {
     case $1 in
         -h|--help) trap : EXIT; usage;;
         -k|--keys) trap : EXIT; keys;;
+        -v|--version) echo "$version"; exit;;
         *) keyboard_loop "$1";;
     esac
 }

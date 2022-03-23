@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648049728,607625
+	echo 1648053472,021773
 ;;
 arch)
 #!/usr/bin/env bash
@@ -926,6 +926,107 @@ echo)
 # echo in pure bash.
 
 echo "$@"
+;;
+ed)
+#!/bin/bash
+#ed in pure bash.
+insert() {
+	while true
+	do
+		read -r line
+		if [ -z "$line" ]; then continue
+		elif [ "$line" = . ]; then break
+		else
+			linee="$linee
+$line"
+		fi
+	done
+}
+deleteline() {
+	n=0
+	linee=$(
+		echo "$linee" | while read -r lined
+		do
+			if [ $n = "$linen" ]; then true
+			else echo "$lined"
+			fi
+			((n++))
+		done
+	)
+}
+changeline() {
+	n=0
+	linee=$(
+		echo "$linee" | while read -r lined
+		do
+			if [ $n = "$linen" ]; then
+				read -r linec < /dev/tty
+				echo "$linec"
+			else echo "$lined"
+			fi
+			((n++))
+		done
+	)
+}
+insert() {
+	n=0
+	linee=$(
+		echo "$linee" | while read -r lined
+		do
+			if [ $n = "$linen" ]; then
+				read -r linec < /dev/tty
+				echo "${linec}${lined}"
+			else echo "$lined"
+			fi
+			((n++))
+		done
+	)
+}
+numberline() {
+	n=0
+	echo "$linee" | while read -r line
+	do
+		echo "$n $line"
+		((n++))
+	done
+}
+writee() {
+	[ -z "$linee" ] && echo 'error: have no content'
+	[ -z "$file" ] && echo 'no file specified'
+	echo "$linee" > "$file"
+	echo ${#linee}
+}
+#execute
+linee=
+linen=0
+[ -n "$1" ] && file="$1"
+if [ -f "$file" ]; then
+	linee="$(<"$file")"
+	echo ${#linee}
+fi
+while true
+do
+	read -rp ': ' command
+	commandar=($command)
+	if [ -z "$command" ]; then echo '?' && continue
+	elif [ "$command" = a ]; then insert
+	elif [ "$command" = q ]; then exit
+	elif [ "$command" = d ]; then deleteline
+	elif [ "$command" = c ]; then changeline
+	elif [ "$command" = c ]; then insert
+	elif [ "$command" = '+' ]; then ((linen++))
+	elif [ "$command" = '-' ]; then ((linen--))
+	elif [ "$command" = nl ]; then numberline
+	elif [ "$command" = w ]; then writee
+	elif [ "$command" = wq ]; then writee; exit
+	elif [ "$command" = p ]; then echo "${linee##*$'\n'}"
+	elif [ "$command" = ',p' ]; then echo "$linee"
+	elif [ "${commandar[0]}" = f ]; then file="${commandar[1]}"
+	elif [ "${commandar[0]}" = g ]; then linen="${commandar[1]}"
+	else
+		echo "?"
+	fi
+done
 ;;
 env)
 #!/usr/bin/env bash
@@ -4618,6 +4719,6 @@ else
 fi
 ;;
 *)
-echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

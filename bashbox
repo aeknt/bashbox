@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648053472,021773
+	echo 1648148310,061889
 ;;
 arch)
 #!/usr/bin/env bash
@@ -1061,8 +1061,82 @@ expr)
 #!/usr/bin/env bash
 #
 # expr in pure bash.
-
-printf '%s\n' "$(($@))"
+if [ -z "$*" ]; then
+	while true
+	do
+		read -rp ':' expre
+		printf '%s\n' "$(($expre))"
+	done
+else	
+	printf '%s\n' "$(($@))"
+fi
+;;
+exprf)
+#!/bin/bash
+floatpoint='.'
+makeunfloat() {
+	IFS=$floatpoint read -ra n <<< "$1"
+	floatlenght="${#n[1]}"
+	echo "${n[0]}${n[1]}"
+}
+makefloat() {
+	len=$2
+	num=$1
+	[ ${#num} -lt "$len" ] && {
+		echo echo -n 0
+	}
+	[ ${#num} = "$len" ] && {
+		echo -n 0
+	}
+	tmp=$(( ${#num} - len ))
+	echo "${1:0:$tmp}${floatpoint}${1: -$2}"
+}
+getfloatlenght() {
+	IFS=$floatpoint read -ra n <<< "$1"
+	echo "${#n[1]}"
+}
+calculate() {
+	inta="$1"
+	oper="$2" && [ ! "$oper" = '+' ] && [ ! "$oper" = '-' ] && [ ! "$oper" = '*' ] && [ ! "$oper" = '/' ] && echo unknown operation && exit
+	intb="$3"
+	[[ ! $inta == *.* ]] && inta=${inta}.0
+	[[ ! $intb == *.* ]] && intb=${intb}.0
+	if [ ! $(getfloatlenght $inta) = $(getfloatlenght $intb) ]; then
+		floatlenghtinta=$(getfloatlenght $inta)
+		floatlenghtintb=$(getfloatlenght $intb)
+		if [ $floatlenghtinta -gt $floatlenghtintb ]; then
+			last=$(( floatlenghtinta - floatlenghtintb ))
+			intb=$(echo -n $intb
+				for ((i=1;i<=last;i+=1)); {
+			    	printf '%s' 0
+				}
+			)
+			floatlenght=$(getfloatlenght $inta)
+		elif [ $floatlenghtinta -lt $floatlenghtintb ]; then
+			last=$(( floatlenghtintb - floatlenghtinta ))
+			inta=$(echo -n $inta
+				for ((i=1;i<=last;i+=1)); {
+					printf '%s' 0
+				}
+			)
+			floatlenght=$(getfloatlenght $intb)
+		fi
+	else
+		floatlenght=$(getfloatlenght $inta)
+	fi
+	[ "$oper" = '*' ] && floatlenght=$(( floatlenght * 2 ))
+	[ "$oper" = '/' ] && {
+		inta=$(echo -n $inta
+			for ((i=1;i<=floatlenght;i+=1)); {
+				printf '%s' 0000000000000000
+			}
+		)
+		floatlenght=$(( floatlenght + 15 ))
+	}
+	echo $(makefloat $(( $(makeunfloat $inta) $oper $(makeunfloat $intb) )) $floatlenght )
+}
+shift
+calculate "$@"
 ;;
 factor)
 #!/bin/bash
@@ -4719,6 +4793,6 @@ else
 fi
 ;;
 *)
-echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

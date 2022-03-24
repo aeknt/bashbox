@@ -1,0 +1,65 @@
+#!/bin/bash
+floatpoint='.'
+makeunfloat() {
+	IFS=$floatpoint read -ra n <<< "$1"
+	floatlenght="${#n[1]}"
+	echo "${n[0]}${n[1]}"
+}
+makefloat() {
+	len=$2
+	num=$1
+	[ ${#num} -lt "$len" ] && {
+		echo echo -n 0
+	}
+	[ ${#num} = "$len" ] && {
+		echo -n 0
+	}
+	tmp=$(( ${#num} - len ))
+	echo "${1:0:$tmp}${floatpoint}${1: -$2}"
+}
+getfloatlenght() {
+	IFS=$floatpoint read -ra n <<< "$1"
+	echo "${#n[1]}"
+}
+calculate() {
+	inta="$1"
+	oper="$2" && [ ! "$oper" = '+' ] && [ ! "$oper" = '-' ] && [ ! "$oper" = '*' ] && [ ! "$oper" = '/' ] && echo unknown operation && exit
+	intb="$3"
+	[[ ! $inta == *.* ]] && inta=${inta}.0
+	[[ ! $intb == *.* ]] && intb=${intb}.0
+	if [ ! $(getfloatlenght $inta) = $(getfloatlenght $intb) ]; then
+		floatlenghtinta=$(getfloatlenght $inta)
+		floatlenghtintb=$(getfloatlenght $intb)
+		if [ $floatlenghtinta -gt $floatlenghtintb ]; then
+			last=$(( floatlenghtinta - floatlenghtintb ))
+			intb=$(echo -n $intb
+				for ((i=1;i<=last;i+=1)); {
+			    	printf '%s' 0
+				}
+			)
+			floatlenght=$(getfloatlenght $inta)
+		elif [ $floatlenghtinta -lt $floatlenghtintb ]; then
+			last=$(( floatlenghtintb - floatlenghtinta ))
+			inta=$(echo -n $inta
+				for ((i=1;i<=last;i+=1)); {
+					printf '%s' 0
+				}
+			)
+			floatlenght=$(getfloatlenght $intb)
+		fi
+	else
+		floatlenght=$(getfloatlenght $inta)
+	fi
+	[ "$oper" = '*' ] && floatlenght=$(( floatlenght * 2 ))
+	[ "$oper" = '/' ] && {
+		inta=$(echo -n $inta
+			for ((i=1;i<=floatlenght;i+=1)); {
+				printf '%s' 0000000000000000
+			}
+		)
+		floatlenght=$(( floatlenght + 15 ))
+	}
+	echo $(makefloat $(( $(makeunfloat $inta) $oper $(makeunfloat $intb) )) $floatlenght )
+}
+shift
+calculate "$@"

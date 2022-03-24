@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 #
 # expr in pure bash.
-
-printf '%s\n' "$(($@))"
+if [ -z "$*" ]; then
+	while true
+	do
+		read -rp ':' expre
+		printf '%s\n' "$(($expre))"
+	done
+else	
+	printf '%s\n' "$(($@))"
+fi

@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648148310,061889
+	echo 1648390943,176984
 ;;
 arch)
 #!/usr/bin/env bash
@@ -1135,8 +1135,40 @@ calculate() {
 	}
 	echo $(makefloat $(( $(makeunfloat $inta) $oper $(makeunfloat $intb) )) $floatlenght )
 }
-shift
+parse() {
+	#inta="$1"
+	#oper="$2" && [ ! "$oper" = '+' ] && [ ! "$oper" = '-' ] && [ ! "$oper" = '*' ] && [ ! "$oper" = '/' ] && echo unknown operation && exit
+	#intb="$3"
+	for arg in "$@"; {
+		[[ ! $arg == *.* ]] && continue
+		IFS=$floatpoint read -ra n <<< "$arg"
+		maxlenght="${#n[1]}"
+	}
+	floatlenght=$maxlenght
+	mathline=$(
+		echo -n 'echo $(makefloat $(( '
+		for arg in "$@"; {
+			[ "$arg" = '+' ] && echo -n '+ ' && continue
+			[ "$arg" = '-' ] && echo -n '- ' && continue
+			[ "$arg" = '*' ] && echo -n '* ' && continue
+			[ "$arg" = '/' ] && echo -n '/ ' && continue
+			number=$([[ ! $arg == *.* ]] && echo -n "${arg}.0" && continue; echo -n "${arg}")
+			currentlenght=$(getfloatlenght "$number" )
+			last=$(( maxlenght - currentlenght ))
+			echo -n '10#$(makeunfloat '"$(
+				echo -n "$number"
+				for ((i=1;i<=last;i+=1)); {
+			    	printf '%s' 0
+				}
+			)"') '
+		}
+		echo -n ')) $floatlenght)'
+	)
+	eval "${mathline}"
+}
+#shift
 calculate "$@"
+#parse "$@"
 ;;
 factor)
 #!/bin/bash
@@ -2545,6 +2577,23 @@ ord() {
   LC_CTYPE=C printf '%d' "'$1"
 }
 ord "$@"
+;;
+ping)
+#!/bin/bash
+declare -i n
+n=0
+interval=1
+TIMEFORMAT='%3lR'
+[ -z "$1" ] && echo not enough arguments && exit
+[ -z "$2" ] && port=80
+[ -n "$2" ] && port="$2"
+( (echo >/dev/tcp/"${1}"/"${port}") &>/dev/null && echo "PING ${1}:${port}") || exit
+while true
+do
+	((n++))
+	echo "icmp_seq=${n} time=$( (time echo >/dev/tcp/"${1}"/"${port}") 2>&1 )"
+	sleep "${interval}"
+done
 ;;
 pr)
 #!/bin/bash
@@ -4793,6 +4842,6 @@ else
 fi
 ;;
 *)
-echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord ping pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

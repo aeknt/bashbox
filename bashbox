@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648390943,176984
+	echo 1648392839,175784
 ;;
 arch)
 #!/usr/bin/env bash
@@ -3163,6 +3163,8 @@ mem() {
 	printf '%s\n' "$(</proc/meminfo)" | linesget 1 2 21 5 3
 }
 getproc() {
+	cd /proc || exit 1
+	proc=$(echo *)
 	a=8
 	ignore=$(( $1 + 7 ))
 	for item in $proc; {
@@ -3184,8 +3186,6 @@ getproc() {
 	}
 }
 draw() {
-	#escape
-	escape=$(printf "\u1b")
 	#clear the screen
 	printf "\033c"
 	#print lines
@@ -3204,6 +3204,8 @@ draw() {
 	[ "$input" = "q" ] && exit
 }
 #prepare
+#escape
+escape=$(printf "\u1b")
 shopt -s checkwinsize; (:;:)
 cd /proc || exit 1
 proc=$(echo *)

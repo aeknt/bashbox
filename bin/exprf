@@ -61,5 +61,37 @@ calculate() {
 	}
 	echo $(makefloat $(( $(makeunfloat $inta) $oper $(makeunfloat $intb) )) $floatlenght )
 }
-shift
+parse() {
+	#inta="$1"
+	#oper="$2" && [ ! "$oper" = '+' ] && [ ! "$oper" = '-' ] && [ ! "$oper" = '*' ] && [ ! "$oper" = '/' ] && echo unknown operation && exit
+	#intb="$3"
+	for arg in "$@"; {
+		[[ ! $arg == *.* ]] && continue
+		IFS=$floatpoint read -ra n <<< "$arg"
+		maxlenght="${#n[1]}"
+	}
+	floatlenght=$maxlenght
+	mathline=$(
+		echo -n 'echo $(makefloat $(( '
+		for arg in "$@"; {
+			[ "$arg" = '+' ] && echo -n '+ ' && continue
+			[ "$arg" = '-' ] && echo -n '- ' && continue
+			[ "$arg" = '*' ] && echo -n '* ' && continue
+			[ "$arg" = '/' ] && echo -n '/ ' && continue
+			number=$([[ ! $arg == *.* ]] && echo -n "${arg}.0" && continue; echo -n "${arg}")
+			currentlenght=$(getfloatlenght "$number" )
+			last=$(( maxlenght - currentlenght ))
+			echo -n '10#$(makeunfloat '"$(
+				echo -n "$number"
+				for ((i=1;i<=last;i+=1)); {
+			    	printf '%s' 0
+				}
+			)"') '
+		}
+		echo -n ')) $floatlenght)'
+	)
+	eval "${mathline}"
+}
+#shift
 calculate "$@"
+#parse "$@"

@@ -1,0 +1,15 @@
+#!/bin/bash
+declare -i n
+n=0
+interval=1
+TIMEFORMAT='%3lR'
+[ -z "$1" ] && echo not enough arguments && exit
+[ -z "$2" ] && port=80
+[ -n "$2" ] && port="$2"
+( (echo >/dev/tcp/"${1}"/"${port}") &>/dev/null && echo "PING ${1}:${port}") || exit
+while true
+do
+	((n++))
+	echo "icmp_seq=${n} time=$( (time echo >/dev/tcp/"${1}"/"${port}") 2>&1 )"
+	sleep "${interval}"
+done

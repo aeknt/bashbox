@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648392839,175784
+	echo 1648754018,648944
 ;;
 arch)
 #!/usr/bin/env bash
@@ -151,6 +151,20 @@ getcont() {
 	fi
 }
 bin
+;;
+bc)
+#!/usr/bin/env bash
+#
+# expr in pure bash.
+if [ -z "$*" ]; then
+	while true
+	do
+		read -rp ':' expre
+		printf '%s\n' "$(($expre))"
+	done
+else	
+	printf '%s\n' "$(($@))"
+fi
 ;;
 bf)
 #!/usr/bin/env bash
@@ -2561,6 +2575,90 @@ done }
 	}
 }
 ;;
+nosj)
+#!/usr/bin/env bash
+#
+# nosj - json parser in pure bash
+
+tokenize() {
+    local j str
+
+    while read -rN 1; do
+        case $REPLY in
+            [\{\}\[\],])
+                [[ $str ]] && j+=$REPLY
+                [[ $str ]] || { tokens+=("$j" "$REPLY"); j=; }
+            ;;
+
+            :)
+                [[ $str ]] && j+=:
+                [[ $str ]] || j+='\ '
+            ;;
+
+            [[:space:]])
+                [[ $str ]] && j+=$REPLY
+            ;;
+
+            [\"\'])
+                [[ $str ]] && str= || str=1
+                [[ ${j: -1} == \\ ]] && { str=1; j+=$REPLY; }
+            ;;
+
+            *) j+=$REPLY ;;
+        esac
+    done
+}
+
+parse() {
+    local i key key_plain nosj objects o out val
+
+    declare -A nosj
+
+    for ((i=0;i<${#tokens[@]};i++)) {
+        case ${tokens[i]} in
+            \{|\[)
+                objects+=("${tokens[i-1]}")
+            ;;
+
+            \}|\])
+                unset 'objects[-1]'
+            ;;
+
+            *\\\ *)
+                key=${objects[*]//\\ /.}${tokens[i]/\\ *}
+                key_plain=index_${key//[^A-Za-z0-9]/_}
+                val=${tokens[i]/*\\ }
+
+                if [[ -n ${nosj[$key]} ]]; then
+                    [[ -n ${nosj[${key}[0]]} ]] || {
+                        nosj["${key}[0]"]=${nosj[$key]}
+                        printf -v o 'nosj[%q]=%q' "${key}[0]" "${nosj[$key]}"
+                        out+=("$o")
+                    }
+
+                    declare -i "$key_plain+=1"
+                    printf -v o 'nosj[%q]=%q' "${key}[${!key_plain}]" "$val"
+                    out+=("$o")
+
+                elif [[ $val ]]; then
+                    nosj["$key"]=$val
+                    printf -v o 'nosj[%q]=%q' "$key" "$val"
+                    out+=("$o")
+                fi
+            ;;
+        esac
+    }
+
+    printf '%s\n%s\n' "declare -A nosj" "${out[@]}"
+}
+
+main() {
+    tokenize < "${1:-/dev/stdin}"
+    parse
+}
+
+LANG=C LC_ALL=C IFS= main "$1"
+;;
 od)
 #!/bin/bash
  
@@ -4844,6 +4942,6 @@ else
 fi
 ;;
 *)
-echo arch at base16 base64 basename bashbox-create bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl od ord ping pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

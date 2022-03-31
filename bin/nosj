@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# nosj - json parser in pure bash
+
+tokenize() {
+    local j str
+
+    while read -rN 1; do
+        case $REPLY in
+            [\{\}\[\],])
+                [[ $str ]] && j+=$REPLY
+                [[ $str ]] || { tokens+=("$j" "$REPLY"); j=; }
+            ;;
+
+            :)
+                [[ $str ]] && j+=:
+                [[ $str ]] || j+='\ '
+            ;;
+
+            [[:space:]])
+                [[ $str ]] && j+=$REPLY
+            ;;
+
+            [\"\'])
+                [[ $str ]] && str= || str=1
+                [[ ${j: -1} == \\ ]] && { str=1; j+=$REPLY; }
+            ;;
+
+            *) j+=$REPLY ;;
+        esac
+    done
+}
+
+parse() {
+    local i key key_plain nosj objects o out val
+
+    declare -A nosj
+
+    for ((i=0;i<${#tokens[@]};i++)) {
+        case ${tokens[i]} in
+            \{|\[)
+                objects+=("${tokens[i-1]}")
+            ;;
+
+            \}|\])
+                unset 'objects[-1]'
+            ;;
+
+            *\\\ *)
+                key=${objects[*]//\\ /.}${tokens[i]/\\ *}
+                key_plain=index_${key//[^A-Za-z0-9]/_}
+                val=${tokens[i]/*\\ }
+
+                if [[ -n ${nosj[$key]} ]]; then
+                    [[ -n ${nosj[${key}[0]]} ]] || {
+                        nosj["${key}[0]"]=${nosj[$key]}
+                        printf -v o 'nosj[%q]=%q' "${key}[0]" "${nosj[$key]}"
+                        out+=("$o")
+                    }
+
+                    declare -i "$key_plain+=1"
+                    printf -v o 'nosj[%q]=%q' "${key}[${!key_plain}]" "$val"
+                    out+=("$o")
+
+                elif [[ $val ]]; then
+                    nosj["$key"]=$val
+                    printf -v o 'nosj[%q]=%q' "$key" "$val"
+                    out+=("$o")
+                fi
+            ;;
+        esac
+    }
+
+    printf '%s\n%s\n' "declare -A nosj" "${out[@]}"
+}
+
+main() {
+    tokenize < "${1:-/dev/stdin}"
+    parse
+}
+
+LANG=C LC_ALL=C IFS= main "$1"

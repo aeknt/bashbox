@@ -12,7 +12,7 @@ merge things in bin/ to one script
 if you want contribute, **do not edit "bashbox" file, its just automerged file, edit things in bin/.**
 
 # thanks
-in bashbox is used:
+in bashbox is used: (some of these unedited, some heavily edited)
 
 https://github.com/lijaesela/bim (unlicense)
 
@@ -35,6 +35,8 @@ https://github.com/faragon/lzb (bsd 3)
 https://github.com/dylanaraps/bush (mit)
 
 https://github.com/Crestwave/bf (mit) 
+
+https://github.com/dylanaraps/nosj (mit)
 
 and other random scripts i found on iternet and were without license:
 

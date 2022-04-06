@@ -1,0 +1,10 @@
+#!/bin/bash
+shopt -s globstar
+if [ -z "$1" ]; then
+	printf '%s\n' .*.*
+	printf '%s\n' **
+else
+	cd "$1" || return
+	printf '%s\n' .*.*
+	printf '%s\n' **
+fi

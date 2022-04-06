@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1648754018,648944
+	echo 1649259477,648192
 ;;
 arch)
 #!/usr/bin/env bash
@@ -1253,6 +1253,18 @@ else
 			recurse "$file"
 		}
 	fi
+fi
+;;
+findfast)
+#!/bin/bash
+shopt -s globstar
+if [ -z "$1" ]; then
+	printf '%s\n' .*.*
+	printf '%s\n' **
+else
+	cd "$1" || return
+	printf '%s\n' .*.*
+	printf '%s\n' **
 fi
 ;;
 free)
@@ -4942,6 +4954,6 @@ else
 fi
 ;;
 *)
-echo arch at base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink realpath rev rgbtohex sed seq sh sha512 sleep stat strip tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

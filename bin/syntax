@@ -1,0 +1,61 @@
+#!/bin/bash
+tmp=
+comment=false
+#mapfile -t builtin < <( compgen -b )
+#mapfile -t somethingk < <( compgen -k )
+IFS=
+syntax(){
+	word="$*"
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+#	IFS=" "
+#	for b in "${builtin[@]}"; {
+#		[ "${word}" = "${b}" ] && colour 38 5 3 "${word}" && return
+#	}
+#	for a in "${somethingk[@]}"; {
+#		[ "${word}" = "${a}" ] && colour 38 5 2 "${word}" && return
+#	}
+#	IFS=
+	[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
+	[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
+	[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+}
+colour(){
+	printf '\e[%sD' "${#tmpword}"
+	printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
+	printf "\033[0;0m"
+}
+readstuff() {
+	while read -rsn1 cmd
+	do
+	[ -z "${cmd}" ] && {
+		printf '\n'
+		tmpword=
+		tmp=
+		comment=false
+	}
+		case "${cmd}" in
+			" ")
+				printf '%s' "${cmd}"
+				tmp="${tmp}${cmd}"
+				tmpword=
+			;;
+			*)
+				printf '%s' "${cmd}"
+				tmp="${tmp}${cmd}"
+				tmpword="${tmpword}${cmd}"
+				syntax "${tmpword}"
+			;;
+		esac
+	done
+	
+}
+readstuff

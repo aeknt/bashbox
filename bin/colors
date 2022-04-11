@@ -38,6 +38,7 @@ verbose() {
 	done
 	printf "\n"
 }
+#simple colors, similiar to how neofetch outputs them
 simple() {
     # Display the terminal palette.
     # Usage: colors
@@ -48,6 +49,13 @@ simple() {
 
     printf "\\n\\n"
 }
+linuxttyworkaroundsimple(){
+	printf "
+\\e[0;40m  \\e[0;41m  \\e[0;42m  \\e[0;43m  \\e[0;44m  \\e[0;45m  \\e[0;46m  \\e[0;47m  \\e[0m
+\\e[5;100m  \\e[5;101m  \\e[5;102m  \\e[5;103m  \\e[5;104m  \\e[5;105m  \\e[5;106m  \\e[5;107m  \\e[0m
+"
+}
 [ -z "$1" ] && verbose
 [ "$1" = "-s" ] && simple
+[ "$1" = "-t" ] && linuxttyworkaroundsimple
 [ "$1" = "-h" ] && echo "usage: colors [ -s ]"

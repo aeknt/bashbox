@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #stolen from https://github.com/comfies/bed
+printf '\e[?7l'
 basenam() {
 	for file in "$@"; do
 	    file="${file%/}"
@@ -133,7 +134,7 @@ page_down() {
 execute() {
     ((line == 0)) && return # If the line is not possible, do nothing
     printf '\e[?25h\e[%sH' "$((line + 2 - base))" # Reset cursor position and enable cursor
-    read -re -p "$(printf '%4s ' ": ")" # Present editable line
+    read -re -p "$(printf '%4s ' "$")" # Present editable line
     if [[ "$REPLY" != "${buffer[line]}" ]]; then # If the line is changed, update and inform
         buffer[line]="$($REPLY)"
         modified=true

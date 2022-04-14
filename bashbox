@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1649851600,568463
+	echo 1649930271,347830
 ;;
 arch)
 #!/usr/bin/env bash
@@ -371,7 +371,7 @@ bc)
 if [ -z "$*" ]; then
 	while true
 	do
-		read -rp ':' expre
+		read -rep ':' expre
 		printf '%s\n' "$(($expre))"
 	done
 else	
@@ -1298,7 +1298,7 @@ expr)
 if [ -z "$*" ]; then
 	while true
 	do
-		read -rp ':' expre
+		read -rep ':' expre
 		printf '%s\n' "$(($expre))"
 	done
 else	

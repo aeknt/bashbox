@@ -4,7 +4,7 @@
 if [ -z "$*" ]; then
 	while true
 	do
-		read -rp ':' expre
+		read -rep ':' expre
 		printf '%s\n' "$(($expre))"
 	done
 else	

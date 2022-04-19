@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#stolen from https://github.com/comfies/bed
+#stolen from https://github.com/comfies/bed and edited to be like nano and added few stuff like syntax highlighting
 printf '\e[?7l'
 basenam() {
 	for file in "$@"; do
@@ -8,18 +8,21 @@ basenam() {
 	done
 }
 declare -a buffer
+declare -a buffersyntax
 declare -i line base
 declare file message modified
 
 printf "\e[?1049h" #switch to alternative buffer
 
 buffer=() # File contents
+buffersyntax=() # File contents
 line=0 # Currently selected line (0 means the buffer is empty)
 base=1 # Top-most line shown
 file= # Currently addressed file
-message="Welcome to nano (bed) (press 'q' to quit)." # Feedback text in the status bar
+message="Welcome to bano (press 'x' to quit)." # Feedback text in the status bar
 modified=false # Tracking whether a file was modified
 
+shopt -s lastpipe
 shopt -s extglob # Ensure advanced pattern matching is available
 shopt -s checkwinsize; (:) # Enable and then trigger a terminal size refresh
 trap redraw WINCH ALRM # Attach WINCH and ALRM to redraw the screen
@@ -28,6 +31,7 @@ trap quit INT
 trap quit SIGTERM
 
 set_buffer_file() {
+	printf '\e[D\033[1;93;108m' #make prompt nicer
     bind 'set disable-completion off' 2>/dev/null # Enable completion
     printf '\e[?25h' # Enable cursor
     if read -rei "$1$file" -p "${BED_FILE_PROMPT:=Path: }" file; then
@@ -39,6 +43,7 @@ set_buffer_file() {
 read_buffer() {
     set_buffer_file "$1" # Update target file (pass on default if present)
     mapfile -t -O 1 buffer <"$file" # Read file into an array
+    pipesyntax < "$file" | mapfile -t -O 1 buffersyntax  # Read file into an array
     if [[ "${buffer[1]}" ]]; then # Ensure that something was actually read into the file
         line=1 # Indicate that we have a buffer loaded
         modified=false
@@ -56,7 +61,9 @@ write_buffer() {
     modified=false
     message="Wrote ${#buffer[@]} lines to '$file'"
 }
-
+megaredraw(){
+	printf '%s\n' "${buffer[@]}" | pipesyntax | mapfile -t -O 1 buffersyntax
+}
 edit_line() {
     ((line == 0)) && return # If the line is not possible, do nothing
     printf '\e[?25h\e[%sH' "$((line + 2 - base))" # Reset cursor position and enable cursor
@@ -65,12 +72,14 @@ edit_line() {
         buffer[line]=$REPLY
         modified=true
     fi
+    megaredraw
 }
 
 new_line() {
     buffer=("" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset 'buffer[0]'
     modified=true
+    megaredraw
 }
 
 append_line() {
@@ -90,9 +99,11 @@ delete_line() {
     unset 'buffer[0]'
     ((line > ${#buffer[@]})) && up
     modified=true
+    megaredraw
 }
 
 quit() {
+	printf '\e[D\033[1;93;108m' #make prompt nicer
     if [[ "$modified" == "true" ]]; then
         while :; do
             read -rsN1 -p "Buffer modified, save before close? [Y/n/c]" choice
@@ -139,32 +150,41 @@ execute() {
         buffer[line]="$($REPLY)"
         modified=true
     fi
+    megaredraw
 }
 shell() {
 	printf "\033c"
 	bash
 	redraw
 }
+help() {
+	printf '\033[0;0m'
+	printf '\n' # Add final newline to seperate commandline
+	printf '\e[0;107;30m x\e[0;m Exit     \e[0;107;30m⏎ \e[0;m Insert       \e[0;107;30m f\e[0;m Set Target \e[0;107;30m r\e[0;m Read File \e[0;107;30m o\e[0;m Write Out \e[0;107;30m e\e[0;m Edit      \e[0;107;30m a\e[0;m Append  \e[0;107;30m d\e[0;m Delete Line\n'
+	printf '\e[0;107;30m l\e[0;m New Line \e[0;107;30m c\e[0;m Replace Line \e[0;107;30m p\e[0;m Prev Line  \e[0;107;30m n\e[0;m Next Line \e[0;107;30m y\e[0;m Prev Page \e[0;107;30m v\e[0;m Next Page \e[0;107;30m t\e[0;m Execute \e[0;107;30m s\e[0;m Shell\n'
+	read -rsn1
+}
 
 die() {
     bind 'set disable-completion off' 2>/dev/null # Enable completion
     printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
     printf "\e[?1049l" # switch back to main buffer
-    exit "${errno:-0}" # Assume that we're exiting without an error
+    exit "${errno:-0}" # Assume that we are exiting without an error
 }
 
 redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
-        "$COLUMNS" "$message" "bano" \
+        "$COLUMNS" "$message" "bano (press h for help)" \
         "$(basenam "$file")" "$line" "${#buffer[line]}") # Status line, among others
-    for ((i = base; i - base < LINES - 3; i++)); do # Iterate over shown lines
+    for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-            printf '\n\e[K%4s\e[m %s' "$i" "${buffer[i]}" # Print the line
+            if [ "${buffer[i]}" = TODO ]; then
+                printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "${buffer[i]}"
+            else
+                printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}" #print the line from syntaxed buffer
+            fi  # Print the line
     done
-    printf '\n' # Add final newline to seperate commandline
-    printf '%s\n' "$(printf '\e[0;107;30m x\e[0;m Exit     \e[0;107;30m⏎ \e[0;m Insert       \e[0;107;30m f\e[0;m Set Target \e[0;107;30m r\e[0;m Read File \e[0;107;30m o\e[0;m Write Out \e[0;107;30m e\e[0;m Edit      \e[0;107;30m a\e[0;m Append  \e[0;107;30m d\e[0;m Delete Line')"
-    printf '%s'   "$(printf '\e[0;107;30m l\e[0;m New Line \e[0;107;30m c\e[0;m Replace Line \e[0;107;30m p\e[0;m Prev Line  \e[0;107;30m n\e[0;m Next Line \e[0;107;30m y\e[0;m Prev Page \e[0;107;30m v\e[0;m Next Page \e[0;107;30m t\e[0;m Execute \e[0;107;30m s\e[0;m Shell\e[2A\r')"
 }
 
 key() {
@@ -188,7 +208,9 @@ key() {
     ${BED_KEY_CHANGE:=c}) change_line;;
     ${BED_KEY_CMD:=t}) execute;;
     ${BED_KEY_SHELL:=s}) shell;;
+    ${BED_KEY_HELP:=h}) help;;
     esac
+    redraw
 }
 
 main() {
@@ -197,14 +219,54 @@ main() {
         redraw # Draw out the UI before loading file
         read_buffer "$1"
     fi
-    while redraw; do # Keep redrawing when we can (allow WINCH signals to get handled)
+    redraw
+    while true; do
         local -a k=()
         local -i i=1
-        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=0.1}" k[0]; then # Check for ready input
+        
+        if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=1}" k[0]; then # Check for ready input
             while read -rsN1 -t0.0001 k[$i]; do ((i++)); done # Multibyte hack
             key "$(printf '%s' "${k[@]}")" # Handle keypress event
         fi
     done
 }
-
+pipesyntax() {
+	#!/bin/bash
+	comment=false
+	word=
+	bckIFS="${IFS}"
+	IFS=
+	syntax(){
+		[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+		"${comment}" && colour 38 5 4 "${word}" && return
+		[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
+		[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
+		[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
+		[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+		colour 0 97 108 "${word}"
+	}
+	colour(){
+		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
+		printf "\033[0;0m"
+	}
+	readstuff() {
+		while read -rsn1 char
+		do
+			[ "$char" = " " ] && syntax && word='' && printf ' ' && continue
+			[ -z "$char" ] && syntax && word='' comment='false' && echo && continue
+			word="${word}${char}"
+		done
+	}
+	readstuff
+	IFS="${bckIFS}"
+}
 main "$@"
+printf '\e[?7h'

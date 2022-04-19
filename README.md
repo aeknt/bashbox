@@ -38,7 +38,7 @@ https://github.com/Crestwave/bf (mit)
 
 https://github.com/dylanaraps/nosj (mit)
 
-and other random scripts i found on iternet and were without license:
+and other random scripts i found on internet and were without license:
 
 	- curl
 	

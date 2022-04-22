@@ -13,7 +13,7 @@ if you want contribute, **do not edit "bashbox" file, its just automerged file, 
 
 # example of bano, the nano in bash
 
-[![asciicast](https://asciinema.org/a/ZIg9aiCGZ7q2rl50NoByatWNl.svg)](https://asciinema.org/a/ZIg9aiCGZ7q2rl50NoByatWNl)
+will make better example later
 
 # thanks
 in bashbox is used: (some of these unedited, some heavily edited)

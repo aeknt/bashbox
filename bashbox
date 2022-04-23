@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1650750382,315899
+	echo 1650752042,794245
 ;;
 arch)
 #!/usr/bin/env bash
@@ -112,6 +112,17 @@ tabrender(){
 	do
 		[ "$char" = " " ] && printf ' ' && continue
 		[ "$char" = "	" ] && printf '\033[0;37;48m%s\033[0;0m' "${BANO_RENDER_TAB:=.}" && continue
+		printf '%s' "$char"
+	done
+	IFS="$IFSbck"
+}
+tabrenderraw(){
+	IFSbck="$IFS"
+	IFS=
+	while read -rsn1 char
+	do
+		[ "$char" = " " ] && printf ' ' && continue
+		[ "$char" = "	" ] && printf '%s' "${BANO_RENDER_TAB_ALT:= }" && continue
 		printf '%s' "$char"
 	done
 	IFS="$IFSbck"
@@ -225,11 +236,12 @@ redraw() {
     for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-            if [ "${buffer[i]}" = TODO ]; then
-                printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "${buffer[i]}"
-            else
-				printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}"
-            fi  # Print the line
+            case "${buffer[i]}" in
+                *"TODO: "*|*TODO:) printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "$(printf '%s' "${buffer[i]}" | tabrenderraw)";;
+                *"NOTE: "*|*NOTE:) printf '\n\e[K%4s\e[m \033[0;47m%s\033[0;0m' "$i" "$(printf '%s' "${buffer[i]}" | tabrenderraw)";;
+				*) printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}";;
+            esac
+            #TODO: make proper coloring based on variable for future config
     done
     printf '\e[?25h\e[%s;%sH' $((line + 2 - base)) $(( rl + 6 )) # move cursor to the line
 }
@@ -2787,6 +2799,17 @@ tabrender(){
 	done
 	IFS="$IFSbck"
 }
+tabrenderraw(){
+	IFSbck="$IFS"
+	IFS=
+	while read -rsn1 char
+	do
+		[ "$char" = " " ] && printf ' ' && continue
+		[ "$char" = "	" ] && printf '%s' "${BANO_RENDER_TAB_ALT:= }" && continue
+		printf '%s' "$char"
+	done
+	IFS="$IFSbck"
+}
 new_line() {
     buffer=("" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset 'buffer[0]'
@@ -2896,11 +2919,12 @@ redraw() {
     for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
-            if [ "${buffer[i]}" = TODO ]; then
-                printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "${buffer[i]}"
-            else
-				printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}"
-            fi  # Print the line
+            case "${buffer[i]}" in
+                *"TODO: "*|*TODO:) printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "$(printf '%s' "${buffer[i]}" | tabrenderraw)";;
+                *"NOTE: "*|*NOTE:) printf '\n\e[K%4s\e[m \033[0;47m%s\033[0;0m' "$i" "$(printf '%s' "${buffer[i]}" | tabrenderraw)";;
+				*) printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}";;
+            esac
+            #TODO: make proper coloring based on variable for future config
     done
     printf '\e[?25h\e[%s;%sH' $((line + 2 - base)) $(( rl + 6 )) # move cursor to the line
 }

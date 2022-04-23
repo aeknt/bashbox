@@ -1,0 +1,16 @@
+#!/bin/bash
+[ $# = 0 ] && exit
+IFS='.'
+filename="${1%/}"
+filename="${filename##*/}"
+filenamesplit=($filename)
+extension="${filenamesplit[-1]}"
+[ "${#filenamesplit[@]}" -gt 1 ] && echo "$extension" && exit
+mapfile -n 1 file_data < "$1"
+shebang="$(echo -n "${file_data[@]}")"
+[ ! "${shebang:0:1}" = '#' ] && echo unknown && exit
+shebang="${shebang%/}"
+IFS=' '
+shebang="${shebang##*/}"
+shebangsplit=($shebang)
+printf '%s\n' "${shebangsplit[-1]}"

@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1650752042,794245
+	echo 1650756515,568930
 ;;
 arch)
 #!/usr/bin/env bash
@@ -37,16 +37,12 @@ bano)
 #stolen from https://github.com/comfies/bed and edited to be like nano and added few stuff like syntax highlighting
 #i guess i will turn this into ebashs later :)
 printf '\e[?7l'
-basenam() {
-	for file in "$@"; do
-	    file="${file%/}"
-	    printf '%s\n' "${file##*/}"
-	done
-}
+
+declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified
+declare file message modified filetype
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -67,6 +63,70 @@ trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
 trap quit INT
 trap quit SIGTERM
 
+syntax[bash]=builtin_syntax_bash
+syntax[sh]=builtin_syntax_bash #there isnt anything really bash specific currently
+syntax[ksh]=builtin_syntax_bash
+syntax[mksh]=builtin_syntax_bash
+syntax[dash]=builtin_syntax_bash
+syntax[zsh]=builtin_syntax_bash
+syntax[conf]=builtin_syntax_conf
+syntax[unknown]=builtin_syntax_unknown
+
+builtin_syntax_bash(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
+	[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
+	[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_unknown() {
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_conf(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+
+syntax() {
+	for s in "${!syntax[@]}"; {
+		[ "$s" = "$filetype" ] && "${syntax[$s]}" && return
+	}
+	"${syntax[unknown]}"
+}
+basenam() {
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
+filetype(){
+	[ $# = 0 ] && return
+	IFS='.'
+	filename="${1%/}"
+	filename="${filename##*/}"
+	filenamesplit=($filename)
+	extension="${filenamesplit[-1]}"
+	[ "${#filenamesplit[@]}" -gt 1 ] && echo "$extension" && return
+	mapfile -n 1 file_data < "$1"
+	shebang="$(echo -n "${file_data[@]}")"
+	[ ! "${shebang:0:1}" = '#' ] && echo unknown && return
+	shebang="${shebang%/}"
+	IFS=' '
+	shebang="${shebang##*/}"
+	shebangsplit=($shebang)
+	printf '%s\n' "${shebangsplit[-1]}"	
+}
 set_buffer_file() {
 	printf '\e[%s;0H' "${LINES}"
 	printf '\e[D\033[1;93;108m' #make prompt nicer
@@ -79,6 +139,7 @@ set_buffer_file() {
 }
 
 read_buffer() {
+	filetype="$(filetype "$1")"
     set_buffer_file "$1" # Update target file (pass on default if present)
     mapfile -t -O 1 buffer <"$file" # Read file into an array
     pipesyntax < "$file" | mapfile -t -O 1 buffersyntax  # Read file into an array
@@ -232,7 +293,7 @@ die() {
 redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
-        "$(basenam "$file")" "$line" "${rl}") # Status line, among others
+        "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
     for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
@@ -314,28 +375,10 @@ main() {
     done
 }
 pipesyntax() {
-	#!/bin/bash
 	comment=false
 	word=
 	bckIFS="${IFS}"
 	IFS=
-	syntax(){
-		[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
-		"${comment}" && colour 38 5 4 "${word}" && return
-		[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
-		[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
-		[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
-		colour 0 0 0 "${word}"
-	}
 	colour(){
 		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
 		printf "\033[0;0m"
@@ -660,6 +703,7 @@ else
 fi
 ;;
 chr)
+#!/bin/bash
 chr() {
   [ "$1" -lt 256 ] || return 1
   printf "\\$(printf '%03o' "$1")"
@@ -1618,6 +1662,24 @@ line(){
 }
 printf '%s\n' "$(</proc/meminfo)" | line 1 2 21 5 3
 ;;
+ftype)
+#!/bin/bash
+[ $# = 0 ] && exit
+IFS='.'
+filename="${1%/}"
+filename="${filename##*/}"
+filenamesplit=($filename)
+extension="${filenamesplit[-1]}"
+[ "${#filenamesplit[@]}" -gt 1 ] && echo "$extension" && exit
+mapfile -n 1 file_data < "$1"
+shebang="$(echo -n "${file_data[@]}")"
+[ ! "${shebang:0:1}" = '#' ] && echo unknown && exit
+shebang="${shebang%/}"
+IFS=' '
+shebang="${shebang##*/}"
+shebangsplit=($shebang)
+printf '%s\n' "${shebangsplit[-1]}"
+;;
 getlines)
 #!/bin/bash
 #make array with all lines mapped to line numbers
@@ -1634,6 +1696,7 @@ do
 done
 ;;
 getopt)
+#!/bin/bash
 getopt() {
   # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
   # version 1.4.5
@@ -2720,16 +2783,12 @@ nano)
 #stolen from https://github.com/comfies/bed and edited to be like nano and added few stuff like syntax highlighting
 #i guess i will turn this into ebashs later :)
 printf '\e[?7l'
-basenam() {
-	for file in "$@"; do
-	    file="${file%/}"
-	    printf '%s\n' "${file##*/}"
-	done
-}
+
+declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified
+declare file message modified filetype
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -2750,6 +2809,70 @@ trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
 trap quit INT
 trap quit SIGTERM
 
+syntax[bash]=builtin_syntax_bash
+syntax[sh]=builtin_syntax_bash #there isnt anything really bash specific currently
+syntax[ksh]=builtin_syntax_bash
+syntax[mksh]=builtin_syntax_bash
+syntax[dash]=builtin_syntax_bash
+syntax[zsh]=builtin_syntax_bash
+syntax[conf]=builtin_syntax_conf
+syntax[unknown]=builtin_syntax_unknown
+
+builtin_syntax_bash(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
+	[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
+	[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_unknown() {
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_conf(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+
+syntax() {
+	for s in "${!syntax[@]}"; {
+		[ "$s" = "$filetype" ] && "${syntax[$s]}" && return
+	}
+	"${syntax[unknown]}"
+}
+basenam() {
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
+filetype(){
+	[ $# = 0 ] && return
+	IFS='.'
+	filename="${1%/}"
+	filename="${filename##*/}"
+	filenamesplit=($filename)
+	extension="${filenamesplit[-1]}"
+	[ "${#filenamesplit[@]}" -gt 1 ] && echo "$extension" && return
+	mapfile -n 1 file_data < "$1"
+	shebang="$(echo -n "${file_data[@]}")"
+	[ ! "${shebang:0:1}" = '#' ] && echo unknown && return
+	shebang="${shebang%/}"
+	IFS=' '
+	shebang="${shebang##*/}"
+	shebangsplit=($shebang)
+	printf '%s\n' "${shebangsplit[-1]}"	
+}
 set_buffer_file() {
 	printf '\e[%s;0H' "${LINES}"
 	printf '\e[D\033[1;93;108m' #make prompt nicer
@@ -2762,6 +2885,7 @@ set_buffer_file() {
 }
 
 read_buffer() {
+	filetype="$(filetype "$1")"
     set_buffer_file "$1" # Update target file (pass on default if present)
     mapfile -t -O 1 buffer <"$file" # Read file into an array
     pipesyntax < "$file" | mapfile -t -O 1 buffersyntax  # Read file into an array
@@ -2915,7 +3039,7 @@ die() {
 redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
-        "$(basenam "$file")" "$line" "${rl}") # Status line, among others
+        "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
     for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
@@ -2997,28 +3121,10 @@ main() {
     done
 }
 pipesyntax() {
-	#!/bin/bash
 	comment=false
 	word=
 	bckIFS="${IFS}"
 	IFS=
-	syntax(){
-		[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
-		"${comment}" && colour 38 5 4 "${word}" && return
-		[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
-		[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
-		[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
-		colour 0 0 0 "${word}"
-	}
 	colour(){
 		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
 		printf "\033[0;0m"
@@ -3154,6 +3260,7 @@ do
 done < ${1:-/dev/fd/0}
 ;;
 ord)
+#!/bin/bash
 ord() {
   LC_CTYPE=C printf '%d' "'$1"
 }
@@ -3763,6 +3870,7 @@ else
 fi
 ;;
 time)
+#!/bin/bash
 $@
 echo "$SECONDS"
 ;;
@@ -5514,6 +5622,6 @@ else
 fi
 ;;
 *)
-echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

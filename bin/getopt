@@ -1,3 +1,4 @@
+#!/bin/bash
 getopt() {
   # pure-getopt, a drop-in replacement for GNU getopt in pure Bash.
   # version 1.4.5

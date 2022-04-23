@@ -2,16 +2,12 @@
 #stolen from https://github.com/comfies/bed and edited to be like nano and added few stuff like syntax highlighting
 #i guess i will turn this into ebashs later :)
 printf '\e[?7l'
-basenam() {
-	for file in "$@"; do
-	    file="${file%/}"
-	    printf '%s\n' "${file##*/}"
-	done
-}
+
+declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified
+declare file message modified filetype
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -32,6 +28,70 @@ trap die EXIT HUP USR1 # Attach most exit codes to cleanup and exit
 trap quit INT
 trap quit SIGTERM
 
+syntax[bash]=builtin_syntax_bash
+syntax[sh]=builtin_syntax_bash #there isnt anything really bash specific currently
+syntax[ksh]=builtin_syntax_bash
+syntax[mksh]=builtin_syntax_bash
+syntax[dash]=builtin_syntax_bash
+syntax[zsh]=builtin_syntax_bash
+syntax[conf]=builtin_syntax_conf
+syntax[unknown]=builtin_syntax_unknown
+
+builtin_syntax_bash(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
+	[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
+	[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
+	[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_unknown() {
+	colour 0 0 0 "${word}"
+}
+builtin_syntax_conf(){
+	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
+	"${comment}" && colour 38 5 4 "${word}" && return
+	colour 0 0 0 "${word}"
+}
+
+syntax() {
+	for s in "${!syntax[@]}"; {
+		[ "$s" = "$filetype" ] && "${syntax[$s]}" && return
+	}
+	"${syntax[unknown]}"
+}
+basenam() {
+	for file in "$@"; do
+	    file="${file%/}"
+	    printf '%s\n' "${file##*/}"
+	done
+}
+filetype(){
+	[ $# = 0 ] && return
+	IFS='.'
+	filename="${1%/}"
+	filename="${filename##*/}"
+	filenamesplit=($filename)
+	extension="${filenamesplit[-1]}"
+	[ "${#filenamesplit[@]}" -gt 1 ] && echo "$extension" && return
+	mapfile -n 1 file_data < "$1"
+	shebang="$(echo -n "${file_data[@]}")"
+	[ ! "${shebang:0:1}" = '#' ] && echo unknown && return
+	shebang="${shebang%/}"
+	IFS=' '
+	shebang="${shebang##*/}"
+	shebangsplit=($shebang)
+	printf '%s\n' "${shebangsplit[-1]}"	
+}
 set_buffer_file() {
 	printf '\e[%s;0H' "${LINES}"
 	printf '\e[D\033[1;93;108m' #make prompt nicer
@@ -44,6 +104,7 @@ set_buffer_file() {
 }
 
 read_buffer() {
+	filetype="$(filetype "$1")"
     set_buffer_file "$1" # Update target file (pass on default if present)
     mapfile -t -O 1 buffer <"$file" # Read file into an array
     pipesyntax < "$file" | mapfile -t -O 1 buffersyntax  # Read file into an array
@@ -197,7 +258,7 @@ die() {
 redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
-        "$(basenam "$file")" "$line" "${rl}") # Status line, among others
+        "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
     for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
@@ -279,28 +340,10 @@ main() {
     done
 }
 pipesyntax() {
-	#!/bin/bash
 	comment=false
 	word=
 	bckIFS="${IFS}"
 	IFS=
-	syntax(){
-		[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
-		"${comment}" && colour 38 5 4 "${word}" && return
-		[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
-		[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
-		[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
-		[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
-		colour 0 0 0 "${word}"
-	}
 	colour(){
 		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
 		printf "\033[0;0m"

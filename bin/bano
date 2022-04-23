@@ -68,9 +68,19 @@ megaredraw(){
 	printf '%s\n' "${buffer[@]}" | pipesyntax | mapfile -t -O 1 buffersyntax
 }
 megaredrawline(){
-	buffersyntax[line]="${buffer[line]}"
+	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | tabrender)"
 }
-
+tabrender(){
+	IFSbck="$IFS"
+	IFS=
+	while read -rsn1 char
+	do
+		[ "$char" = " " ] && printf ' ' && continue
+		[ "$char" = "	" ] && printf '\033[0;37;48m%s\033[0;0m' "${BANO_RENDER_TAB:=.}" && continue
+		printf '%s' "$char"
+	done
+	IFS="$IFSbck"
+}
 new_line() {
     buffer=("" "${buffer[@]:1:line}" "" "${buffer[@]:line+1}")
     unset 'buffer[0]'
@@ -141,7 +151,10 @@ execute() {
     redraw
 }
 right() {
-	((rl++))
+	case "${buffer[line]}" in
+		"	") rl=$((rl + 4));;
+		*)((rl++))
+	esac
 	[ $rl -gt "${#buffer[line]}" ] && { rl=0; down; }
 }
 left() {
@@ -180,7 +193,7 @@ redraw() {
             if [ "${buffer[i]}" = TODO ]; then
                 printf '\n\e[K%4s\e[m \033[0;45m%s\033[0;0m' "$i" "${buffer[i]}"
             else
-                printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}" #print the line from syntaxed buffer
+				printf '\n\e[K%4s\e[m %s' "$i" "${buffersyntax[i]}"
             fi  # Print the line
     done
     printf '\e[?25h\e[%s;%sH' $((line + 2 - base)) $(( rl + 6 )) # move cursor to the line
@@ -248,7 +261,7 @@ main() {
         local -i i=1
         
         if read -rsN1 -t"${BED_REFRESH_TIMEOUT:=1}" k[0]; then # Check for ready input
-            while read -rsN1 -t0.0001 k[$i]; do ((i++)); done # Multibyte hack
+           while read -rsN1 -t0.0001 k[$i]; do ((i++)); done # Multibyte hack
             keytype "$(printf '%s' "${k[@]}")" # Handle keypress event
         fi
     done
@@ -274,7 +287,7 @@ pipesyntax() {
 		[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
 		[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
 		[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
-		colour 0 97 108 "${word}"
+		colour 0 0 0 "${word}"
 	}
 	colour(){
 		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
@@ -284,6 +297,7 @@ pipesyntax() {
 		while read -rsn1 char
 		do
 			[ "$char" = " " ] && syntax && word='' && printf ' ' && continue
+			[ "$char" = "	" ] && syntax && word='' && printf '\033[0;37;48m%s\033[0;0m' "${BANO_RENDER_TAB:=.}" && continue
 			[ -z "$char" ] && syntax && word='' comment='false' && echo && continue
 			word="${word}${char}"
 		done

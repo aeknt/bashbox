@@ -11,10 +11,6 @@ merge things in bin/ to one script
 # contributing
 if you want contribute, **do not edit "bashbox" file, its just automerged file, edit things in bin/.**
 
-# example of bano, the nano in bash
-
-will make better example later
-
 # thanks
 in bashbox is used: (some of these unedited, some heavily edited)
 

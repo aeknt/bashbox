@@ -7,7 +7,7 @@ declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified filetype
+declare file message modified filetype enable_mouse
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -19,6 +19,7 @@ rl=0 # how left or right the cursor is
 file= # Currently addressed file
 message="Welcome to bano (press 'x' to quit)." # Feedback text in the status bar
 modified=false # Tracking whether a file was modified
+enable_mouse=true # Xterm mouse support
 
 shopt -s lastpipe
 shopt -s extglob # Ensure advanced pattern matching is available
@@ -249,8 +250,8 @@ help() {
 	printf '\e[%s;0H' "${LINES}"
 	printf '\033[0;0m'
 	printf '\n' # Add final newline to seperate commandline
-	printf '\e[0;107;30m C-x\e[0;m Exit     \e[0;107;30m⏎   \e[0;m New Line  \e[0;107;30m M-r\e[0;m Set Target \e[0;107;30m C-r\e[0;m Read File \e[0;107;30m C-o\e[0;m Write Out \e[0;107;30m C-d\e[0;m Delete Line\n'
-	printf '\e[0;107;30m C-l\e[0;m New Line \e[0;107;30m C-p\e[0;m Prev Line \e[0;107;30m C-n\e[0;m Next Line  \e[0;107;30m C-y\e[0;m Prev Page \e[0;107;30m C-v\e[0;m Next Page \e[0;107;30m C-t\e[0;m Execute \e[0;107;30m C-s\e[0;m Shell\n'
+	printf '\e[0;107;30m C-x\e[0;m Exit     \e[0;107;30m⏎   \e[0;m New Line  \e[0;107;30m M-r\e[0;m Set Target \e[0;107;30m C-r\e[0;m Read File \e[0;107;30m C-o\e[0;m Write Out \e[0;107;30m C-d\e[0;m Delete Line \e[0;107;30m C-e\e[0;m Toggle Mouse\n'
+	printf '\e[0;107;30m C-l\e[0;m New Line \e[0;107;30m C-p\e[0;m Prev Line \e[0;107;30m C-n\e[0;m Next Line  \e[0;107;30m C-y\e[0;m Prev Page \e[0;107;30m C-v\e[0;m Next Page \e[0;107;30m C-t\e[0;m Execute     \e[0;107;30m C-s\e[0;m Shell       \n'
 	read -rsn1
 	redraw
 }
@@ -261,6 +262,10 @@ die() {
     printf "\e[?1049l" # switch back to main buffer
     echo -e "\e[?1000;1006;1015l" #disable mouse tracking
     exit "${errno:-0}" # Assume that we are exiting without an error
+}
+mtoggle() {
+	[ "$enable_mouse" = true ] && echo -ne "\e[?1000;1006;1015l" && enable_mouse=false && return
+	[ "$enable_mouse" = false ] && echo -ne "\e[?1000;1006;1015h" && enable_mouse=true && return
 }
 
 redraw() {
@@ -322,6 +327,7 @@ keytype() {
 		${BANO_KEY_EXECUTE:=14}) execute; return;;
 		${BANO_KEY_DELETE:=4}) delete_line; redraw; return;;
 		${BANO_KEY_SHELL:=13}) shell; return;;
+		${BANO_KEY_MOUSE_TOGGLE:=5}) mtoggle; return;;
 		${BANO_KEY_SCROLL:=1b}) mouse=true;;
 		${BANO_KEY_BACKSPACE:=7f}) backspace; return;; #delete last char when backspace is pressed
 	esac

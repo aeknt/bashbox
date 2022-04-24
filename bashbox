@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1650756515,568930
+	echo 1650789769,708727
 ;;
 arch)
 #!/usr/bin/env bash
@@ -228,6 +228,9 @@ up() {
         ((line > 1)) && ((line--)) # As long as we can keep going up, go up
         ((line < base)) && ((base--)) # Push back the top if we need to
         ((base <= 0)) && base=1 # Don't push back if our base is at 1
+        [ -z "$bckrl" ] && bckrl="${rl}"
+        (( "${#buffer[line]}" < "${rl}" )) && rl="${#buffer[line]}"
+        (( "${#buffer[line]}" > "${rl}" )) && rl=bckrl
     done
 }
 
@@ -239,6 +242,9 @@ down() {
     for ((i = 0; i < ${1:-1}; i++)); do
         ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
         ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+        [ -z "$bckrl" ] && bckrl="${rl}"
+        (( "${#buffer[line]}" < "${rl}" )) && rl="${#buffer[line]}"
+        (( "${#buffer[line]}" > "${rl}" )) && rl=bckrl
     done
 }
 
@@ -259,14 +265,15 @@ execute() {
 }
 right() {
 	case "${buffer[line]}" in
-		"	") rl=$((rl + 4));;
-		*)((rl++))
+		*)((rl++));;
 	esac
-	[ $rl -gt "${#buffer[line]}" ] && { rl=0; down; }
+	[ "$rl" -gt "${#buffer[line]}" ] && { rl=0; down; }
+	bckrl=
 }
 left() {
 	((rl--))
 	[ "$rl" -lt 0 ] && { up; rl="${#buffer[line]}"; }
+	bckrl=
 }
 shell() {
 	printf "\033c"
@@ -287,6 +294,7 @@ die() {
     bind 'set disable-completion off' 2>/dev/null # Enable completion
     printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
     printf "\e[?1049l" # switch back to main buffer
+    echo -e "\e[?1000;1006;1015l" #disable mouse tracking
     exit "${errno:-0}" # Assume that we are exiting without an error
 }
 
@@ -317,6 +325,7 @@ backspace() {
 	modified=true
 }
 keytype() {
+	mouse=false
 	case "$1" in
 		${BANO_KEY_PGUP:=$'\E[5~'}) page_up; redraw; return;;
 		${BANO_KEY_PGDN:=$'\E[6~'}) page_down; redraw; return;;
@@ -326,6 +335,11 @@ keytype() {
 		${BANO_KEY_LEFT:=$'\E[D'}*) left; redraw; return;;
 	esac
 	hexkey=$(printf "%x\n" "'$1")
+	#clear        #stuff for debugging
+	#echo $hexkey #stuff for debugging
+	#read         #stuff for debugging
+	#[ "$hexkey" = "$1b" ] && { read -r a; clear; echo $a; read; } && return
+	#[ "${1:1:2}" = '[' ] && echo E && return
 	case "$hexkey" in
 		${BANO_KEY_EXIT:=18}) quit; return;;
 		${BANO_KEY_PREVIOUS:=10}) up; redraw; return;;
@@ -343,12 +357,59 @@ keytype() {
 		${BANO_KEY_EXECUTE:=14}) execute; return;;
 		${BANO_KEY_DELETE:=4}) delete_line; redraw; return;;
 		${BANO_KEY_SHELL:=13}) shell; return;;
+		${BANO_KEY_SCROLL:=1b}) mouse=true;;
 		${BANO_KEY_BACKSPACE:=7f}) backspace; return;; #delete last char when backspace is pressed
 	esac
-	
-	#clear        #stuff for debugging
-	#echo $hexkey #stuff for debugging
-	#read         #stuff for debugging
+	#TODO: make mouse scrolling nice instead of ignoring it
+
+	#parse mouse stuff somewhatish weirdly
+	$mouse && {
+		a=$(echo "$1")
+		[ "${a: -1}" = 'm' ] && {
+			value=0
+			echo "$a" | while read -rsn1 mchar; do
+				[ "$mchar" = 'm' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					value=0
+					break
+				} 
+				[ "$mchar" = 'M' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					value=0
+					break
+				} 
+				[ "$mchar" = ';' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					((value++))
+				} 
+				[ "$mchar" = '0' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '1' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '2' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '3' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '4' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '5' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '6' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '7' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '8' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '9' ] && tmp="${tmp}${mchar}"
+			done
+		}
+		#limitations of movenment
+		[ $x = 1 ] && return
+		[ $y -lt 6 ] && return
+		line=$(( x - 1 ))
+		rl=$(( y - 6 ))
+		((line > ${#buffer[@]})) && line=${#buffer[@]}
+		((rl > ${#buffer[line]})) && rl=${#buffer[line]}
+		redraw
+		return
+	}
 	
 	buffer[line]="${buffer[line]:0:${rl}}$1${buffer[line]:${rl}}" #add the key at $rl (cursor position)
 	right #go right with cursor
@@ -359,6 +420,7 @@ keytype() {
 
 main() {
     printf '\e[?1047h' # Switch to alternative buffer
+    echo -ne "\e[?1000;1006;1015h" #enable mouse tracking
     if [[ "$1" ]]; then # If a file was provided in the terminal pre-load it
         redraw # Draw out the UI before loading file
         read_buffer "$1"
@@ -2288,6 +2350,9 @@ hostname)
 : '\h'
 printf '%s\n' "${_@P}"
 ;;
+key)
+[<0;53;30M[<0;53;30m
+;;
 kill)
 #!/bin/bash
 #seems like kill is bash builtin so this is another useless script
@@ -2974,6 +3039,9 @@ up() {
         ((line > 1)) && ((line--)) # As long as we can keep going up, go up
         ((line < base)) && ((base--)) # Push back the top if we need to
         ((base <= 0)) && base=1 # Don't push back if our base is at 1
+        [ -z "$bckrl" ] && bckrl="${rl}"
+        (( "${#buffer[line]}" < "${rl}" )) && rl="${#buffer[line]}"
+        (( "${#buffer[line]}" > "${rl}" )) && rl=bckrl
     done
 }
 
@@ -2985,6 +3053,9 @@ down() {
     for ((i = 0; i < ${1:-1}; i++)); do
         ((line < ${#buffer[@]})) && ((line++)) # If we can go down, go down
         ((line > base + LINES - 3)) && ((base++)) # Move window down if needed
+        [ -z "$bckrl" ] && bckrl="${rl}"
+        (( "${#buffer[line]}" < "${rl}" )) && rl="${#buffer[line]}"
+        (( "${#buffer[line]}" > "${rl}" )) && rl=bckrl
     done
 }
 
@@ -3005,14 +3076,15 @@ execute() {
 }
 right() {
 	case "${buffer[line]}" in
-		"	") rl=$((rl + 4));;
-		*)((rl++))
+		*)((rl++));;
 	esac
-	[ $rl -gt "${#buffer[line]}" ] && { rl=0; down; }
+	[ "$rl" -gt "${#buffer[line]}" ] && { rl=0; down; }
+	bckrl=
 }
 left() {
 	((rl--))
 	[ "$rl" -lt 0 ] && { up; rl="${#buffer[line]}"; }
+	bckrl=
 }
 shell() {
 	printf "\033c"
@@ -3033,6 +3105,7 @@ die() {
     bind 'set disable-completion off' 2>/dev/null # Enable completion
     printf '\e[?25h\e[?7h\e[?1047l' # Reset terminal to sane mode
     printf "\e[?1049l" # switch back to main buffer
+    echo -e "\e[?1000;1006;1015l" #disable mouse tracking
     exit "${errno:-0}" # Assume that we are exiting without an error
 }
 
@@ -3063,6 +3136,7 @@ backspace() {
 	modified=true
 }
 keytype() {
+	mouse=false
 	case "$1" in
 		${BANO_KEY_PGUP:=$'\E[5~'}) page_up; redraw; return;;
 		${BANO_KEY_PGDN:=$'\E[6~'}) page_down; redraw; return;;
@@ -3072,6 +3146,11 @@ keytype() {
 		${BANO_KEY_LEFT:=$'\E[D'}*) left; redraw; return;;
 	esac
 	hexkey=$(printf "%x\n" "'$1")
+	#clear        #stuff for debugging
+	#echo $hexkey #stuff for debugging
+	#read         #stuff for debugging
+	#[ "$hexkey" = "$1b" ] && { read -r a; clear; echo $a; read; } && return
+	#[ "${1:1:2}" = '[' ] && echo E && return
 	case "$hexkey" in
 		${BANO_KEY_EXIT:=18}) quit; return;;
 		${BANO_KEY_PREVIOUS:=10}) up; redraw; return;;
@@ -3089,12 +3168,59 @@ keytype() {
 		${BANO_KEY_EXECUTE:=14}) execute; return;;
 		${BANO_KEY_DELETE:=4}) delete_line; redraw; return;;
 		${BANO_KEY_SHELL:=13}) shell; return;;
+		${BANO_KEY_SCROLL:=1b}) mouse=true;;
 		${BANO_KEY_BACKSPACE:=7f}) backspace; return;; #delete last char when backspace is pressed
 	esac
-	
-	#clear        #stuff for debugging
-	#echo $hexkey #stuff for debugging
-	#read         #stuff for debugging
+	#TODO: make mouse scrolling nice instead of ignoring it
+
+	#parse mouse stuff somewhatish weirdly
+	$mouse && {
+		a=$(echo "$1")
+		[ "${a: -1}" = 'm' ] && {
+			value=0
+			echo "$a" | while read -rsn1 mchar; do
+				[ "$mchar" = 'm' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					value=0
+					break
+				} 
+				[ "$mchar" = 'M' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					value=0
+					break
+				} 
+				[ "$mchar" = ';' ] && {
+					[ "$value" = '0' ] && mode="${tmp}" && tmp=
+					[ "$value" = '1' ] && y="${tmp}" && tmp=
+					[ "$value" = '2' ] && x="${tmp}" && tmp=
+					((value++))
+				} 
+				[ "$mchar" = '0' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '1' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '2' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '3' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '4' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '5' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '6' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '7' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '8' ] && tmp="${tmp}${mchar}"
+				[ "$mchar" = '9' ] && tmp="${tmp}${mchar}"
+			done
+		}
+		#limitations of movenment
+		[ $x = 1 ] && return
+		[ $y -lt 6 ] && return
+		line=$(( x - 1 ))
+		rl=$(( y - 6 ))
+		((line > ${#buffer[@]})) && line=${#buffer[@]}
+		((rl > ${#buffer[line]})) && rl=${#buffer[line]}
+		redraw
+		return
+	}
 	
 	buffer[line]="${buffer[line]:0:${rl}}$1${buffer[line]:${rl}}" #add the key at $rl (cursor position)
 	right #go right with cursor
@@ -3105,6 +3231,7 @@ keytype() {
 
 main() {
     printf '\e[?1047h' # Switch to alternative buffer
+    echo -ne "\e[?1000;1006;1015h" #enable mouse tracking
     if [[ "$1" ]]; then # If a file was provided in the terminal pre-load it
         redraw # Draw out the UI before loading file
         read_buffer "$1"
@@ -3868,6 +3995,12 @@ elif [ "$1" = "-a" ]; then
 else
 	printf '%s\n' "$(<"/dev/stdin")" > "$1"
 fi
+;;
+test)
+hi
+bhai
+bhai bhai
+	why bhai
 ;;
 time)
 #!/bin/bash
@@ -5622,6 +5755,6 @@ else
 fi
 ;;
 *)
-echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname key kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee test time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

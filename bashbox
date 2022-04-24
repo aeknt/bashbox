@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1650804227,796691
+	echo 1650812932,217117
 ;;
 arch)
 #!/usr/bin/env bash
@@ -374,36 +374,18 @@ keytype() {
 		[ "${a: -1}" = 'm' ] && {
 			value=0
 			echo "$a" | while read -rsn1 mchar; do
-				[ "$mchar" = 'm' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					value=0
-					break
-				} 
-				[ "$mchar" = 'M' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					value=0
-					break
-				} 
-				[ "$mchar" = ';' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					((value++))
-				} 
-				[ "$mchar" = '0' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '1' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '2' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '3' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '4' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '5' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '6' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '7' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '8' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '9' ] && tmp="${tmp}${mchar}"
+				case "$mchar" in
+					'0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|9)tmp="${tmp}${mchar}";;
+					'm'|'M'|';') {
+						[ "$value" = '0' ] && mode="${tmp}" && tmp=
+						[ "$value" = '1' ] && y="${tmp}" && tmp=
+						[ "$value" = '2' ] && x="${tmp}" && tmp=
+					};;
+				esac
+				case "$mchar" in
+					';')((value++));;
+					'm'|'M')value=0 && break;;
+				esac
 			done
 		}
 		#limitations of movenment
@@ -3188,36 +3170,18 @@ keytype() {
 		[ "${a: -1}" = 'm' ] && {
 			value=0
 			echo "$a" | while read -rsn1 mchar; do
-				[ "$mchar" = 'm' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					value=0
-					break
-				} 
-				[ "$mchar" = 'M' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					value=0
-					break
-				} 
-				[ "$mchar" = ';' ] && {
-					[ "$value" = '0' ] && mode="${tmp}" && tmp=
-					[ "$value" = '1' ] && y="${tmp}" && tmp=
-					[ "$value" = '2' ] && x="${tmp}" && tmp=
-					((value++))
-				} 
-				[ "$mchar" = '0' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '1' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '2' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '3' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '4' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '5' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '6' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '7' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '8' ] && tmp="${tmp}${mchar}"
-				[ "$mchar" = '9' ] && tmp="${tmp}${mchar}"
+				case "$mchar" in
+					'0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|9)tmp="${tmp}${mchar}";;
+					'm'|'M'|';') {
+						[ "$value" = '0' ] && mode="${tmp}" && tmp=
+						[ "$value" = '1' ] && y="${tmp}" && tmp=
+						[ "$value" = '2' ] && x="${tmp}" && tmp=
+					};;
+				esac
+				case "$mchar" in
+					';')((value++));;
+					'm'|'M')value=0 && break;;
+				esac
 			done
 		}
 		#limitations of movenment

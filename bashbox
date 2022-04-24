@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1650789769,708727
+	echo 1650798237,029386
 ;;
 arch)
 #!/usr/bin/env bash
@@ -403,7 +403,7 @@ keytype() {
 		#limitations of movenment
 		[ $x = 1 ] && return
 		[ $y -lt 6 ] && return
-		line=$(( x - 1 ))
+		line=$(( base + ( x - 2 ) ))
 		rl=$(( y - 6 ))
 		((line > ${#buffer[@]})) && line=${#buffer[@]}
 		((rl > ${#buffer[line]})) && rl=${#buffer[line]}
@@ -2350,9 +2350,6 @@ hostname)
 : '\h'
 printf '%s\n' "${_@P}"
 ;;
-key)
-[<0;53;30M[<0;53;30m
-;;
 kill)
 #!/bin/bash
 #seems like kill is bash builtin so this is another useless script
@@ -3214,7 +3211,7 @@ keytype() {
 		#limitations of movenment
 		[ $x = 1 ] && return
 		[ $y -lt 6 ] && return
-		line=$(( x - 1 ))
+		line=$(( base + ( x - 2 ) ))
 		rl=$(( y - 6 ))
 		((line > ${#buffer[@]})) && line=${#buffer[@]}
 		((rl > ${#buffer[line]})) && rl=${#buffer[line]}
@@ -3995,12 +3992,6 @@ elif [ "$1" = "-a" ]; then
 else
 	printf '%s\n' "$(<"/dev/stdin")" > "$1"
 fi
-;;
-test)
-hi
-bhai
-bhai bhai
-	why bhai
 ;;
 time)
 #!/bin/bash
@@ -5755,6 +5746,6 @@ else
 fi
 ;;
 *)
-echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname key kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee test time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

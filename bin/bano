@@ -368,7 +368,7 @@ keytype() {
 		#limitations of movenment
 		[ $x = 1 ] && return
 		[ $y -lt 6 ] && return
-		line=$(( x - 1 ))
+		line=$(( base + ( x - 2 ) ))
 		rl=$(( y - 6 ))
 		((line > ${#buffer[@]})) && line=${#buffer[@]}
 		((rl > ${#buffer[line]})) && rl=${#buffer[line]}

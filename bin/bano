@@ -7,7 +7,7 @@ declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified filetype enable_mouse
+declare file message modified filetype enable_mouse comment stringone stringtwo
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -38,21 +38,37 @@ syntax[zsh]=builtin_syntax_bash
 syntax[conf]=builtin_syntax_conf
 syntax[unknown]=builtin_syntax_unknown
 
-builtin_syntax_bash(){
-	[[ "${word}" =~ "#" ]] && colour 38 5 4 "${word}" && comment=true && return
-	"${comment}" && colour 38 5 4 "${word}" && return
-	[[ "${word}" = '||' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = '&&' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = ']' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = '[' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = ')' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = '(' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = '{' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = '}' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" = ';' ]] && colour 38 5 5 "${word}" && return
-	[[ "${word}" =~ '$' ]] && colour 38 5 6 "${word}" && return
-	[[ "${word}" =~ '"' ]] && colour 38 5 1 "${word}" && return
-	[[ "${word}" =~ "'" ]] && colour 38 5 1 "${word}" && return
+builtin_syntax_bash() {
+	case "${word:0:2}" in
+		'"$') colour 0 36 48 "${word}"; return ;;
+	esac
+	case "${word:0:1}" in
+		'#') colour 0 37 48 "${word}" && comment=true; return;;
+		'$') colour 0 96 108 "${word}"; return ;;
+		'-') colour 0 93 108 "${word}"; return ;;
+	esac
+	"${comment}" && colour 0 37 48 "${word}" && return
+	case "${word}" in
+		'||') colour 0 95 108 "${word}"; return ;;
+		'&&') colour 0 95 108 "${word}"; return ;;
+		']') colour 1 95 108 "${word}"; return ;;
+		'[') colour 1 95 108 "${word}"; return ;;
+		'[[') colour 1 95 108 "${word}"; return ;;
+		']]') colour 1 95 108 "${word}"; return ;;
+		')') colour 1 95 108 "${word}"; return ;;
+		'(') colour 1 95 108 "${word}"; return ;;
+		'{') colour 1 95 108 "${word}"; return ;;
+		'}') colour 1 95 108 "${word}"; return ;;
+		';') colour 0 95 108 "${word}"; return ;;
+		*"'"*) colour 0 92 108 "${word}" && return ;;
+		*'"'*) colour 0 32 48 "${word}" && return ;;
+		*'='*) colour 0 94 108 "${word}"; return ;;
+	esac
+		   
+	[[ "${word: -2}" = '()' ]] && colour 0 30 44 "${word}" && return
+	case "${word}" in
+		'echo'|'return'|'case'|'esac'|'for'|'while'|'do'|'done'|'if'|'elif'|'else'|'printf'|'fi'|'continue'|'exit'|'bind'|'then'|'break'|'read'|'declare'|'typeset'|'local'|'let'|'shopt'|'trap'|'set') colour 0 91 108 "${word}" && return
+	esac
 	colour 0 0 0 "${word}"
 }
 builtin_syntax_unknown() {
@@ -130,8 +146,11 @@ megaredraw(){
 	printf '%s\n' "${buffer[@]}" | pipesyntax | mapfile -t -O 1 buffersyntax
 }
 megaredrawline(){
-	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | tabrender)"
+	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | pipesyntax)"
 }
+#megaredrawlinesyntax(){
+#	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | pipesyntax)"
+#}
 tabrender(){
 	IFSbck="$IFS"
 	IFS=
@@ -391,12 +410,13 @@ main() {
 }
 pipesyntax() {
 	comment=false
+	stringone=false
+	stringtwo=false
 	word=
 	bckIFS="${IFS}"
 	IFS=
 	colour(){
-		printf "\033[%s;%s;%sm%s" "$1" "$2" "$3" "$4"
-		printf "\033[0;0m"
+		printf "\033[%s;%s;%sm%s\033[0;0m" "$1" "$2" "$3" "$4"
 	}
 	readstuff() {
 		while read -rsn1 char
@@ -404,7 +424,7 @@ pipesyntax() {
 			[ "$char" = " " ] && syntax && word='' && printf ' ' && continue
 			[ "$char" = "	" ] && syntax && word='' && printf '\033[0;37;48m%s\033[0;0m' "${BANO_RENDER_TAB:=.}" && continue
 			[ -z "$char" ] && syntax && word='' comment='false' && echo && continue
-			word="${word}${char}"
+			word="${word}${char}" && printf '%s\e[%sD' "$word" "${#word}"
 		done
 	}
 	readstuff

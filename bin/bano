@@ -7,7 +7,7 @@ declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified filetype enable_mouse comment stringone stringtwo
+declare file message modified filetype enable_mouse comment stringone stringtwo reservedlines
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -20,6 +20,7 @@ file= # Currently addressed file
 message="Welcome to bano (press 'x' to quit)." # Feedback text in the status bar
 modified=false # Tracking whether a file was modified
 enable_mouse=true # Xterm mouse support
+reservedlines=1 # Number of lines not displaying file
 
 shopt -s lastpipe
 shopt -s extglob # Ensure advanced pattern matching is available
@@ -291,7 +292,7 @@ redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
         "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
-    for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
+    for ((i = base; i - base < LINES - reservedlines; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
             case "${buffer[i]}" in

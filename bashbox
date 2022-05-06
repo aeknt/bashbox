@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1651082416,069229
+	echo 1651842937,673069
 ;;
 arch)
 #!/usr/bin/env bash
@@ -42,7 +42,7 @@ declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified filetype enable_mouse comment stringone stringtwo
+declare file message modified filetype enable_mouse comment stringone stringtwo reservedlines
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -55,6 +55,7 @@ file= # Currently addressed file
 message="Welcome to bano (press 'x' to quit)." # Feedback text in the status bar
 modified=false # Tracking whether a file was modified
 enable_mouse=true # Xterm mouse support
+reservedlines=1 # Number of lines not displaying file
 
 shopt -s lastpipe
 shopt -s extglob # Ensure advanced pattern matching is available
@@ -326,7 +327,7 @@ redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
         "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
-    for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
+    for ((i = base; i - base < LINES - reservedlines; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
             case "${buffer[i]}" in
@@ -809,28 +810,31 @@ repeat() {
 	
 }
 verbose() {
-	for x in 0 1 4 5 7 8; do
-		for i in $(repeat 30 37); do
-			for a in $(repeat 40 48); do
-					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+	for x in {0..8}; do
+		echo -e "\e[$x""m\\\e[$x""m Example text\e[0;0;0m "
+		for i in {30..37}; do
+			echo -ne "\e[$x;$i""m\\\e[$x;$i""m\e[0;0;0m "
+			for a in {40..47}; do
+				echo -ne "\e[$x;$i;$a""m\\\e[$x;$i;$a""m\e[0;0;0m "
 			done
-			printf "\n"
+			echo
 		done
 	done
-	for x in 0 1 4 5 7 8; do
-		for i in $(repeat 90 97); do
-			for a in $(repeat 100 108); do
-					printf "\033[%d;%d;%dm\\\e[%d;%d;%dm\033[0;37;40m\033[0m" "$x" "$i" "$a" "$x" "$i" "$a"
+	echo ""
+	for x in {0..8}; do
+		echo -e "\e[$x""m\\\e[$x""m Example Text\e[0;0;0m "
+		for i in {90..97}; do
+			echo -ne "\e[$x;$i""m\\\e[$x;$i""m\e[0;0;0m "
+			for a in {100..107}; do
+				echo -ne "\e[$x;$i;$a""m\\\e[$x;$i;$a""m\e[0;0;0m "
 			done
-			printf "\n"
+			echo
 		done
 	done
-	printf "\n"
+	echo ""
 }
 #simple colors, similiar to how neofetch outputs them
 simple() {
-    # Display the terminal palette.
-    # Usage: colors
     for i in {0..15}; do
         ((i%8==0)) && printf "\\n"
         printf "%b" "\\e[48;05;${i}m  \\e[0m"
@@ -2858,7 +2862,7 @@ declare -A syntax
 declare -a buffer
 declare -a buffersyntax
 declare -i line base rl
-declare file message modified filetype enable_mouse comment stringone stringtwo
+declare file message modified filetype enable_mouse comment stringone stringtwo reservedlines
 
 printf "\e[?1049h" #switch to alternative buffer
 
@@ -2871,6 +2875,7 @@ file= # Currently addressed file
 message="Welcome to bano (press 'x' to quit)." # Feedback text in the status bar
 modified=false # Tracking whether a file was modified
 enable_mouse=true # Xterm mouse support
+reservedlines=1 # Number of lines not displaying file
 
 shopt -s lastpipe
 shopt -s extglob # Ensure advanced pattern matching is available
@@ -3142,7 +3147,7 @@ redraw() {
     (printf '\e[0;30m \e[H\e[?25l\e[107m%*s\r %s \e[46;30m %s \e[0;107;30m L%s W%s\e[m' \
         "$COLUMNS" "$message" "bano (press C-g for help)" \
         "$(basenam "$file") ($filetype)" "$line" "${rl}") # Status line, among others
-    for ((i = base; i - base < LINES - 1; i++)); do # Iterate over shown lines
+    for ((i = base; i - base < LINES - reservedlines; i++)); do # Iterate over shown lines
         ((i != line)) && printf '\e[90m' # Fade line number if not selected
         ((i > ${#buffer[@]})) && printf '\n\e[K   ~\e[m' || \
             case "${buffer[i]}" in

@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1651842937,673069
+	echo 1665695617,975067
 ;;
 arch)
 #!/usr/bin/env bash
@@ -2700,6 +2700,26 @@ infofilesall() {
 [ "$1" = "-l" ] && infofiles
 [ "$1" = "-la" ] && infofilesall
 [ "$1" = "-al" ] && infofilesall
+;;
+lscpu)
+#!/bin/bash
+uniq_lscpu() {
+	while read -r line; do
+	for check in "${hab[@]}"
+	do
+		if [ "$line" = "$check" ]; then
+			repeat=yes
+		fi
+	done
+	#echo $repeat : $line
+	[ "$repeat" = "no" ] && echo "$line"
+	repeat=no
+	hab+=("$line")
+	done
+}
+if [ -f /proc/cpuinfo ]; then
+	printf '%s\n' "$(</proc/cpuinfo)" | uniq_lscpu
+fi
 ;;
 makewords)
 #!/bin/bash
@@ -5767,6 +5787,6 @@ else
 fi
 ;;
 *)
-echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
+echo arch at bano base16 base64 basename bashbox-create bc bf cat chr clear colors colors256 command cp curl cut date dialog dir dirname echo ed env exec expand expr exprf factor false figlethd find findfast free ftype getlines getopt grep hd head hextorgb hostname kill less locale logname lolcat lowercase ls lscpu makewords man more nano nl nosj od ord ping pr print printenv printf ps pwd pwdx readlink readsyntax realpath rev rgbtohex sed seq sh sha512 sleep stat strip syntax tac tail tee time timeout top touch tput true truecolors ttysize type uidname uname uniq uppercase uptime vdir vi view watch wc which whoami yes
 ;;
 esac

@@ -20,7 +20,7 @@ repeat() {
 	
 }
 verbose() {
-	for x in {0..8}; do
+	for x in {0..9}; do
 		echo -e "\e[$x""m\\\e[$x""m Example text\e[0;0;0m "
 		for i in {30..37}; do
 			echo -ne "\e[$x;$i""m\\\e[$x;$i""m\e[0;0;0m "
@@ -31,7 +31,7 @@ verbose() {
 		done
 	done
 	echo ""
-	for x in {0..8}; do
+	for x in {0..9}; do
 		echo -e "\e[$x""m\\\e[$x""m Example Text\e[0;0;0m "
 		for i in {90..97}; do
 			echo -ne "\e[$x;$i""m\\\e[$x;$i""m\e[0;0;0m "

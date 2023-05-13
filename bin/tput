@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+############################
+#TODO: THIS IS SHITE
+############################
+
 shopt -s checkwinsize; (:;:)
 printhelp() {
  echo "Usage: tput [command]

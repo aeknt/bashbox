@@ -4,6 +4,12 @@
 
 for file in "$@"
 do
-	cd -P "${file%/*}" &&
-		echo "$PWD/${file##*/}"
+	[ -f "$file" ] && {
+		cd -P "${file%/*}" &&
+			echo "$PWD/${file##*/}"
+	}
+	[ -d "$file" ] && {
+		cd -P "$file" &&
+			echo "$PWD"
+	}
 done

@@ -1,9 +1,1 @@
-#!/usr/bin/env bash
-#
-# realpath in pure bash.
-
-for file in "$@"
-do
-	cd -P $file
-	echo $PWD
-done
+realpath

@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1684795386.302176
+	echo 1684817323,842878
 ;;
 arch)
 #!/usr/bin/env bash
@@ -3556,8 +3556,8 @@ pwdx)
 #!/usr/bin/env bash
 for pid in "$@"
 do
-	cd -P /proc/$pid/cwd
-	echo $PWD
+	cd -P "/proc/$pid/cwd"
+	echo "$PWD"
 done
 ;;
 readlink)
@@ -3567,8 +3567,14 @@ readlink)
 
 for file in "$@"
 do
-	cd -P $file
-	echo $PWD
+	[ -f "$file" ] && {
+		cd -P "${file%/*}" &&
+			echo "$PWD/${file##*/}"
+	}
+	[ -d "$file" ] && {
+		cd -P "$file" &&
+			echo "$PWD"
+	}
 done
 ;;
 readsyntax)
@@ -3633,8 +3639,14 @@ realpath)
 
 for file in "$@"
 do
-	cd -P "${file%/*}" &&
-		echo "$PWD/${file##*/}"
+	[ -f "$file" ] && {
+		cd -P "${file%/*}" &&
+			echo "$PWD/${file##*/}"
+	}
+	[ -d "$file" ] && {
+		cd -P "$file" &&
+			echo "$PWD"
+	}
 done
 ;;
 rev)

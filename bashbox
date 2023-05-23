@@ -3,7 +3,7 @@ cmdf=$1
 shift
 case $cmdf in
 --build)
-	echo 1684007392,213612
+	echo 1684795386.302176
 ;;
 arch)
 #!/usr/bin/env bash
@@ -3633,8 +3633,8 @@ realpath)
 
 for file in "$@"
 do
-	cd -P $file
-	echo $PWD
+	cd -P "${file%/*}" &&
+		echo "$PWD/${file##*/}"
 done
 ;;
 rev)

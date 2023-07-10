@@ -143,16 +143,16 @@ write_buffer() {
     modified=false
     message="Wrote ${#buffer[@]} lines to '$file'"
 }
-megaredraw(){
+megaredraw() {
 	printf '%s\n' "${buffer[@]}" | pipesyntax | mapfile -t -O 1 buffersyntax
 }
-megaredrawline(){
+megaredrawline() {
 	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | pipesyntax)"
 }
 #megaredrawlinesyntax(){
 #	buffersyntax[line]="$(printf '%s' "${buffer[line]}" | pipesyntax)"
 #}
-tabrender(){
+tabrender() {
 	IFSbck="$IFS"
 	IFS=
 	while read -rsn1 char
@@ -163,7 +163,7 @@ tabrender(){
 	done
 	IFS="$IFSbck"
 }
-tabrenderraw(){
+tabrenderraw() {
 	IFSbck="$IFS"
 	IFS=
 	while read -rsn1 char

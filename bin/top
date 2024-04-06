@@ -57,12 +57,14 @@ getproc() {
 			if [ "$a" -gt "$ignore" ]; then
 				[ "$a" = $(( LINES + $1 )) ] && break
 				if [[ ! "$item" =~ [^[:digit:]] ]]; then
-					echo -n "$item "
+					printf '\r%*s\r' 10 ' '
+					printf '%-10s' "$item "
 					c=0
 					for word in $(linesget 9 < "$item"/status); {
-						[ $c = 1 ] && echo -n "${uid[$word]} "
+						[ $c = 1 ] && printf '%*s\e[10G' 10 ' ' && printf '%-10s' "${uid[$word]}"
 						c=$(( c + 1 ))
 					}
+					printf '%*s\e[20G' $((COLUMNS - 20)) ' '
 					printf '%s\n' "$(<"$item/comm")"
 				fi
 			fi
@@ -72,11 +74,19 @@ getproc() {
 }
 draw() {
 	#clear the screen
-	printf "\033c"
+	#	printf "\033c"
+	printf '\e[0;0H'
 	#print lines
+	printf '%*s\n' $COLUMNS ' '
+	printf '%*s\n' $COLUMNS ' '
+	printf '%*s\n' $COLUMNS ' '
+	printf '%*s\n' $COLUMNS ' '
+	printf '%*s\n' $COLUMNS ' '
+	printf '%*s\n' $COLUMNS ' '
+	printf '\e[0;0H'
 	echo -n top; timeup; echo
 	mem
-	printf "\033[0;30;107mPID USER COMMAND\033[0;0m\n"
+	printf '\033[0;30;107mPID      USER      COMMAND%*s\033[0;0m\n' "$((COLUMNS - 26))" ' '
 	#this all is 7 lines
 	getproc "$1"
 	read -rsn1 -t 1 input
